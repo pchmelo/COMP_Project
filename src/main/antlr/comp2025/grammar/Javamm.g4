@@ -9,50 +9,82 @@ INT : 'int' ;
 PUBLIC : 'public' ;
 RETURN : 'return' ;
 
-INTEGER : [0-9] ;
-ID : [a-zA-Z]+ ;
+INTEGER : '0' | [1-9] [0-9]* ;
+ID : [a-zA-Z_$] [a-zA-Z0-9_$]* ;
+
+MULT_LINE_COMMENT : '/*' .*? '*/' -> skip ;
+END_OF_LINE_COMMENT : '//' ~[\r\n]* -> skip ;
 
 WS : [ \t\n\r\f]+ -> skip ;
 
 program
-    : classDecl EOF
+    : (importDeclaration)* classDeclaration EOF
     ;
 
-
-classDecl
-    : CLASS name=ID
-        '{'
-        methodDecl*
-        '}'
+importDeclaration
+    : 'import' value+=ID ('.' value+=ID)* ';' #ImportStatement
     ;
 
-varDecl
+classDeclaration
+    : 'class' ID ('extends' ID)? '{' (varDeclaration)* (methodDeclaration)* '}'
+    ;
+
+varDeclaration
     : type name=ID ';'
     ;
 
-type
-    : name= INT ;
+methodDeclaration
+    : ('public')? returnType methodName=ID '(' (argument)* ')' '{' (varDeclaration)* (statement)* returnStmt '}'
+    | ('public')? 'static' 'void' 'main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration)* (statement)* '}'
+    ;
 
-methodDecl locals[boolean isPublic=false]
-    : (PUBLIC {$isPublic=true;})?
-        type name=ID
-        '(' param ')'
-        '{' varDecl* stmt* '}'
+returnType
+    : type
+    ;
+
+returnStmt
+    : 'return' expression ';'
     ;
 
 param
     : type name=ID
     ;
 
-stmt
-    : expr '=' expr ';' #AssignStmt //
-    | RETURN expr ';' #ReturnStmt
+argument
+    : type argName=ID (',' argument)*
     ;
 
-expr
-    : expr op= '*' expr #BinaryExpr //
-    | expr op= '+' expr #BinaryExpr //
-    | value=INTEGER #IntegerLiteral //
-    | name=ID #VarRefExpr //
+type
+    : INT '[' ']'     #IntArrayType
+    | INT '...'       #VarArgType
+    | 'boolean'         #BooleanType
+    | INT             #IntType
+    | ID                #ClassType
+    ;
+
+statement
+    : '{' statements=statement* '}' #BlockStmt
+    | 'if' '(' expression ')' ifStmt=statement ('else' elseStmt=statement)? #IfStmt
+    | 'while' '(' expression ')' whileStmt=statement #WhileStmt
+    | expression ';' #ExpressionStmt
+    | var=ID '=' expression ';' #AssignStmt
+    | var=ID '[' index=expression ']' '=' expression ';' #ArrayAssignStmt
+    ;
+
+expression
+    : expression op=('&&' | '<' | '+' | '-' | '*' | '/' ) expression #ComparisonExpr
+    | expression '[' expression ']' #ArrayAccessExpr
+    | expression '.' 'length' #ArrayLengthExpr
+    | expression '.' methodName=ID '(' (expression (',' expression)*) ')' #MethodCallExpr
+    | 'new' INT '[' expression ']' #NewIntArrayExpr
+    | 'new' ID '(' ')' #NewObjectExpr
+    | '!' expression #NotExpr
+    | '(' expression ')' #ParenthesesExpr
+    | '[' (expression (',' expression)*)? ']' #ArrayExpr
+    | value=INTEGER #IntegerExpr
+    | 'true' #TrueExpr
+    | 'false' #FalseExpr
+    | var=ID #VarExpr
+    | 'this' #ThisExpr
     ;
 
