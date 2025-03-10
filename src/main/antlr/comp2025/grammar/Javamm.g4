@@ -22,19 +22,19 @@ program
     ;
 
 importDeclaration
-    : 'import' value+=ID ('.' value+=ID)* ';' #ImportStatement
+    : 'import' value+=ID ('.' value+=ID)* ';' #ImportDecl
     ;
 
 classDeclaration
-    : 'class' ID ('extends' ID)? '{' (varDeclaration)* (methodDeclaration)* '}'
+    : 'class' name=ID ('extends' superName=ID)? '{' (varDeclaration)* (methodDeclaration)* '}' #ClassDecl     //!!superName not tested in grammar
     ;
 
 varDeclaration
-    : type name=ID ';'
+    : type name=ID ';' #VarDecl
     ;
 
 methodDeclaration
-    : ('public')? returnType methodName=ID '(' (argument) ')' '{' (varDeclaration)* (statement)* returnStmt '}'
+    : ('public')? returnType methodName=ID '(' (argument)? ')' '{' (varDeclaration)* (statement)* returnStmt '}'   //empty arguments are not tested in grammar
     | ('public')? 'static' 'void' 'main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration)* (statement)* '}'
     ;
 
@@ -59,7 +59,7 @@ type
     | INT '...'         #VarArgType
     | 'boolean'         #BooleanType
     | INT               #IntType
-    | ID                #ClassType
+    | name=ID                #ClassType
     | 'String'          #StringType
     ;
 

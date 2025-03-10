@@ -21,6 +21,13 @@ public class TypeUtils {
         return new Type("int", false);
     }
 
+    public static Type newBooleanType() {
+        return new Type("boolean", false);
+    }
+
+    public static Type newObjectType(String name) { return new Type(name, false);
+    }
+
     public static Type convertType(JmmNode typeNode) {
 
         // TODO: When you support new types, this must be updated
