@@ -60,7 +60,6 @@ public class JmmSymbolTableBuilder {
         List<JmmNode> children = classDecl.getChildren(VAR_DECL);
         for (JmmNode child : children){
             String kind = child.getChild(0).getKind();
-            System.out.println(kind);
             Type returnType;
             switch (kind) {
                 case "IntType":
@@ -184,9 +183,19 @@ public class JmmSymbolTableBuilder {
 
     private List<String> buildMethods(JmmNode classDecl) {
 
-        var methods = classDecl.getChildren(METHOD_DECL).stream()
+        /*var methods = classDecl.getChildren(METHOD_DECL).stream()
                 .map(method -> method.get("name"))
-                .toList();
+                .toList();*/
+        List<String> methods = new ArrayList<>();
+        List<JmmNode> children = classDecl.getChildren(METHOD_DECL);
+        for (JmmNode child : children){
+            methods.add(child.get("name"));
+        }
+        // TODO: O que é praticamente fazer direto porque só há um main... ó será que não ?? é que a forma que está a gramatica escrita pode esxitir mais que um
+        children = classDecl.getChildren(MAIN_METHOD_DECL);
+        for (JmmNode child : children){
+            methods.add("main");
+        }
 
         return methods;
     }
