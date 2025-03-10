@@ -34,7 +34,7 @@ varDeclaration
     ;
 
 methodDeclaration
-    : ('public')? returnType methodName=ID '(' (argument)* ')' '{' (varDeclaration)* (statement)* returnStmt '}'
+    : ('public')? returnType methodName=ID '(' (argument) ')' '{' (varDeclaration)* (statement)* returnStmt '}'
     | ('public')? 'static' 'void' 'main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration)* (statement)* '}'
     ;
 
@@ -55,15 +55,16 @@ argument
     ;
 
 type
-    : INT '[' ']'     #IntArrayType
-    | INT '...'       #VarArgType
+    : INT '[' ']'       #IntArrayType
+    | INT '...'         #VarArgType
     | 'boolean'         #BooleanType
-    | INT             #IntType
+    | INT               #IntType
     | ID                #ClassType
+    | 'String'          #StringType
     ;
 
 statement
-    : '{' statements=statement* '}' #BlockStmt
+    : '{' statement* '}' #BlockStmt
     | 'if' '(' expression ')' ifStmt=statement ('else' elseStmt=statement)? #IfStmt
     | 'while' '(' expression ')' whileStmt=statement #WhileStmt
     | expression ';' #ExpressionStmt
@@ -75,7 +76,7 @@ expression
     : expression op=('&&' | '<' | '+' | '-' | '*' | '/' ) expression #ComparisonExpr
     | expression '[' expression ']' #ArrayAccessExpr
     | expression '.' 'length' #ArrayLengthExpr
-    | expression '.' methodName=ID '(' (expression (',' expression)*) ')' #MethodCallExpr
+    | expression '.' methodName=ID '(' (expression (',' expression)*)? ')' #MethodCallExpr
     | 'new' INT '[' expression ']' #NewIntArrayExpr
     | 'new' ID '(' ')' #NewObjectExpr
     | '!' expression #NotExpr
