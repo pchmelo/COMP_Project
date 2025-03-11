@@ -4,11 +4,6 @@ grammar Javamm;
     package pt.up.fe.comp2025;
 }
 
-CLASS : 'class' ;
-INT : 'int' ;
-PUBLIC : 'public' ;
-RETURN : 'return' ;
-
 INTEGER : '0' | [1-9] [0-9]* ;
 ID : [a-zA-Z_$] [a-zA-Z0-9_$]* ;
 
@@ -18,7 +13,7 @@ END_OF_LINE_COMMENT : '//' ~[\r\n]* -> skip ;
 WS : [ \t\n\r\f]+ -> skip ;
 
 program
-    : (importDeclaration)* classDeclaration EOF
+    : importDeclaration* classDeclaration EOF
     ;
 
 importDeclaration
@@ -26,7 +21,7 @@ importDeclaration
     ;
 
 classDeclaration
-    : 'class' ID ('extends' ID)? '{' (varDeclaration)* (methodDeclaration)* '}'
+    : 'class' ID ('extends' ID)? '{' varDeclaration* methodDeclaration* '}'
     ;
 
 varDeclaration
@@ -34,58 +29,62 @@ varDeclaration
     ;
 
 methodDeclaration
-    : ('public')? returnType methodName=ID '(' (argument) ')' '{' (varDeclaration)* (statement)* returnStmt '}'
-    | ('public')? 'static' 'void' 'main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration)* (statement)* '}'
+    : ('public')? ('static')? returnType methodName=ID '(' argument? (',' argument)* ')' '{' (varDeclaration | statement)* returnStmt '}'
+    | ('public')? 'static' 'void' 'main' '(' 'String' '['']' argName=ID ')' '{' varDeclaration* statement* '}'
     ;
 
 returnType
     : type
+    | 'void'
     ;
 
 returnStmt
     : 'return' expression ';'
-    ;
-
-param
-    : type name=ID
+    | 'return' ';'
     ;
 
 argument
-    : type argName=ID (',' argument)*
+    : type argName=ID
     ;
 
 type
-    : INT '[' ']'       #IntArrayType
-    | INT '...'         #VarArgType
+    : type '[' ']'      #ArrayType
+    | type '...'        #VarArgType
     | 'boolean'         #BooleanType
-    | INT               #IntType
-    | ID                #ClassType
+    | 'int'             #IntType
     | 'String'          #StringType
+    | ID                #ClassType
     ;
 
 statement
-    : '{' statement* '}' #BlockStmt
-    | 'if' '(' expression ')' ifStmt=statement ('else' elseStmt=statement)? #IfStmt
-    | 'while' '(' expression ')' whileStmt=statement #WhileStmt
+    : '{' statement* '}' #BracketStmt
+    | 'if' '(' expression ')' statement ('else if' '(' expression ')' statement)* ('else' statement)? #IfStmt
+    | 'while' '(' expression ')' statement #WhileStmt
     | expression ';' #ExpressionStmt
-    | var=ID '=' expression ';' #AssignStmt
+    | var=ID op=('=' | '+=' | '-=' | '*=' | '/=') expression ';' #AssignStmt
     | var=ID '[' index=expression ']' '=' expression ';' #ArrayAssignStmt
     ;
 
 expression
-    : expression op=('&&' | '<' | '+' | '-' | '*' | '/' ) expression #ComparisonExpr
+    : '(' expression ')' #ParenthesesExpr
+    | value=ID op=('++' | '--') #Postfix
+    | expression op=('*' | '/') expression #BinaryOp
+    | expression op=('+' | '-') expression #BinaryOp
+    | expression op=('>' | '<' | '>=' | '<=') expression #BinaryOp
+    | expression op=('==' | '!=') expression #BinaryOp
+    | expression op='&&' expression #BinaryOp
+    | expression op='||' expression #BinaryOp
     | expression '[' expression ']' #ArrayAccessExpr
     | expression '.' 'length' #ArrayLengthExpr
     | expression '.' methodName=ID '(' (expression (',' expression)*)? ')' #MethodCallExpr
-    | 'new' INT '[' expression ']' #NewIntArrayExpr
+    | 'new' 'int' '[' expression ']' #NewIntArrayExpr
     | 'new' ID '(' ')' #NewObjectExpr
     | '!' expression #NotExpr
-    | '(' expression ')' #ParenthesesExpr
     | '[' (expression (',' expression)*)? ']' #ArrayExpr
     | value=INTEGER #IntegerExpr
-    | 'true' #TrueExpr
-    | 'false' #FalseExpr
-    | var=ID #VarExpr
+    | value='true' #TrueExpr
+    | value='false' #FalseExpr
+    | value=ID #VarExpr
     | 'this' #ThisExpr
     ;
 
