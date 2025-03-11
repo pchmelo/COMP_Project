@@ -21,8 +21,14 @@ public class TypeUtils {
         return new Type("int", false);
     }
 
+    public static Type newIntArrayType() { return new Type("int", true); }
+
     public static Type newBooleanType() {
         return new Type("boolean", false);
+    }
+
+    public static Type newVoidType() {
+        return new Type("void", false);
     }
 
     public static Type newObjectType(String name) { return new Type(name, false);

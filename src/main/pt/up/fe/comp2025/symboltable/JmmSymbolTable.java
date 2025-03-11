@@ -70,11 +70,17 @@ public class JmmSymbolTable extends AJmmSymbolTable {
     @Override
     public Type getReturnType(String methodSignature) {
         // TODO: Simple implementation that needs to be expanded
-        return TypeUtils.newIntType();
+        //returnTypes.get(methodSignature);
+        System.out.println(returnTypes.get(methodSignature));
+
+        return returnTypes.get(methodSignature);
     }
 
     @Override
     public List<Symbol> getParameters(String methodSignature) {
+        if(methodSignature.equals("main")) {
+            return new ArrayList<>();
+        }
         return params.get(methodSignature);
     }
 

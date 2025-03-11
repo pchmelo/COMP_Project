@@ -45,6 +45,7 @@ public class JmmSymbolTableBuilder {
         String className = classDecl.get("name");
         var superName = buildSuperName(classDecl);
         var fields = buildFields(classDecl);
+
         var methods = buildMethods(classDecl);
         System.out.println(methods.size());
         var returnTypes = buildReturnTypes(classDecl);
@@ -59,22 +60,7 @@ public class JmmSymbolTableBuilder {
         List<Symbol> fields = new ArrayList<>();
         List<JmmNode> children = classDecl.getChildren(VAR_DECL);
         for (JmmNode child : children){
-            String kind = child.getChild(0).getKind();
-            Type returnType;
-            switch (kind) {
-                case "IntType":
-                    returnType = TypeUtils.newIntType();
-                    break;
-                case "BooleanType":
-                    returnType = TypeUtils.newBooleanType();
-                    break;
-                case "ClassType":
-                    returnType = TypeUtils.newObjectType(child.getChild(0).get("name"));
-                    break;
-                default:
-                    returnType = TypeUtils.newObjectType(child.getChild(0).get("name"));
-                    break;
-            }
+            Type returnType = typerReturner(child);
             Symbol tempAux = new Symbol(returnType, child.get("name"));
             fields.add(tempAux);
         }
@@ -135,35 +121,68 @@ public class JmmSymbolTableBuilder {
 
     private Map<String, Type> buildReturnTypes(JmmNode classDecl) {
         Map<String, Type> map = new HashMap<>();
-        System.out.println(classDecl.getChildren(METHOD_DECL).size());
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             var name = method.get("name");
             // TODO: After you add more types besides 'int', you will have to update this
-            var returnType = TypeUtils.newIntType();
+            JmmNode child = method.getChild(0);
+            Type returnType;
+            if (child.getKind().equals("VoidType")){
+                returnType = TypeUtils.newVoidType();
+            }else {
+                returnType = typerReturner(child);
+            }
             map.put(name, returnType);
         }
+        for (var method : classDecl.getChildren(MAIN_METHOD_DECL)) {
+            map.put("main", TypeUtils.newVoidType());
+        }
+
 
         return map;
     }
 
+    private Type typerReturner(JmmNode child){
+        Type returnType;
+        String kind = child.getChild(0).getKind();
+        switch (kind) {
+            case "IntType":
+                returnType = TypeUtils.newIntType();
+                break;
+            case "BooleanType":
+                returnType = TypeUtils.newBooleanType();
+                break;
+            case "ClassType":
+                returnType = TypeUtils.newObjectType(child.getChild(0).get("name"));
+                break;
+            case "IntArrayType":
+                returnType = TypeUtils.newIntArrayType();
+                break;
+            default:
+                returnType = TypeUtils.newObjectType(child.getChild(0).get("name"));
+                break;
+        }
+        return returnType;
+    }
 
     private Map<String, List<Symbol>> buildParams(JmmNode classDecl) {
         Map<String, List<Symbol>> map = new HashMap<>();
+        /* var params = method.getChildren(PARAM).stream()
+                    // TODO: When you support new types, this code has to be updated
+                    .map(param -> new Symbol(TypeUtils.newIntType(), param.get("name")))
+                    .toList();*/
+
 
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             var name = method.get("name");
-            List<JmmNode> children = method.getChildren(PARAM);
-            List<JmmNode> children_2 = children.get(0).getChildren();
-            String test = children_2.getFirst().getKind();
+            List<JmmNode> children = method.getChildren(PARAM); //SÓ 1 ou 0
+            List<Symbol> symbolList = new ArrayList<>();
             for (JmmNode child : children){
-                System.out.println(child.get("name"));
+                Type returnType = typerReturner(child);
+                Symbol aux = new Symbol(returnType, child.get("name"));
+                symbolList.add(aux);
             }
-            var params = method.getChildren(PARAM).stream()
-                    // TODO: When you support new types, this code has to be updated
-                    .map(param -> new Symbol(TypeUtils.newIntType(), param.get("name")))
-                    .toList();
-
-            map.put(name, params);
+            System.out.println( name + "size of final list: " + symbolList.size() );
+            map.put(name, symbolList);
         }
 
         return map;

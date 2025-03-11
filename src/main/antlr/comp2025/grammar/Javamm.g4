@@ -34,12 +34,13 @@ varDeclaration
     ;
 
 methodDeclaration
-    : ('public')? returnType name=ID '(' (argument)? ')' '{' (varDeclaration)* (statement)* returnStmt '}'  #MethodDecl //empty arguments are not tested in grammar
-    | ('public')? 'static' 'void' 'main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration)* (statement)* '}' #MainMethodDecl
+    : ('public')? ('static')? returnType name=ID '(' (argument (',' argument)* )? ')' '{' (varDeclaration)* (statement)* returnStmt '}'  #MethodDecl //empty arguments are not tested in grammar
+    | ('public')? 'static' returnType 'main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration)* (statement)* '}' #MainMethodDecl
     ;
 
 returnType
-    : type
+    : type    #TypeTagNotUsed
+    | 'void'  #VoidType
     ;
 
 returnStmt
@@ -47,7 +48,7 @@ returnStmt
     ;
 
 argument
-    : type name+=ID (',' argument)* #Param
+    : type name=ID #Param
     ;
 
 type
