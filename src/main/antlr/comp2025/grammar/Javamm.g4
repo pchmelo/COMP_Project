@@ -46,12 +46,8 @@ returnStmt
     : 'return' expression ';'
     ;
 
-param
-    : type name=ID
-    ;
-
 argument
-    : type argName=ID (',' argument)*
+    : type name+=ID (',' argument)* #Param
     ;
 
 type

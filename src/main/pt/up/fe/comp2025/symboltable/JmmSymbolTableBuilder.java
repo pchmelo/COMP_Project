@@ -152,6 +152,12 @@ public class JmmSymbolTableBuilder {
 
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             var name = method.get("name");
+            List<JmmNode> children = method.getChildren(PARAM);
+            List<JmmNode> children_2 = children.get(0).getChildren();
+            String test = children_2.getFirst().getKind();
+            for (JmmNode child : children){
+                System.out.println(child.get("name"));
+            }
             var params = method.getChildren(PARAM).stream()
                     // TODO: When you support new types, this code has to be updated
                     .map(param -> new Symbol(TypeUtils.newIntType(), param.get("name")))
@@ -169,6 +175,7 @@ public class JmmSymbolTableBuilder {
 
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             var name = method.get("name");
+
             var locals = method.getChildren(VAR_DECL).stream()
                     // TODO: When you support new types, this code has to be updated
                     .map(varDecl -> new Symbol(TypeUtils.newIntType(), varDecl.get("name")))
