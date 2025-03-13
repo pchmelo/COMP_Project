@@ -29,7 +29,7 @@ varDeclaration
     ;
 
 methodDeclaration
-    : ('public')? ('static')? returnType methodName=ID '(' (argument (',' argument)*)? ')' '{' (varDeclaration | statement)* '}'  #MethodDecl
+    : ('public')? ('static')? returnType name=ID '(' (argument (',' argument)*)? ')' '{' (varDeclaration | statement)* '}'  #MethodDecl
     | ('public')? 'static' 'void' 'main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration | statement)* '}' #MainMethodDecl
     ;
 
@@ -38,7 +38,7 @@ returnType
     | 'void'  #VoidType
     ;
 
-returnStmt
+returnStatement
     : 'return' expression ';'
     | 'return' ';'
     ;
@@ -48,12 +48,16 @@ argument
     ;
 
 type
-    : type '[' ']'      #ArrayType
-    | type '...'        #VarArgType
-    | 'boolean'         #BooleanType
-    | 'int'             #IntType
-    | 'String'          #StringType
-    | name=ID           #ClassType
+    : defaultType '[' ']'       #ArrayType
+    | defaultType '...'         #VarArgType
+    | defaultType               #DflType
+    | name=ID                   #ClassType
+    ;
+
+defaultType
+    : name='boolean' #BooleanType
+    | name='int'     #IntType
+    | name='String'  #StringType
     ;
 
 statement
@@ -63,7 +67,7 @@ statement
     | expression ';' #ExpressionStmt
     | var=ID op=('=' | '+=' | '-=' | '*=' | '/=') expression ';' #AssignStmt
     | var=ID '[' index=expression ']' '=' expression ';' #ArrayAssignStmt
-    | returnStmt
+    | returnStatement    #ReturnStmt
     ;
 
 expression
