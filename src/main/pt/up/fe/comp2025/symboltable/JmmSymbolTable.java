@@ -11,20 +11,29 @@ import java.util.stream.Collectors;
 
 public class JmmSymbolTable extends AJmmSymbolTable {
 
+    private final List<String> imports;
     private final String className;
+    private final String superName;
     private final List<String> methods;
     private final Map<String, Type> returnTypes;
+    private final List<Symbol> fields;
     private final Map<String, List<Symbol>> params;
     private final Map<String, List<Symbol>> locals;
 
 
-    public JmmSymbolTable(String className,
+    public JmmSymbolTable(List<String> imports,
+                          String className,
+                          String superName,
+                          List<Symbol> fields,
                           List<String> methods,
                           Map<String, Type> returnTypes,
                           Map<String, List<Symbol>> params,
                           Map<String, List<Symbol>> locals) {
 
+        this.imports = imports;
         this.className = className;
+        this.superName = superName;
+        this.fields = fields;
         this.methods = methods;
         this.returnTypes = returnTypes;
         this.params = params;
@@ -33,7 +42,7 @@ public class JmmSymbolTable extends AJmmSymbolTable {
 
     @Override
     public List<String> getImports() {
-        throw new NotImplementedException();
+        return imports;
     }
 
     @Override
@@ -43,12 +52,12 @@ public class JmmSymbolTable extends AJmmSymbolTable {
 
     @Override
     public String getSuper() {
-        throw new NotImplementedException();
+        return superName;
     }
 
     @Override
     public List<Symbol> getFields() {
-        throw new NotImplementedException();
+        return fields;
     }
 
 
@@ -61,11 +70,17 @@ public class JmmSymbolTable extends AJmmSymbolTable {
     @Override
     public Type getReturnType(String methodSignature) {
         // TODO: Simple implementation that needs to be expanded
-        return TypeUtils.newIntType();
+        //returnTypes.get(methodSignature);
+        System.out.println(returnTypes.get(methodSignature));
+
+        return returnTypes.get(methodSignature);
     }
 
     @Override
     public List<Symbol> getParameters(String methodSignature) {
+        if(methodSignature.equals("main")) {
+            return new ArrayList<>();
+        }
         return params.get(methodSignature);
     }
 

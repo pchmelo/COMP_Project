@@ -15,10 +15,12 @@ import java.util.Set;
  */
 public enum Kind {
     PROGRAM,
+    IMPORT_DECL,
     CLASS_DECL,
     VAR_DECL,
     TYPE,
     METHOD_DECL,
+    MAIN_METHOD_DECL,
     PARAM,
     STMT,
     ASSIGN_STMT,
