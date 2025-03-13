@@ -17,25 +17,25 @@ program
     ;
 
 importDeclaration
-    : 'import' value+=ID ('.' value+=ID)* ';' #ImportStatement
+    : 'import' value+=ID ('.' value+=ID)* ';' #ImportDecl
     ;
 
 classDeclaration
-    : 'class' ID ('extends' ID)? '{' varDeclaration* methodDeclaration* '}'
+    : 'class' name=ID ('extends' superName=ID)? '{' ((varDeclaration) | (methodDeclaration))* '}' #ClassDecl
     ;
 
 varDeclaration
-    : type name=ID ';'
+    : type name=ID ';' #VarDecl
     ;
 
 methodDeclaration
-    : ('public')? ('static')? returnType methodName=ID '(' argument? (',' argument)* ')' '{' (varDeclaration | statement)* returnStmt '}'
-    | ('public')? 'static' 'void' 'main' '(' 'String' '['']' argName=ID ')' '{' varDeclaration* statement* '}'
+    : ('public')? ('static')? returnType methodName=ID '(' (argument (',' argument)*)? ')' '{' (varDeclaration | statement)* '}'  #MethodDecl
+    | ('public')? 'static' 'void' 'main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration | statement)* '}' #MainMethodDecl
     ;
 
 returnType
-    : type
-    | 'void'
+    : type    #TypeTagNotUsed
+    | 'void'  #VoidType
     ;
 
 returnStmt
@@ -44,7 +44,7 @@ returnStmt
     ;
 
 argument
-    : type argName=ID
+    : type name=ID #Param
     ;
 
 type
@@ -53,7 +53,7 @@ type
     | 'boolean'         #BooleanType
     | 'int'             #IntType
     | 'String'          #StringType
-    | ID                #ClassType
+    | name=ID           #ClassType
     ;
 
 statement
@@ -63,6 +63,7 @@ statement
     | expression ';' #ExpressionStmt
     | var=ID op=('=' | '+=' | '-=' | '*=' | '/=') expression ';' #AssignStmt
     | var=ID '[' index=expression ']' '=' expression ';' #ArrayAssignStmt
+    | returnStmt
     ;
 
 expression
