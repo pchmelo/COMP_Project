@@ -67,43 +67,6 @@ public class JmmSymbolTableBuilder {
         return fields;
     }
 
-    /*private List<Symbol> buildA(JmmNode classDecl) {
-        List<Symbol> fields = new ArrayList<>();
-        System.out.println(classDecl.getChildren(METHOD_DECL).size());
-        for (var method : classDecl.getChildren(METHOD_DECL)) {
-
-            JmmNode root_arg = method.getChildren(ARG_DECL).getFirst();  //Só o root de arg - Tb só retornara 1 xd
-            List<Symbol> tempField = buildAAux(root_arg);
-            System.out.println(fields.addAll(tempField));
-        }
-        var returnType = TypeUtils.newIntType();
-        Symbol tempAux = new Symbol(returnType, "a");
-        fields.add(tempAux);
-        return fields;
-    }
-
-    private List<Symbol> buildAAux(JmmNode rootArg) {
-        List<Symbol> tempField = new ArrayList<>();
-        for (JmmNode arg : rootArg.getChildren()){
-            System.out.println(arg.getChild(0).getKind());
-            /*switch (arg.getChild(0).getKind()){
-                case :
-                    // handle case for SomeKindValue3
-                    break;
-
-                default:
-                    // handle the case if none of the above match
-                    break;
-            }*/
-            /*var returnType = TypeUtils.newIntType();
-            //Symbol tempAux = new Symbol(returnType, arg.get("argName"));
-            Symbol tempAux = new Symbol(returnType, "a");
-            tempField.add(tempAux);
-            //tempField.addAll(buildFieldsAux(arg.getChild(0)));
-        }
-        return tempField;
-    }*/
-
     private String buildSuperName(JmmNode classDecl) {
         if (classDecl.hasAttribute("superName")) {
             return classDecl.get("superName");
@@ -144,22 +107,34 @@ public class JmmSymbolTableBuilder {
     private Type typerReturner(JmmNode child){
         Type returnType;
         String kind = child.getChild(0).getKind();
-        switch (kind) {
-            case "IntType":
-                returnType = TypeUtils.newIntType();
-                break;
-            case "BooleanType":
-                returnType = TypeUtils.newBooleanType();
-                break;
-            case "ClassType":
-                returnType = TypeUtils.newObjectType(child.getChild(0).get("name"));
-                break;
-            case "IntArrayType":
-                returnType = TypeUtils.newIntArrayType();
-                break;
-            default:
-                returnType = TypeUtils.newObjectType(child.getChild(0).get("name"));
-                break;
+        if(kind.equals("DflType")){
+            kind = child.getChild(0).getChild(0).getKind();
+            switch (kind) {
+                case "IntType":
+                    returnType = TypeUtils.newIntType();
+                    break;
+                case "BooleanType":
+                    returnType = TypeUtils.newBooleanType();
+                    break;
+                case "StringType":
+                    returnType = TypeUtils.newStringType();
+                    break;
+                default:
+                    returnType = TypeUtils.newObjectType(child.getChild(0).get("name"));
+                    break;
+            }
+        }else{
+            switch (kind) {
+                case "ClassType":
+                    returnType = TypeUtils.newObjectType(child.getChild(0).get("name"));
+                    break;
+                case "ArrayType", "VarArgType":
+                    returnType = TypeUtils.newArrayType(child.getChild(0).getChild(0).get("name"));
+                    break;
+                default:
+                    returnType = TypeUtils.newObjectType(child.getChild(0).get("name"));
+                    break;
+            }
         }
         return returnType;
     }
