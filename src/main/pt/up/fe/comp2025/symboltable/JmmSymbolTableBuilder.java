@@ -77,7 +77,7 @@ public class JmmSymbolTableBuilder {
     private List<String> buildImports(List<JmmNode> children) {
         List<String> list = new ArrayList<>();
         for (JmmNode child : children) {
-                list.add(child.get("value"));
+                list.add(child.get("name"));
         }
         return list;
     }

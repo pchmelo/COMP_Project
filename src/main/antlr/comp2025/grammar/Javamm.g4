@@ -17,7 +17,7 @@ program
     ;
 
 importDeclaration
-    : 'import' value+=ID ('.' value+=ID)* ';' #ImportDecl
+    : 'import' name+=ID ('.' name+=ID)* ';' #ImportDecl
     ;
 
 classDeclaration
@@ -89,7 +89,7 @@ expression
     | value=INTEGER #IntegerExpr
     | value='true' #TrueExpr
     | value='false' #FalseExpr
-    | value=ID #VarExpr
+    | name=ID #VarRefExpr
     | 'this' #ThisExpr
     ;
 
