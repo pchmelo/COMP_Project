@@ -47,9 +47,7 @@ public class JmmSymbolTableBuilder {
         var fields = buildFields(classDecl);
 
         var methods = buildMethods(classDecl);
-        System.out.println(methods.size());
         var returnTypes = buildReturnTypes(classDecl);
-        System.out.println(returnTypes.size());
         var params = buildParams(classDecl);
         var locals = buildLocals(classDecl);
 
@@ -77,7 +75,12 @@ public class JmmSymbolTableBuilder {
     private List<String> buildImports(List<JmmNode> children) {
         List<String> list = new ArrayList<>();
         for (JmmNode child : children) {
-                list.add(child.get("name"));
+
+            //To transform "[io, io2]" in "io.io2"
+            List<String> resultList = List.of(child.get("name").substring(1, child.get("name").length() - 1).split(", "));
+            String name = String.join(".", resultList);
+
+            list.add(name);
         }
         return list;
     }
@@ -156,7 +159,6 @@ public class JmmSymbolTableBuilder {
                 Symbol aux = new Symbol(returnType, child.get("name"));
                 symbolList.add(aux);
             }
-            System.out.println( name + "size of final list: " + symbolList.size() );
             map.put(name, symbolList);
         }
 
@@ -169,15 +171,17 @@ public class JmmSymbolTableBuilder {
 
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             var name = method.get("name");
-
-            var locals = method.getChildren(VAR_DECL).stream()
-                    // TODO: When you support new types, this code has to be updated
-                    .map(varDecl -> new Symbol(TypeUtils.newIntType(), varDecl.get("name")))
-                    .toList();
-
+            List<Symbol> locals = new ArrayList<>();
+            List<JmmNode> children = method.getChildren(VAR_DECL);
+            for (JmmNode child : children){
+                Type returnType = typerReturner(child);
+                Symbol tempAux = new Symbol(returnType, child.get("name"));
+                locals.add(tempAux);
+            }
 
             map.put(name, locals);
         }
+        System.out.println("Tamanho do mapa"+map.size());
 
         return map;
     }

@@ -130,4 +130,23 @@ public class SymbolTableTest {
         assertEquals("Parameter 2", "boolean", parameters.get(1).getType().getName());
         assertEquals("Parameter 3", "Parameters", parameters.get(2).getType().getName());
     }
+
+    //adicionei
+    @Test
+    public void Locals() {
+        var semantics = test("symboltable/Locals.jmm", false);
+        var st = semantics.getSymbolTable();
+        var methods = st.getMethods();
+        assertEquals(5, methods.size());
+
+        for (var m : methods) {
+            var numLocals = st.getLocalVariables(m).size();
+            switch (m){
+                case "all":
+                    assertEquals("Method " + m + " locals", 3, numLocals);
+                    break;
+            }
+
+        }
+    }
 }
