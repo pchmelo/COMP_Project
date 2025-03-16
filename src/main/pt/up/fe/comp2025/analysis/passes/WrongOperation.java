@@ -123,7 +123,7 @@ public class WrongOperation extends AnalysisVisitor {
     }
 
 
-    private String valueReturner(JmmNode node, SymbolTable table, String currentMethod) {
+    public String valueReturner(JmmNode node, SymbolTable table, String currentMethod) {
         String kind = node.getKind();
         switch (kind){
             case "BinaryExpr":  //o codigo de binary op não precisa disto mas pus porque pode ser necessario ig
