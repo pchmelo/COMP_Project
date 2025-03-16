@@ -73,12 +73,12 @@ statement
 expression
     : '(' expression ')' #ParenthesesExpr
     | value=ID op=('++' | '--') #Postfix
-    | expression op=('*' | '/') expression #BinaryOp
-    | expression op=('+' | '-') expression #BinaryOp
-    | expression op=('>' | '<' | '>=' | '<=') expression #BinaryOp
-    | expression op=('==' | '!=') expression #BinaryOp
-    | expression op='&&' expression #BinaryOp
-    | expression op='||' expression #BinaryOp
+    | expression op=('*' | '/') expression #BinaryExpr
+    | expression op=('+' | '-') expression #BinaryExpr
+    | expression op=('>' | '<' | '>=' | '<=') expression #BinaryExpr
+    | expression op=('==' | '!=') expression #BinaryExpr
+    | expression op='&&' expression #BinaryExpr
+    | expression op='||' expression #BinaryExpr
     | expression '[' expression ']' #ArrayAccessExpr
     | expression '.' 'length' #ArrayLengthExpr
     | expression '.' methodName=ID '(' (expression (',' expression)*)? ')' #MethodCallExpr
