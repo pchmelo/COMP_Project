@@ -12,10 +12,9 @@ import pt.up.fe.comp2025.ast.TypeUtils;
 import pt.up.fe.specs.util.SpecsCheck;
 
 /**
- * Checks if the type of the expression in a return statement is compatible with the method return type.
- *
- * @author JBispo
+ * Checks if the type of the expression inside an operation is valid
  */
+
 public class WrongOperation extends AnalysisVisitor {
 
     private String currentMethod;
@@ -25,15 +24,10 @@ public class WrongOperation extends AnalysisVisitor {
         addVisit(Kind.METHOD_DECL, this::visitMethodDecl);
         addVisit(Kind.MAIN_METHOD_DECL, this::visitMethodDecl);
         addVisit(Kind.BINARY_EXPR, this::visitBinaryExpr);
-        addVisit(Kind.ASSIGN_STMT, this::visitBinaryExpr);
+        addVisit(Kind.ASSIGN_STMT, this::visitAssignmentExpr);
     }
 
-    private Void visitMethodDecl(JmmNode method, SymbolTable table) {
-        currentMethod = method.get("name");
-        return null;
-    }
-
-    private Void visitBinaryExpr(JmmNode expression, SymbolTable table) {
+    private Void visitAssignmentExpr(JmmNode expression, SymbolTable table) {
         SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
 
         String val0;
@@ -58,7 +52,6 @@ public class WrongOperation extends AnalysisVisitor {
                         message,
                         null)
                 );
-                return null;
             }
             if(!val0.equals(val1)){
                 var message = "Type error: cannot assign a in the left side a " + val0 + " type with a " + val1 + " type in the right side";
@@ -69,15 +62,27 @@ public class WrongOperation extends AnalysisVisitor {
                         message,
                         null)
                 );
-                return null;
             }
             return null;
         }
 
-        var expression0 = expression.getChild(0);
-        val0 = valueReturner(expression0, table, currentMethod);
-        var expression1 = expression.getChild(1);
-        val1 = valueReturner(expression1, table, currentMethod);
+        return null;
+    }
+
+    private Void visitMethodDecl(JmmNode method, SymbolTable table) {
+        currentMethod = method.get("name");
+        return null;
+    }
+
+    private Void visitBinaryExpr(JmmNode expression, SymbolTable table) {
+        SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
+
+        JmmNode expression0 = expression.getChild(0);
+        String val0 = valueReturner(expression0, table, currentMethod);
+        JmmNode expression1 = expression.getChild(1);
+        String val1 = valueReturner(expression1, table, currentMethod);
+
+        String operator = expression.get("op");
 
         if (operator.equals("+")){
             if (val0.equals("String") && val1.equals("String")) {
