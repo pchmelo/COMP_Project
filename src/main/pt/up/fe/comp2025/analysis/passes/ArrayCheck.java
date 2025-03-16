@@ -12,9 +12,9 @@ import pt.up.fe.comp2025.ast.TypeUtils;
 import pt.up.fe.specs.util.SpecsCheck;
 
 import java.util.List;
-/*
+
 public class ArrayCheck extends AnalysisVisitor {
-    WrongOperation wrongOperation = new WrongOperation();
+    private TypeUtils types = new TypeUtils(null);
     private String currentMethod;
 
     @Override
@@ -33,29 +33,26 @@ public class ArrayCheck extends AnalysisVisitor {
     private Void ArrayAccess(JmmNode mainNode, SymbolTable table){
         SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
 
-        String arrayVar = mainNode.get("name");
-        JmmNode arrayIndex = mainNode.getChild(1);
+        Symbol variable_ = types.valueFromVarReturner(mainNode.get("name"), table,currentMethod);
+        Type arrayVarType =  types.valueFromTypeReturner(variable_.getType());
 
-        Symbol variable_ = wrongOperation.valueFromVarReturner(arrayVar, table, currentMethod);
-        val0 =  valueFromTypeReturner(variable_.getType());
-        String arrayVarType = wrongOperation.valueReturner(arrayVar, table, currentMethod);
-        String indexVarType = wrongOperation.valueReturner(arrayVar, table, currentMethod);
+        Type indexVarType = types.valueReturner(mainNode.getChild(0), table, currentMethod);
 
         // Error if the index is not an integer
-        if (!indexVarType.equals("int")) {
+        if (!indexVarType.getName().equals("int")) {
             var message = "Trying to access array with index that is not an Integer";
-            addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), arrayVar.getColumn(), message, null));
+            addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), mainNode.getColumn(), message, null));
         }
-        /*
+
         if (!arrayVarType.isArray()) {
             var message = "Trying to access a non-array variable as an array";
-            addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), arrayVar.getColumn(), message, null));
+            addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), mainNode.getColumn(), message, null));
         }
-
-
 
         return null;
     }
+
+    /*
 
     //Verifica se o tipo do array é compativel com o tipo dos elementos que o inicializam
     private Void ArrayInicialization(JmmNode mainNode, SymbolTable table){
@@ -95,7 +92,7 @@ public class ArrayCheck extends AnalysisVisitor {
         return null;
 
     }
-
+    */
 
 }
-*/
+
