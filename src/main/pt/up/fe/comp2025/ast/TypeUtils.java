@@ -1,5 +1,6 @@
 package pt.up.fe.comp2025.ast;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
@@ -58,6 +59,72 @@ public class TypeUtils {
 
         // TODO: Update when there are new types
         return new Type("int", false);
+    }
+
+    public Type valueReturner(JmmNode node, SymbolTable table, String currentMethod) {
+        String kind = node.getKind();
+        switch (kind){
+            case "BinaryExpr":  //o codigo de binary op não precisa disto mas pus porque pode ser necessario ig
+                // rezando que as expressoes são do mesmo tipo
+                String operator = node.get("op");
+                if (operator.equals("&&") || operator.equals("||") || operator.equals(">") || operator.equals("<") || operator.equals(">=") || operator.equals("<=") || operator.equals("==") || operator.equals("!=") ){
+                    return new Type("boolean", false);
+                }else if (operator.equals("*") || operator.equals("/") || operator.equals("-")){
+                    return new Type("int", false);
+                }else{
+                    //For '+' guessing based on the left node
+                    return valueReturner(node.getChild(0), table, currentMethod);
+                }
+
+            case "IntegerExpr", "ArrayLengthExpr", "Postfix":
+                return new Type("int", false);
+            case "TrueExpr" , "FalseExpr":
+                return new Type("boolean", false);
+            case "MethodCallExpr":
+                String methodName = node.get("name");
+                Type returnType = table.getReturnType(methodName);
+                return valueFromTypeReturner(returnType);
+            case "ArrayAccessExpr":
+                Symbol variable = valueFromVarReturner(node.get("name"),table,currentMethod);
+                return variable.getType();
+            case "VarRefExpr":
+                Symbol variable_ = valueFromVarReturner(node.get("name"),table,currentMethod);
+                return valueFromTypeReturner(variable_.getType());
+            case "ThisExpr":
+                new Type("this", false);  //tecnicamente dará sempre erro sozinho. só não dá erro quando this.metodo pois o type é return type do metodo e para this.varivel que é a variavel...
+            case "ParenthesesExpr":
+                return valueReturner(node.getChild(0),table,currentMethod);
+            default:
+                System.out.println("I am "+ kind);
+                return new Type("outro", false);
+        }
+    }
+
+    public Symbol valueFromVarReturner(String name, SymbolTable table, String currentMethod) {
+        for (Symbol field : table.getFields()){
+            if (field.getName().equals(name)){
+                return field;
+            }
+        }
+        for (Symbol local : table.getLocalVariables(currentMethod)){
+            if (local.getName().equals(name)){
+                return local;
+            }
+        }
+        for (Symbol param : table.getParameters(currentMethod)){
+            if (param.getName().equals(name)){
+                return param;
+            }
+        }
+        return new Symbol(new Type("errado",false),"errado");  //se temos undeclaredvariables muito improvavel de chegar aqui
+    }
+
+    public Type valueFromTypeReturner(Type returnType){
+        if (returnType.isArray()) {
+            return new Type(returnType.getName(), true);
+
+        }
+        return new Type(returnType.getName(), false);
     }
 
 

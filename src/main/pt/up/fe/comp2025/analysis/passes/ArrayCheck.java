@@ -12,7 +12,7 @@ import pt.up.fe.comp2025.ast.TypeUtils;
 import pt.up.fe.specs.util.SpecsCheck;
 
 import java.util.List;
-
+/*
 public class ArrayCheck extends AnalysisVisitor {
     WrongOperation wrongOperation = new WrongOperation();
     private String currentMethod;
@@ -51,12 +51,12 @@ public class ArrayCheck extends AnalysisVisitor {
             var message = "Trying to access a non-array variable as an array";
             addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), arrayVar.getColumn(), message, null));
         }
-        */
+
 
 
         return null;
     }
-    /*
+
     //Verifica se o tipo do array é compativel com o tipo dos elementos que o inicializam
     private Void ArrayInicialization(JmmNode mainNode, SymbolTable table){
         JmmNode arrayVar = mainNode.getChild(0);
@@ -95,6 +95,7 @@ public class ArrayCheck extends AnalysisVisitor {
         return null;
 
     }
-    */
+
 
 }
+*/

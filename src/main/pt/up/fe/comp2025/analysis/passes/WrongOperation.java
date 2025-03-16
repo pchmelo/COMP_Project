@@ -15,9 +15,11 @@ import pt.up.fe.specs.util.SpecsCheck;
  * Checks if the type of the expression inside an operation is valid
  */
 
+
 public class WrongOperation extends AnalysisVisitor {
 
     private String currentMethod;
+    private TypeUtils types = new TypeUtils(null);
 
     @Override
     public void buildVisitor() {
@@ -30,21 +32,21 @@ public class WrongOperation extends AnalysisVisitor {
     private Void visitAssignmentExpr(JmmNode expression, SymbolTable table) {
         SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
 
-        String val0;
-        String val1;
+        Type val0;
+        Type val1;
 
         String operator = expression.get("op");
 
         if(operator.equals("=")){
 
-            Symbol variable_ = valueFromVarReturner(expression.get("var"),table,currentMethod);
-            val0 =  valueFromTypeReturner(variable_.getType());
+            Symbol variable_ = types.valueFromVarReturner(expression.get("var"),table,currentMethod);
+            val0 =  types.valueFromTypeReturner(variable_.getType());
 
             var rightExpression = expression.getChild(0);
-            val1 = valueReturner(rightExpression, table, currentMethod);
+            val1 = types.valueReturner(rightExpression, table, currentMethod);
 
-            if((val0.equals("int") || val0.equals("boolean") || val0.equals("String"))) {
-                var message = "Type error: cannot assign a in the left side a " + val0 + " type";
+            if((val0.getName().equals("int") || val0.getName().equals("boolean") || val0.getName().equals("String"))) {
+                var message = "Type error: cannot assign a in the left side a " + val0.getName() + " type";
                 addReport(Report.newError(
                         Stage.SEMANTIC,
                         expression.getLine(),
@@ -53,8 +55,8 @@ public class WrongOperation extends AnalysisVisitor {
                         null)
                 );
             }
-            if(!val0.equals(val1)){
-                var message = "Type error: cannot assign a in the left side a " + val0 + " type with a " + val1 + " type in the right side";
+            if(!val0.getName().equals(val1.getName())){
+                var message = "Type error: cannot assign a in the left side a " + val0.getName() + " type with a " + val1.getName() + " type in the right side";
                 addReport(Report.newError(
                         Stage.SEMANTIC,
                         expression.getLine(),
@@ -78,44 +80,44 @@ public class WrongOperation extends AnalysisVisitor {
         SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
 
         JmmNode expression0 = expression.getChild(0);
-        String val0 = valueReturner(expression0, table, currentMethod);
+        Type val0 = types.valueReturner(expression0, table, currentMethod);
         JmmNode expression1 = expression.getChild(1);
-        String val1 = valueReturner(expression1, table, currentMethod);
+        Type val1 = types.valueReturner(expression1, table, currentMethod);
 
         String operator = expression.get("op");
 
         if (operator.equals("+")){
-            if (val0.equals("String") && val1.equals("String")) {
+            if (val0.getName().equals("String") && val1.getName().equals("String")) {
                 return null;
             }
         }
 
         if (operator.equals("*") || operator.equals("/") || operator.equals("+") || operator.equals("-")){
-            if (val0.equals("int") && val1.equals("int")) {
+            if (val0.getName().equals("int") && val1.getName().equals("int")) {
                 return null;
             }
         }
 
         if (operator.equals(">") || operator.equals("<") || operator.equals(">=") || operator.equals("<=")){
-            if (val0.equals("int") && val1.equals("int")) {
+            if (val0.getName().equals("int") && val1.getName().equals("int")) {
                 return null;
             }
         }
 
         if (operator.equals("==") || operator.equals("!=")){
-            if ((val0.equals("int") && val1.equals("int")) || (val0.equals("boolean") && val1.equals("boolean")) || (val0.equals("String") && val1.equals("String"))  || (val0.equals(val1))) {
+            if ((val0.getName().equals("int") && val1.getName().equals("int")) || (val0.getName().equals("boolean") && val1.getName().equals("boolean")) || (val0.getName().equals("String") && val1.getName().equals("String"))  || (val0.getName().equals(val1.getName()))) {
                 return null;
             }
         }
 
         if (operator.equals("&&") || operator.equals("||")){
-            if (val0.equals("boolean") && val1.equals("boolean")) {
+            if (val0.getName().equals("boolean") && val1.getName().equals("boolean")) {
                 return null;
             }
         }
 
         // Create error report
-        var message = String.format("Expressions not equal val for op '%s', ig it is: '%s' and '%s'", expression.get("op"), val0, val1);
+        var message = String.format("Expressions not equal val for op '%s', ig it is: '%s' and '%s'", expression.get("op"), val0.getName(), val1.getName());
         addReport(Report.newError(
                 Stage.SEMANTIC,
                 expression.getLine(),
@@ -126,74 +128,6 @@ public class WrongOperation extends AnalysisVisitor {
 
         return null;
     }
-
-
-    public String valueReturner(JmmNode node, SymbolTable table, String currentMethod) {
-        String kind = node.getKind();
-        switch (kind){
-            case "BinaryExpr":  //o codigo de binary op não precisa disto mas pus porque pode ser necessario ig
-                // rezando que as expressoes são do mesmo tipo
-                String operator = node.get("op");
-                if (operator.equals("&&") || operator.equals("||") || operator.equals(">") || operator.equals("<") || operator.equals(">=") || operator.equals("<=") || operator.equals("==") || operator.equals("!=") ){
-                    return "boolean";
-                }else if (operator.equals("*") || operator.equals("/") || operator.equals("-")){
-                    return "int";
-                }else{
-                    //For '+' guessing based on the left node
-                    return valueReturner(node.getChild(0), table, currentMethod);
-                }
-
-            case "IntegerExpr", "ArrayLengthExpr", "Postfix":
-                return "int";
-            case "TrueExpr" , "FalseExpr":
-                return "boolean";
-            case "MethodCallExpr":
-                String methodName = node.get("name");
-                Type returnType = table.getReturnType(methodName);
-                return valueFromTypeReturner(returnType);
-            case "ArrayAccessExpr":
-                Symbol variable = valueFromVarReturner(node.get("name"),table,currentMethod);
-                return variable.getType().getName();
-            case "VarRefExpr":
-                Symbol variable_ = valueFromVarReturner(node.get("name"),table,currentMethod);
-                return valueFromTypeReturner(variable_.getType());
-            case "ThisExpr":
-                return "this";  //tecnicamente dará sempre erro sozinho. só não dá erro quando this.metodo pois o type é return type do metodo e para this.varivel que é a variavel...
-            case "ParenthesesExpr":
-                return valueReturner(node.getChild(0),table,currentMethod);
-            default:
-                System.out.println("I am "+ kind);
-                return "outro";
-        }
-    }
-
-    private Symbol valueFromVarReturner(String name, SymbolTable table, String currentMethod) {
-        for (Symbol field : table.getFields()){
-            if (field.getName().equals(name)){
-                return field;
-            }
-        }
-        for (Symbol local : table.getLocalVariables(currentMethod)){
-            if (local.getName().equals(name)){
-                return local;
-            }
-        }
-        for (Symbol param : table.getParameters(currentMethod)){
-            if (param.getName().equals(name)){
-                return param;
-            }
-        }
-        return new Symbol(new Type("errado",false),"errado");  //se temos undeclaredvariables muito improvavel de chegar aqui
-    }
-
-    private String valueFromTypeReturner(Type returnType){
-        if (returnType.isArray()) {
-            return returnType.getName()+"Array";
-        }
-        return returnType.getName();
-    }
-
-
 
 
 }
