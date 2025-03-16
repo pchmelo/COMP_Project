@@ -1,3 +1,5 @@
+
+/*
 package pt.up.fe.comp2025.analysis.passes;
 
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
@@ -107,3 +109,4 @@ public class TypeError extends AnalysisVisitor {
 
 
 }
+*/
