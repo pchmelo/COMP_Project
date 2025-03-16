@@ -45,6 +45,11 @@ public class GrammarTest {
         TestUtils.parseVerbose("class Foo {int a; int[] b; int c; boolean d; Bar e;}");
     }
 
+    @Test
+    public void testVarDecls2() {
+        TestUtils.parseVerbose("class Foo {public int[] foo() { int[] a; a = [10, 20, 30]; return a; }}");
+    }
+
    /*@Test
     public void testVarDeclString() {
         TestUtils.parseVerbose("String aString;", "VarDecl");

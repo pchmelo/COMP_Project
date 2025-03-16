@@ -56,8 +56,7 @@ public class ArrayCheck extends AnalysisVisitor {
 
     //Verifica se o tipo do array é compativel com o tipo dos elementos que o inicializam
     private Void ArrayInicialization(JmmNode mainNode, SymbolTable table){
-        JmmNode arrayVar = mainNode.getChild(0);
-        List<JmmNode> arrayElements = arrayVar.getChildren();
+        List<JmmNode> arrayElements = mainNode.getChildren();
 
         if(arrayElements.isEmpty()){
             return null;
@@ -70,7 +69,7 @@ public class ArrayCheck extends AnalysisVisitor {
 
             if (!firstArrayElementType.getName().equals(nextArrayElementType.getName())) {
                 var message = "Trying to initialize an array with different types in the elements";
-                addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), arrayVar.getColumn(), message, null));
+                addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), mainNode.getColumn(), message, null));
                 break;
             }
         }

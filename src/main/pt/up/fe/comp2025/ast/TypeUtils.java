@@ -6,6 +6,8 @@ import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2025.symboltable.JmmSymbolTable;
 
+import java.util.List;
+
 /**
  * Utility methods regarding types.
  */
@@ -90,6 +92,14 @@ public class TypeUtils {
             case "VarRefExpr":
                 Symbol variable_ = valueFromVarReturner(node.get("name"),table,currentMethod);
                 return valueFromTypeReturner(variable_.getType());
+            case "ArrayInit":
+                List<JmmNode> arrayElements = node.getChildren();
+
+                if(arrayElements.isEmpty()){
+                    return null;
+                }
+                Type type_ = valueReturner(arrayElements.get(0), table, currentMethod);
+                return new Type(type_.getName(),true);
             case "ThisExpr":
                 new Type("this", false);  //tecnicamente dará sempre erro sozinho. só não dá erro quando this.metodo pois o type é return type do metodo e para this.varivel que é a variavel...
             case "ParenthesesExpr":

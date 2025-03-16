@@ -45,18 +45,9 @@ public class WrongOperation extends AnalysisVisitor {
             var rightExpression = expression.getChild(0);
             val1 = types.valueReturner(rightExpression, table, currentMethod);
 
-            if((val0.getName().equals("int") || val0.getName().equals("boolean") || val0.getName().equals("String"))) {
-                var message = "Type error: cannot assign a in the left side a " + val0.getName() + " type";
-                addReport(Report.newError(
-                        Stage.SEMANTIC,
-                        expression.getLine(),
-                        expression.getColumn(),
-                        message,
-                        null)
-                );
-            }
-            if(!val0.getName().equals(val1.getName())){
-                var message = "Type error: cannot assign a in the left side a " + val0.getName() + " type with a " + val1.getName() + " type in the right side";
+
+            if(!val0.getName().equals(val1.getName()) || val0.isArray() != val1.isArray() ){
+                var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
                 addReport(Report.newError(
                         Stage.SEMANTIC,
                         expression.getLine(),
