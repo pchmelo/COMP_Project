@@ -85,7 +85,7 @@ expression
     | 'new' 'int' '[' expression ']' #NewIntArrayExpr
     | 'new' ID '(' ')' #NewObjectExpr
     | '!' expression #NotExpr
-    | '[' (expression (',' expression)*)? ']' #ArrayExpr
+    | '[' (expression (',' expression)*)? ']' #ArrayInit
     | value=INTEGER #IntegerExpr        //
     | value='true' #TrueExpr            //
     | value='false' #FalseExpr          //

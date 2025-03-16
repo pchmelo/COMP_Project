@@ -22,6 +22,7 @@ public class ArrayCheck extends AnalysisVisitor {
         addVisit(Kind.METHOD_DECL, this::visitMethodDecl);
         addVisit(Kind.MAIN_METHOD_DECL, this::visitMethodDecl);
         addVisit(Kind.ARRAY_ACCESS_EXPR, this::ArrayAccess);
+        addVisit(Kind.ARRAY_INIT, this::ArrayInicialization);
     }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
@@ -52,7 +53,6 @@ public class ArrayCheck extends AnalysisVisitor {
         return null;
     }
 
-    /*
 
     //Verifica se o tipo do array é compativel com o tipo dos elementos que o inicializam
     private Void ArrayInicialization(JmmNode mainNode, SymbolTable table){
@@ -63,12 +63,12 @@ public class ArrayCheck extends AnalysisVisitor {
             return null;
         }
 
-        Type firstArrayElementType = TypeUtils.getExprType(arrayElements.getFirst(), table);
+        Type firstArrayElementType = types.valueReturner(arrayElements.get(0), table, currentMethod);
 
-        for (int i = 0; i < arrayElements.size(); i++) {
-            Type nextArrayElementType = TypeUtils.getExprType(arrayElements.get(i), table);
+        for (int i = 1; i < arrayElements.size(); i++) {
+            Type nextArrayElementType = types.valueReturner(arrayElements.get(i), table, currentMethod);
 
-            if (!firstArrayElementType.equals(nextArrayElementType)) {
+            if (!firstArrayElementType.getName().equals(nextArrayElementType.getName())) {
                 var message = "Trying to initialize an array with different types in the elements";
                 addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), arrayVar.getColumn(), message, null));
                 break;
@@ -79,20 +79,23 @@ public class ArrayCheck extends AnalysisVisitor {
         return null;
     }
 
+
     //Verifica se o tipo que inicializa o array é um inteiro (int)
     private Void ArrayLengthInitCheck(JmmNode mainNode, SymbolTable table){
         JmmNode arrayLengthNode = mainNode.getChild(1);
-        Type arrayLengthType = TypeUtils.getExprType(arrayLengthNode, table);
+        Type arrayLengthType = types.valueReturner(arrayLengthNode.getChild(0), table, currentMethod);
 
         if(!arrayLengthType.getName().equals("int")){
             String message = "Array must have integer length";
-            addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), arrayVar.getColumn(), message, null));
+            addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), mainNode.getColumn(), message, null));
         }
 
         return null;
 
     }
-    */
+
+
+
 
 }
 
