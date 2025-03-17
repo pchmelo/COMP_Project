@@ -81,6 +81,24 @@ public class Varargs extends AnalysisVisitor {
     }
 
     private Void checkCallMethodExpression(JmmNode mainNode, SymbolTable table){
+        Type typeMainNode = types.valueReturner(mainNode, table, currentMethod);
+
+        if(typeMainNode == null){
+            var message = String.format("Method call is not declared");
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    mainNode.getLine(),
+                    mainNode.getColumn(),
+                    message,
+                    null)
+            );
+            return null;
+        }
+
+        if(typeMainNode.getName().equals("Import") || typeMainNode.getName().equals("Super")){
+            return null;
+        }
+
         if(!table.getMethods().contains(mainNode.get("name"))){
             var message = String.format("Method '%s' is not declared", mainNode.get("name"));
             addReport(Report.newError(
@@ -93,18 +111,10 @@ public class Varargs extends AnalysisVisitor {
             return null;
         }
 
-        Type typeMainNode = types.valueReturner(mainNode, table, currentMethod);
-
-        if(typeMainNode.getName().equals("Import")){
-            return null;
-        }
-
         SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
 
         JmmNode methodClass = mainNode.getChild(0);
         String methodName = mainNode.get("name");
-
-
 
         List<Symbol> parameters = table.getParameters(methodName);
         List<JmmNode> sendedArguments = mainNode.getChildren().subList(1, mainNode.getChildren().size());

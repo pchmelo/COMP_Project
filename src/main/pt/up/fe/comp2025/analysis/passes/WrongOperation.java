@@ -47,7 +47,7 @@ public class WrongOperation extends AnalysisVisitor {
 
 
             if(!val0.getName().equals(val1.getName()) || val0.isArray() != val1.isArray() ){
-                if(!table.getImports().contains(val0.getName())){
+                if((!table.getImports().contains(val0.getName())) && (!table.getImports().contains(val0.getName()))){
                     var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
                     addReport(Report.newError(
                             Stage.SEMANTIC,
@@ -57,6 +57,21 @@ public class WrongOperation extends AnalysisVisitor {
                             null)
                     );
                 }
+
+                if(val0.getName().equals(table.getClassName()) || val1.getName().equals(table.getClassName())){
+                    if (!table.getSuper().equals(val1.getName()) && !table.getSuper().equals(val0.getName())){
+                        var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
+                        addReport(Report.newError(
+                                Stage.SEMANTIC,
+                                expression.getLine(),
+                                expression.getColumn(),
+                                message,
+                                null)
+                        );
+                    }
+                }
+
+
             }
             return null;
         }

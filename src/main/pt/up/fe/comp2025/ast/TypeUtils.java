@@ -89,8 +89,14 @@ public class TypeUtils {
                 Type type = table.getReturnType(methodName);
 
                 if(type == null){
-                    if(!table.getImports().contains(node.getChild(0).get("name"))){
+                    Type type_ = valueReturner(node.getChild(0), table, currentMethod);
+                    if(table.getImports().contains(type_.getName())){
                         return new Type("Import", false);
+                    }
+                    if(type_.getName().equals(table.getClassName())){
+                        if (!table.getSuper().isEmpty()){
+                            return new Type("Super", false);
+                        }
                     }
                 }
                 return type;
