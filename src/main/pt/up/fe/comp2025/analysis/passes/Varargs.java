@@ -1,5 +1,6 @@
 package pt.up.fe.comp2025.analysis.passes;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
@@ -24,6 +25,7 @@ public class Varargs extends AnalysisVisitor {
         addVisit(Kind.MAIN_METHOD_DECL, this::visitMethodDecl);
 
         addVisit(Kind.RETURN_STMT, this::checkReturnExpression);
+        addVisit(Kind.METHOD_CALL_EXPR, this::checkCallMethodExpression);
     }
 
     private Void visitMethodDecl(JmmNode mainNode, SymbolTable table) {
@@ -61,11 +63,10 @@ public class Varargs extends AnalysisVisitor {
 
 
     private Void checkReturnExpression(JmmNode mainNode, SymbolTable table){
-        SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
 
         Type methodTypeReturn = types.valueReturner(mainNode.getChild(0), table, currentMethod);
 
-        if(!methodTypeReturn.getName().equals(currentMethodType.getName())){
+        if(!methodTypeReturn.getName().equals(currentMethodType.getName()) && !methodTypeReturn.getName().equals("Import")){
             var message = String.format("Return type is different form the method declared");
             addReport(Report.newError(
                     Stage.SEMANTIC,
@@ -76,6 +77,67 @@ public class Varargs extends AnalysisVisitor {
             );
         }
 
+        return null;
+    }
+
+    private Void checkCallMethodExpression(JmmNode mainNode, SymbolTable table){
+        if(!table.getMethods().contains(mainNode.get("name"))){
+            var message = String.format("Method '%s' is not declared", mainNode.get("name"));
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    mainNode.getLine(),
+                    mainNode.getColumn(),
+                    message,
+                    null)
+            );
+            return null;
+        }
+
+        Type typeMainNode = types.valueReturner(mainNode, table, currentMethod);
+
+        if(typeMainNode.getName().equals("Import")){
+            return null;
+        }
+
+        SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
+
+        JmmNode methodClass = mainNode.getChild(0);
+        String methodName = mainNode.get("name");
+
+
+
+        List<Symbol> parameters = table.getParameters(methodName);
+        List<JmmNode> sendedArguments = mainNode.getChildren().subList(1, mainNode.getChildren().size());
+
+        for(int i = 0; i < sendedArguments.size(); i++){
+            if(parameters.size() <= i){
+                Type currentParamType = parameters.get(i).getType();
+                Type sendedParamType = types.valueReturner(sendedArguments.get(i), table, currentMethod);
+
+                if(!currentParamType.getName().equals(sendedParamType.getName())){
+                    var message = String.format("Argument type is different from the method declared");
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            mainNode.getLine(),
+                            mainNode.getColumn(),
+                            message,
+                            null)
+                    );
+                }
+
+            }
+            else{
+                var message = String.format("Method call has more arguments than the method declared");
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        mainNode.getLine(),
+                        mainNode.getColumn(),
+                        message,
+                        null)
+                );
+                break;
+            }
+        }
         return null;
     }
 

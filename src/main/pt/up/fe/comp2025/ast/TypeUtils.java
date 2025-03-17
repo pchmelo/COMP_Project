@@ -86,8 +86,16 @@ public class TypeUtils {
                 return new Type("boolean", false);
             case "MethodCallExpr":
                 String methodName = node.get("name");
-                Type returnType = table.getReturnType(methodName);
-                return valueFromTypeReturner(returnType);
+                Type type = table.getReturnType(methodName);
+
+                if(type == null){
+                    if(!table.getImports().contains(node.getChild(0).get("name"))){
+                        return new Type("Import", false);
+                    }
+                }
+                return type;
+
+
             case "ArrayAccessExpr":
                 return valueReturner(node.getChild(0), table, currentMethod);
             case "VarRefExpr":
