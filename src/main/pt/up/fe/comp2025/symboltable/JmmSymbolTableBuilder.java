@@ -50,8 +50,25 @@ public class JmmSymbolTableBuilder {
         var returnTypes = buildReturnTypes(classDecl);
         var params = buildParams(classDecl);
         var locals = buildLocals(classDecl);
+        var varargs = buildVarArgs(classDecl);
 
-        return new JmmSymbolTable(imports,className, superName , fields, methods, returnTypes, params, locals);
+        return new JmmSymbolTable(imports,className, superName , fields, methods, returnTypes, params, locals, varargs);
+    }
+
+    private Map<String,String> buildVarArgs(JmmNode classDecl) {
+        Map<String,String> varargs = new HashMap<String, String>();
+        for (var method : classDecl.getChildren(METHOD_DECL)) {
+            var name = method.get("name");
+            List<JmmNode> listParam = method.getChildren(PARAM);
+            if (!listParam.isEmpty()) {
+                JmmNode lastParam = listParam.getLast();
+                JmmNode typeParam = lastParam.getChild(0);
+                if (typeParam.getKind().equals("VarArgType")) {
+                    varargs.put(name, lastParam.get("name"));
+                }
+            }
+        }
+        return varargs;
     }
 
     private List<Symbol> buildFields(JmmNode classDecl) {

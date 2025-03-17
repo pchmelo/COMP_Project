@@ -47,7 +47,10 @@ public class GrammarTest {
 
     @Test
     public void testVarDecls2() {
-        TestUtils.parseVerbose("class Foo {public int[] foo() { int[] a; a = [10, 20, 30]; return a; }}");
+        TestUtils.parseVerbose("class Foo {public int[] all(int a, boolean b, MethodsAndFields maf){\n" +
+                "\t\tc = new int[[6]];\n" +
+                "\t\treturn c;\n" +
+                "\t}}");
     }
 
    /*@Test

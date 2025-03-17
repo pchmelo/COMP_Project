@@ -18,6 +18,7 @@ public class Statements extends AnalysisVisitor {
         addVisit(Kind.METHOD_DECL, this::visitMethodDecl);
         addVisit(Kind.MAIN_METHOD_DECL, this::visitMethodDecl);
         addVisit(Kind.IF_STMT, this::ifCheck);
+        addVisit(Kind.WHILE_STMT, this::whileCheck);
     }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
@@ -31,11 +32,23 @@ public class Statements extends AnalysisVisitor {
         for (JmmNode child : children) {
             if(child.getHierarchy().getLast().equals("Expression")){
                 Type child_type = types.valueReturner(child, table, currentMethod);
-                if (!child_type.getName().equals("boolean")) {
+                if (!child_type.getName().equals("boolean") && !child_type.isArray()) {
                     addReport(newError(child, "Expected boolean expression in if statement"));
                 }
             }
         }
+
+        return null;
+    }
+
+    public Void whileCheck(JmmNode mainNode, SymbolTable table){
+        JmmNode child = mainNode.getChild(0);
+
+        Type child_type = types.valueReturner(child, table, currentMethod);
+        if (!child_type.getName().equals("boolean") && !child_type.isArray()) {
+            addReport(newError(child, "Expected boolean expression in if statement"));
+        }
+
 
         return null;
     }

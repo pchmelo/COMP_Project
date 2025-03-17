@@ -23,6 +23,19 @@ public class ArrayCheck extends AnalysisVisitor {
         addVisit(Kind.MAIN_METHOD_DECL, this::visitMethodDecl);
         addVisit(Kind.ARRAY_ACCESS_EXPR, this::ArrayAccess);
         addVisit(Kind.ARRAY_INIT, this::ArrayInicialization);
+        addVisit(Kind.ARRAY_LENGTH_EXPR, this::IsExpressionArray);
+    }
+
+    private Void IsExpressionArray(JmmNode jmmNode, SymbolTable table) {
+        JmmNode expression = jmmNode.getChild(0);
+        Type expressionType = types.valueReturner(expression, table, currentMethod);
+
+        if(!expressionType.isArray()){
+            String message = "length method must be accessed by an array expression";
+            addReport(Report.newError(Stage.SEMANTIC, jmmNode.getLine(), jmmNode.getColumn(), message, null));
+        }
+
+        return null;
     }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
