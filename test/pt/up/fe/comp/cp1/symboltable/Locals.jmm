@@ -17,8 +17,14 @@ class MethodsAndFields{
 	
 	public int[] all(int a, boolean b, MethodsAndFields maf){
 		int[] c;
-		int a = 3;
-		boolean[] b = new A();
+		int a;
+
+		a = 3;
+
+		boolean[] b;
+
+		b[0] = true;
+
 		return c;
 	}
 	
