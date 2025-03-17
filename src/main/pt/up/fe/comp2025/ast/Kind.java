@@ -32,6 +32,7 @@ public enum Kind {
     ARRAY_ACCESS_EXPR,
     ARRAY_INIT,
     IF_STMT,
+    VAR_ARG_TYPE
     ;
 
 

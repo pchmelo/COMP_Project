@@ -78,7 +78,7 @@ public class TypeUtils {
                     return valueReturner(node.getChild(0), table, currentMethod);
                 }
 
-            case "IntegerExpr", "ArrayLengthExpr", "Postfix":
+            case "IntegerExpr", "ArrayLengthExpr", "Postfix", "IntType":
                 return new Type("int", false);
             case "TrueExpr" , "FalseExpr":
                 return new Type("boolean", false);
@@ -104,6 +104,9 @@ public class TypeUtils {
                 new Type("this", false);  //tecnicamente dará sempre erro sozinho. só não dá erro quando this.metodo pois o type é return type do metodo e para this.varivel que é a variavel...
             case "ParenthesesExpr":
                 return valueReturner(node.getChild(0),table,currentMethod);
+            case "VarArgType":
+                return valueReturner(node.getChild(0),table,currentMethod);
+
             default:
                 System.out.println("I am "+ kind);
                 return new Type("outro", false);
