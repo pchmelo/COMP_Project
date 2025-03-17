@@ -104,6 +104,8 @@ public class TypeUtils {
                 new Type("this", false);  //tecnicamente dará sempre erro sozinho. só não dá erro quando this.metodo pois o type é return type do metodo e para this.varivel que é a variavel...
             case "ParenthesesExpr":
                 return valueReturner(node.getChild(0),table,currentMethod);
+            case "NewObjectExpr":
+                return new Type(node.get("name"), false);
             default:
                 System.out.println("I am "+ kind);
                 return new Type("outro", false);
