@@ -74,7 +74,7 @@ expression
     : '(' expression ')' #ParenthesesExpr          //
     | value=ID op=('++' | '--') #Postfix          //
     | expression '.' 'length' #ArrayLengthExpr    //
-    | name=ID '[' expression ']' #ArrayAccessExpr   //
+    | expression '[' expression ']' #ArrayAccessExpr   //
     | expression '.' name=ID '(' (expression (',' expression)*)? ')' #MethodCallExpr    //
     | expression op=('*' | '/') expression #BinaryExpr     //
     | expression op=('+' | '-') expression #BinaryExpr    //
