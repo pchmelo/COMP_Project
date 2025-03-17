@@ -85,6 +85,9 @@ public class JmmSymbolTable extends AJmmSymbolTable {
 
     @Override
     public List<Symbol> getLocalVariables(String methodSignature) {
+        if(methodSignature.equals("main")) {
+            return new ArrayList<>();
+        }
         return locals.get(methodSignature);
     }
 

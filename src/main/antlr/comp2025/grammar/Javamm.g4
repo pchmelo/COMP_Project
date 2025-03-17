@@ -71,25 +71,25 @@ statement
     ;
 
 expression
-    : '(' expression ')' #ParenthesesExpr
-    | value=ID op=('++' | '--') #Postfix
-    | expression op=('*' | '/') expression #BinaryOp
-    | expression op=('+' | '-') expression #BinaryOp
-    | expression op=('>' | '<' | '>=' | '<=') expression #BinaryOp
-    | expression op=('==' | '!=') expression #BinaryOp
-    | expression op='&&' expression #BinaryOp
-    | expression op='||' expression #BinaryOp
-    | expression '[' expression ']' #ArrayAccessExpr
-    | expression '.' 'length' #ArrayLengthExpr
-    | expression '.' methodName=ID '(' (expression (',' expression)*)? ')' #MethodCallExpr
+    : '(' expression ')' #ParenthesesExpr          //
+    | value=ID op=('++' | '--') #Postfix          //
+    | expression '.' 'length' #ArrayLengthExpr    //
+    | expression '[' expression ']' #ArrayAccessExpr   //
+    | expression '.' name=ID '(' (expression (',' expression)*)? ')' #MethodCallExpr    //
+    | expression op=('*' | '/') expression #BinaryExpr     //
+    | expression op=('+' | '-') expression #BinaryExpr    //
+    | expression op=('>' | '<' | '>=' | '<=') expression #BinaryExpr     //
+    | expression op=('==' | '!=') expression #BinaryExpr     //
+    | expression op='&&' expression #BinaryExpr    //
+    | expression op='||' expression #BinaryExpr    //
     | 'new' 'int' '[' expression ']' #NewIntArrayExpr
-    | 'new' ID '(' ')' #NewObjectExpr
+    | 'new' name=ID '(' ')' #NewObjectExpr
     | '!' expression #NotExpr
-    | '[' (expression (',' expression)*)? ']' #ArrayExpr
-    | value=INTEGER #IntegerExpr
-    | value='true' #TrueExpr
-    | value='false' #FalseExpr
-    | name=ID #VarRefExpr
-    | 'this' #ThisExpr
+    | '[' (expression (',' expression)*)? ']' #ArrayInit
+    | value=INTEGER #IntegerExpr        //
+    | value='true' #TrueExpr            //
+    | value='false' #FalseExpr          //
+    | name=ID #VarRefExpr               //
+    | 'this' #ThisExpr                  //
     ;
 
