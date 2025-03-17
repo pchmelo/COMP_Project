@@ -75,7 +75,9 @@ public class TypeUtils {
                     return new Type("int", false);
                 }else{
                     //For '+' guessing based on the left node
-                    return valueReturner(node.getChild(0), table, currentMethod);
+                    Type left = valueReturner(node.getChild(0), table, currentMethod);
+                    Type right = valueReturner(node.getChild(1), table, currentMethod);
+                    return left;
                 }
 
             case "IntegerExpr", "ArrayLengthExpr", "Postfix", "IntType":
@@ -90,7 +92,7 @@ public class TypeUtils {
                 return valueReturner(node.getChild(0), table, currentMethod);
             case "VarRefExpr":
                 Symbol variable_ = valueFromVarReturner(node.get("name"),table,currentMethod);
-                return valueFromTypeReturner(variable_.getType());
+                return variable_.getType();
             case "ArrayInit":
                 List<JmmNode> arrayElements = node.getChildren();
 
@@ -107,6 +109,12 @@ public class TypeUtils {
                 return new Type(node.get("name"), false);
             case "VarArgType":
                 return valueReturner(node.getChild(0),table,currentMethod);
+            case "ReturnStatement":
+                List<JmmNode> children = node.getChildren();
+                if(children.isEmpty()){
+                    return new Type("void", false);
+                }
+                return valueReturner(children.getFirst(), table, currentMethod);
 
             default:
                 System.out.println("I am "+ kind);

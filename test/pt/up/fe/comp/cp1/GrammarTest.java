@@ -257,4 +257,8 @@ public class GrammarTest {
         TestUtils.parseVerbose("[10, 20, 30]", EXPRESSION);
     }
 
+    @Test
+    public void IncompatibleReturn(){TestUtils.parseVerbose(
+        "class IncompatibleReturn { public static void main(String[] args) { } public int foo(int a) {return a + 1;}}");
+    }
 }

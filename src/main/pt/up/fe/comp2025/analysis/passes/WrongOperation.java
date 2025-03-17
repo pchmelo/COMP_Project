@@ -47,15 +47,16 @@ public class WrongOperation extends AnalysisVisitor {
 
 
             if(!val0.getName().equals(val1.getName()) || val0.isArray() != val1.isArray() ){
-
-                var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
-                addReport(Report.newError(
-                        Stage.SEMANTIC,
-                        expression.getLine(),
-                        expression.getColumn(),
-                        message,
-                        null)
-                );
+                if(!table.getImports().contains(val0.getName())){
+                    var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            expression.getLine(),
+                            expression.getColumn(),
+                            message,
+                            null)
+                    );
+                }
             }
             return null;
         }
@@ -67,6 +68,7 @@ public class WrongOperation extends AnalysisVisitor {
         currentMethod = method.get("name");
         return null;
     }
+
 
     private Void visitBinaryExpr(JmmNode expression, SymbolTable table) {
         SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
