@@ -48,6 +48,7 @@ public class JmmSymbolTable extends AJmmSymbolTable {
         return imports;
     }
 
+
     public Map<String, String> getVarargs() {
         return varargs;
     }

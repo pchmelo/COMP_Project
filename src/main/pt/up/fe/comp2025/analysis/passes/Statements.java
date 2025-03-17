@@ -3,6 +3,8 @@ package pt.up.fe.comp2025.analysis.passes;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp.jmm.report.Report;
+import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2025.analysis.AnalysisVisitor;
 import pt.up.fe.comp2025.ast.Kind;
 import pt.up.fe.comp2025.ast.TypeUtils;
@@ -33,8 +35,14 @@ public class Statements extends AnalysisVisitor {
             if(child.getHierarchy().getLast().equals("Expression")){
                 Type child_type = types.valueReturner(child, table, currentMethod);
                 if (!child_type.getName().equals("boolean") && !child_type.isArray()) {
-                    addReport(newError(child, "Expected boolean expression in if statement"));
-                }
+                    var message = "If/Else if condition must be a boolean expression";
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            mainNode.getLine(),
+                            mainNode.getColumn(),
+                            message,
+                            null)
+                    );                    }
             }
         }
 
@@ -45,8 +53,15 @@ public class Statements extends AnalysisVisitor {
         JmmNode child = mainNode.getChild(0);
 
         Type child_type = types.valueReturner(child, table, currentMethod);
-        if (!child_type.getName().equals("boolean") && !child_type.isArray()) {
-            addReport(newError(child, "Expected boolean expression in if statement"));
+        if (!child_type.getName().equals("boolean") || child_type.isArray()) {
+            var message = "While condition must be a boolean expression";
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    mainNode.getLine(),
+                    mainNode.getColumn(),
+                    message,
+                    null)
+            );
         }
 
 

@@ -150,6 +150,7 @@ public class JmmSymbolTableBuilder {
                     break;
                 case "ArrayType", "VarArgType":
                     returnType = TypeUtils.newArrayType(child.getChild(0).getChild(0).get("name"));
+                    returnType.putObject("isVarArg", true);
                     break;
                 default:
                     returnType = TypeUtils.newObjectType(child.getChild(0).get("name"));

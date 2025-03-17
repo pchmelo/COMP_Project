@@ -119,11 +119,22 @@ public class Varargs extends AnalysisVisitor {
         List<Symbol> parameters = table.getParameters(methodName);
         List<JmmNode> sendedArguments = mainNode.getChildren().subList(1, mainNode.getChildren().size());
 
-        for(int i = 0; i < sendedArguments.size(); i++){
-            if(parameters.size() <= i){
-                Type currentParamType = parameters.get(i).getType();
-                Type sendedParamType = types.valueReturner(sendedArguments.get(i), table, currentMethod);
+        boolean isVarArg = false;
+        String varagType = null;
 
+        Type sendedParamType;
+        Type currentParamType;
+
+        for(int i = 0; i < sendedArguments.size(); i++){
+            sendedParamType = types.valueReturner(sendedArguments.get(i), table, currentMethod);
+
+            if(parameters.size() >= i && !isVarArg){
+
+                if(!table.getParameters(methodName).get(i).getType().getAttributes().isEmpty()){
+                    isVarArg = true;
+                    varagType = table.getParameters(methodName).get(i).getType().getName();
+                }
+                currentParamType = parameters.get(i).getType();
                 if(!currentParamType.getName().equals(sendedParamType.getName())){
                     var message = String.format("Argument type is different from the method declared");
                     addReport(Report.newError(
@@ -132,11 +143,12 @@ public class Varargs extends AnalysisVisitor {
                             mainNode.getColumn(),
                             message,
                             null)
-                    );
+                        );
+
                 }
 
             }
-            else{
+            else if(!isVarArg){
                 var message = String.format("Method call has more arguments than the method declared");
                 addReport(Report.newError(
                         Stage.SEMANTIC,
@@ -147,6 +159,22 @@ public class Varargs extends AnalysisVisitor {
                 );
                 break;
             }
+            if(isVarArg){
+                if(sendedParamType.getName().equals(varagType)){
+                    continue;
+                }
+                else{
+                    var message = String.format("Argument type is different from the argvar method declared");
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            mainNode.getLine(),
+                            mainNode.getColumn(),
+                            message,
+                            null)
+                        );
+                }
+            }
+
         }
         return null;
     }
