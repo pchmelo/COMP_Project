@@ -83,7 +83,7 @@ expression
     | expression op='&&' expression #BinaryExpr    //
     | expression op='||' expression #BinaryExpr    //
     | 'new' 'int' '[' expression ']' #NewIntArrayExpr
-    | 'new' ID '(' ')' #NewObjectExpr
+    | 'new' name=ID '(' ')' #NewObjectExpr
     | '!' expression #NotExpr
     | '[' (expression (',' expression)*)? ']' #ArrayInit
     | value=INTEGER #IntegerExpr        //

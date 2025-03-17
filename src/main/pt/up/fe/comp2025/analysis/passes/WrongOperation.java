@@ -47,6 +47,7 @@ public class WrongOperation extends AnalysisVisitor {
 
 
             if(!val0.getName().equals(val1.getName()) || val0.isArray() != val1.isArray() ){
+
                 var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
                 addReport(Report.newError(
                         Stage.SEMANTIC,

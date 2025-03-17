@@ -34,10 +34,8 @@ public class ArrayCheck extends AnalysisVisitor {
     private Void ArrayAccess(JmmNode mainNode, SymbolTable table){
         SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
 
-        Symbol variable_ = types.valueFromVarReturner(mainNode.get("name"), table,currentMethod);
-        Type arrayVarType =  types.valueFromTypeReturner(variable_.getType());
-
-        Type indexVarType = types.valueReturner(mainNode.getChild(0), table, currentMethod);
+        Type arrayVarType =  types.valueReturner(mainNode.getChild(0), table, currentMethod);
+        Type indexVarType = types.valueReturner(mainNode.getChild(1), table, currentMethod);
 
         // Error if the index is not an integer
         if (!indexVarType.getName().equals("int")) {

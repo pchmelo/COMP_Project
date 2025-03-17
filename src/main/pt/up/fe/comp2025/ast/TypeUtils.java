@@ -87,8 +87,7 @@ public class TypeUtils {
                 Type returnType = table.getReturnType(methodName);
                 return valueFromTypeReturner(returnType);
             case "ArrayAccessExpr":
-                Symbol variable = valueFromVarReturner(node.get("name"),table,currentMethod);
-                return variable.getType();
+                return valueReturner(node.getChild(0), table, currentMethod);
             case "VarRefExpr":
                 Symbol variable_ = valueFromVarReturner(node.get("name"),table,currentMethod);
                 return valueFromTypeReturner(variable_.getType());
