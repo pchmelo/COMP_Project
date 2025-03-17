@@ -82,7 +82,7 @@ public class TypeUtils {
 
             case "IntegerExpr", "ArrayLengthExpr", "Postfix", "IntType":
                 return new Type("int", false);
-            case "TrueExpr" , "FalseExpr":
+            case "TrueExpr" , "FalseExpr", "NotExpr":
                 return new Type("boolean", false);
             case "MethodCallExpr":
                 String methodName = node.get("name");
@@ -129,7 +129,8 @@ public class TypeUtils {
                     return new Type("void", false);
                 }
                 return valueReturner(children.getFirst(), table, currentMethod);
-
+            case "NewIntArrayExpr":
+                return new Type("int", true);
             default:
                 System.out.println("I am "+ kind);
                 return new Type("outro", false);

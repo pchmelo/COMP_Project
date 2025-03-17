@@ -32,20 +32,15 @@ public class WrongOperation extends AnalysisVisitor {
     private Void visitAssignmentExpr(JmmNode expression, SymbolTable table) {
         SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
 
-        Type val0;
-        Type val1;
-
         String operator = expression.get("op");
 
+        Symbol variable_ = types.valueFromVarReturner(expression.get("var"),table,currentMethod);
+        Type val0 =  types.valueFromTypeReturner(variable_.getType());
+
+        var rightExpression = expression.getChild(0);
+        Type val1 = types.valueReturner(rightExpression, table, currentMethod);
+
         if(operator.equals("=")){
-
-            Symbol variable_ = types.valueFromVarReturner(expression.get("var"),table,currentMethod);
-            val0 =  types.valueFromTypeReturner(variable_.getType());
-
-            var rightExpression = expression.getChild(0);
-            val1 = types.valueReturner(rightExpression, table, currentMethod);
-
-
             if(!val0.getName().equals(val1.getName()) || val0.isArray() != val1.isArray() ){
                 if((!table.getImports().contains(val0.getName())) && (!table.getImports().contains(val0.getName()))){
                     var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
@@ -74,6 +69,19 @@ public class WrongOperation extends AnalysisVisitor {
 
             }
             return null;
+        }else{
+            if(!val0.getName().equals("int") || !val1.getName().equals("int") || val0.isArray() != val1.isArray() ){
+                if(!table.getImports().contains(val0.getName())){
+                    var message = "Type error: cannot do operation " + operator + " for " + val0.getName() + " type and " + val1.getName() + " type";
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            expression.getLine(),
+                            expression.getColumn(),
+                            message,
+                            null)
+                    );
+                }
+            }
         }
 
         return null;
@@ -96,31 +104,33 @@ public class WrongOperation extends AnalysisVisitor {
         String operator = expression.get("op");
 
         if (operator.equals("+")){
-            if (val0.getName().equals("String") && val1.getName().equals("String")) {
+            if (val0.getName().equals("String") && val1.getName().equals("String") && !val0.isArray() && !val1.isArray()) {
                 return null;
             }
         }
 
         if (operator.equals("*") || operator.equals("/") || operator.equals("+") || operator.equals("-")){
-            if (val0.getName().equals("int") && val1.getName().equals("int")) {
+            if (val0.getName().equals("int") && val1.getName().equals("int") && !val0.isArray() && !val1.isArray()) {
                 return null;
             }
         }
 
         if (operator.equals(">") || operator.equals("<") || operator.equals(">=") || operator.equals("<=")){
-            if (val0.getName().equals("int") && val1.getName().equals("int")) {
+            if (val0.getName().equals("int") && val1.getName().equals("int") && !val0.isArray() && !val1.isArray()) {
                 return null;
             }
         }
 
         if (operator.equals("==") || operator.equals("!=")){
             if ((val0.getName().equals("int") && val1.getName().equals("int")) || (val0.getName().equals("boolean") && val1.getName().equals("boolean")) || (val0.getName().equals("String") && val1.getName().equals("String"))  || (val0.getName().equals(val1.getName()))) {
-                return null;
+                if(val0.isArray() == val1.isArray()) {
+                    return null;
+                }
             }
         }
 
         if (operator.equals("&&") || operator.equals("||")){
-            if (val0.getName().equals("boolean") && val1.getName().equals("boolean")) {
+            if (val0.getName().equals("boolean") && val1.getName().equals("boolean") && !val0.isArray() && !val1.isArray()) {
                 return null;
             }
         }

@@ -72,9 +72,9 @@ statement
 
 expression
     : '(' expression ')' #ParenthesesExpr          //
-    | value=ID op=('++' | '--') #Postfix          //
-    | expression '.' 'length' #ArrayLengthExpr    //
-    | expression '[' expression ']' #ArrayAccessExpr   //
+    | name=ID op=('++' | '--') #Postfix          //
+    | expression '.' 'length' #ArrayLengthExpr    ////
+    | expression '[' expression ']' #ArrayAccessExpr   ////
     | expression '.' name=ID '(' (expression (',' expression)*)? ')' #MethodCallExpr    //
     | expression op=('*' | '/') expression #BinaryExpr     //
     | expression op=('+' | '-') expression #BinaryExpr    //
@@ -82,10 +82,10 @@ expression
     | expression op=('==' | '!=') expression #BinaryExpr     //
     | expression op='&&' expression #BinaryExpr    //
     | expression op='||' expression #BinaryExpr    //
-    | 'new' 'int' '[' expression ']' #NewIntArrayExpr
-    | 'new' name=ID '(' ')' #NewObjectExpr
-    | '!' expression #NotExpr
-    | '[' (expression (',' expression)*)? ']' #ArrayInit
+    | 'new' 'int' '[' expression ']' #NewIntArrayExpr   ////
+    | 'new' name=ID '(' ')' #NewObjectExpr      ////
+    | '!' expression #NotExpr           ////
+    | '[' (expression (',' expression)*)? ']' #ArrayInit    ////
     | value=INTEGER #IntegerExpr        //
     | value='true' #TrueExpr            //
     | value='false' #FalseExpr          //
