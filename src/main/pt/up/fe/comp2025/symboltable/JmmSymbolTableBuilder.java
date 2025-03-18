@@ -199,7 +199,6 @@ public class JmmSymbolTableBuilder {
 
             map.put(name, locals);
         }
-        System.out.println("Tamanho do mapa"+map.size());
 
         return map;
     }

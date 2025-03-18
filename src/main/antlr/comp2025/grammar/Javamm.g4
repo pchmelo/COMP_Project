@@ -65,9 +65,9 @@ statement
     | 'if' '(' expression ')' statement ('else if' '(' expression ')' statement)* ('else' statement)? #IfStmt
     | 'while' '(' expression ')' statement #WhileStmt
     | expression ';' #ExpressionStmt
-    | var=ID op=('=' | '+=' | '-=' | '*=' | '/=') expression ';' #AssignStmt
-    | var=ID '[' index=expression ']' '=' expression ';' #ArrayAssignStmt
-    | returnStatement    #ReturnStmt
+    | var=ID op=('=' | '+=' | '-=' | '*=' | '/=') expression ';' #AssignStmt    //
+    | name=ID '[' index=expression ']' '=' expression ';' #ArrayAssignStmt      //
+    | returnStatement    #ReturnStmt                                            //
     ;
 
 expression

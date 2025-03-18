@@ -63,7 +63,7 @@ public class TypeUtils {
         return new Type("int", false);
     }
 
-    public Type valueReturner(JmmNode node, SymbolTable table, String currentMethod) {
+    public Type getExprType(JmmNode node, SymbolTable table, String currentMethod) {
         String kind = node.getKind();
         switch (kind){
             case "BinaryExpr":  //o codigo de binary op não precisa disto mas pus porque pode ser necessario ig
@@ -75,8 +75,8 @@ public class TypeUtils {
                     return new Type("int", false);
                 }else{
                     //For '+' guessing based on the left node
-                    Type left = valueReturner(node.getChild(0), table, currentMethod);
-                    Type right = valueReturner(node.getChild(1), table, currentMethod);
+                    Type left = getExprType(node.getChild(0), table, currentMethod);
+                    Type right = getExprType(node.getChild(1), table, currentMethod);
                     return left;
                 }
 
@@ -87,14 +87,30 @@ public class TypeUtils {
             case "MethodCallExpr":
                 String methodName = node.get("name");
                 Type type = table.getReturnType(methodName);
+                String variableCaller = node.getChild(0).get("name");
 
                 if(type == null){
-                    Type type_ = valueReturner(node.getChild(0), table, currentMethod);
+                    if(table.getImports().contains(variableCaller)){
+                        return new Type("Import", false);
+                    }
+                    if (!table.getSuper().isEmpty()){
+                        if(variableCaller.equals(table.getSuper())){
+                            return new Type("Super", false);
+                        }
+                    }
+
+                    Type type_ = getExprType(node.getChild(0), table, currentMethod);
+
+                    // se entra aqui é porque não está mencionado em lado nenhum mas passou no check ._.
+                    if (type_.getName() == "errado"){
+                        return new Type("errado", false);
+                    }
+
                     if(table.getImports().contains(type_.getName())){
                         return new Type("Import", false);
                     }
-                    if(type_.getName().equals(table.getClassName())){
-                        if (!table.getSuper().isEmpty()){
+                    if (!table.getSuper().isEmpty()){
+                        if(type_.getName().equals(table.getClassName()) || type_.getName().equals(table.getSuper())){
                             return new Type("Super", false);
                         }
                     }
@@ -103,7 +119,7 @@ public class TypeUtils {
 
 
             case "ArrayAccessExpr":
-                return valueReturner(node.getChild(0), table, currentMethod);
+                return getExprType(node.getChild(0), table, currentMethod);
             case "VarRefExpr":
                 Symbol variable_ = valueFromVarReturner(node.get("name"),table,currentMethod);
                 return variable_.getType();
@@ -113,22 +129,22 @@ public class TypeUtils {
                 if(arrayElements.isEmpty()){
                     return null;
                 }
-                Type type_ = valueReturner(arrayElements.get(0), table, currentMethod);
+                Type type_ = getExprType(arrayElements.get(0), table, currentMethod);
                 return new Type(type_.getName(),true);
             case "ThisExpr":
-                new Type("this", false);  //tecnicamente dará sempre erro sozinho. só não dá erro quando this.metodo pois o type é return type do metodo e para this.varivel que é a variavel...
+                return new Type("this", false);  //tecnicamente dará sempre erro sozinho. só não dá erro quando this.metodo pois o type é return type do metodo e para this.varivel que é a variavel...
             case "ParenthesesExpr":
-                return valueReturner(node.getChild(0),table,currentMethod);
+                return getExprType(node.getChild(0),table,currentMethod);
             case "NewObjectExpr":
                 return new Type(node.get("name"), false);
             case "VarArgType":
-                return valueReturner(node.getChild(0),table,currentMethod);
+                return getExprType(node.getChild(0),table,currentMethod);
             case "ReturnStatement":
                 List<JmmNode> children = node.getChildren();
                 if(children.isEmpty()){
                     return new Type("void", false);
                 }
-                return valueReturner(children.getFirst(), table, currentMethod);
+                return getExprType(children.getFirst(), table, currentMethod);
             case "NewIntArrayExpr":
                 return new Type("int", true);
             default:

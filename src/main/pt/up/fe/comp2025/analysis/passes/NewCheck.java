@@ -11,8 +11,6 @@ import pt.up.fe.comp2025.ast.Kind;
 import pt.up.fe.comp2025.ast.TypeUtils;
 import pt.up.fe.specs.util.SpecsCheck;
 
-import java.util.List;
-
 public class NewCheck extends AnalysisVisitor {
     private TypeUtils types = new TypeUtils(null);
     private String currentMethod;
@@ -42,7 +40,7 @@ public class NewCheck extends AnalysisVisitor {
 
     private Void isNotExprBool(JmmNode jmmNode, SymbolTable table) {
         JmmNode expression = jmmNode.getChild(0);
-        Type expressionType = types.valueReturner(expression, table, currentMethod);
+        Type expressionType = types.getExprType(expression, table, currentMethod);
 
         if(!expressionType.getName().equals("boolean") || expressionType.isArray()){
             String message = "expression with operator '!' must be boolean";
@@ -59,7 +57,7 @@ public class NewCheck extends AnalysisVisitor {
 
     private Void isNewAttributeInt(JmmNode jmmNode, SymbolTable table) {
         JmmNode newArrayLength = jmmNode.getChild(0);
-        Type newArrayType = types.valueReturner(newArrayLength, table, currentMethod);
+        Type newArrayType = types.getExprType(newArrayLength, table, currentMethod);
 
         if(!newArrayType.getName().equals("int") || newArrayType.isArray()){
             String message = "Array must have integer length";

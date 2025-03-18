@@ -38,9 +38,34 @@ public class WrongOperation extends AnalysisVisitor {
         Type val0 =  types.valueFromTypeReturner(variable_.getType());
 
         var rightExpression = expression.getChild(0);
-        Type val1 = types.valueReturner(rightExpression, table, currentMethod);
+        Type val1 = types.getExprType(rightExpression, table, currentMethod);
 
         if(operator.equals("=")){
+            if(val1.getName().equals("this")){
+                if (val1.isArray()){
+                    var message = "Cannot assign an array of 'this' to anything";
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            expression.getLine(),
+                            expression.getColumn(),
+                            message,
+                            null)
+                    );
+                }
+
+                if (val0.getName().equals(table.getClassName()) || val0.getName().equals(table.getSuper() )){
+                    return null;
+                }
+                var message = "Cannot assign 'this' to a variable with type " + val0.getName();
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        expression.getLine(),
+                        expression.getColumn(),
+                        message,
+                        null)
+                );
+            }
+
             if(!val0.getName().equals(val1.getName()) || val0.isArray() != val1.isArray() ){
                 if((!table.getImports().contains(val0.getName())) && (!table.getImports().contains(val0.getName()))){
                     var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
@@ -97,9 +122,9 @@ public class WrongOperation extends AnalysisVisitor {
         SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
 
         JmmNode expression0 = expression.getChild(0);
-        Type val0 = types.valueReturner(expression0, table, currentMethod);
+        Type val0 = types.getExprType(expression0, table, currentMethod);
         JmmNode expression1 = expression.getChild(1);
-        Type val1 = types.valueReturner(expression1, table, currentMethod);
+        Type val1 = types.getExprType(expression1, table, currentMethod);
 
         String operator = expression.get("op");
 

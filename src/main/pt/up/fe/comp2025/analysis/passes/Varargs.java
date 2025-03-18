@@ -64,7 +64,7 @@ public class Varargs extends AnalysisVisitor {
 
     private Void checkReturnExpression(JmmNode mainNode, SymbolTable table){
 
-        Type methodTypeReturn = types.valueReturner(mainNode.getChild(0), table, currentMethod);
+        Type methodTypeReturn = types.getExprType(mainNode.getChild(0), table, currentMethod);
 
         if(!methodTypeReturn.getName().equals(currentMethodType.getName()) && !methodTypeReturn.getName().equals("Import")){
             var message = String.format("Return type is different form the method declared");
@@ -81,7 +81,7 @@ public class Varargs extends AnalysisVisitor {
     }
 
     private Void checkCallMethodExpression(JmmNode mainNode, SymbolTable table){
-        Type typeMainNode = types.valueReturner(mainNode, table, currentMethod);
+        Type typeMainNode = types.getExprType(mainNode, table, currentMethod);
 
         if(typeMainNode == null){
             var message = String.format("Method call is not declared");
@@ -126,7 +126,7 @@ public class Varargs extends AnalysisVisitor {
         Type currentParamType;
 
         for(int i = 0; i < sendedArguments.size(); i++){
-            sendedParamType = types.valueReturner(sendedArguments.get(i), table, currentMethod);
+            sendedParamType = types.getExprType(sendedArguments.get(i), table, currentMethod);
 
             if(parameters.size() >= i && !isVarArg){
 
@@ -164,7 +164,7 @@ public class Varargs extends AnalysisVisitor {
                     continue;
                 }
                 else{
-                    var message = String.format("Argument type is different from the argvar method declared");
+                    var message = String.format("Argument type is different from the vararg method declared");
                     addReport(Report.newError(
                             Stage.SEMANTIC,
                             mainNode.getLine(),

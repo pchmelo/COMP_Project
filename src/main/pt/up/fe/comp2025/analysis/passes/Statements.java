@@ -33,7 +33,7 @@ public class Statements extends AnalysisVisitor {
 
         for (JmmNode child : children) {
             if(child.getHierarchy().getLast().equals("Expression")){
-                Type child_type = types.valueReturner(child, table, currentMethod);
+                Type child_type = types.getExprType(child, table, currentMethod);
                 if (!child_type.getName().equals("boolean") && !child_type.isArray()) {
                     var message = "If/Else if condition must be a boolean expression";
                     addReport(Report.newError(
@@ -52,7 +52,7 @@ public class Statements extends AnalysisVisitor {
     public Void whileCheck(JmmNode mainNode, SymbolTable table){
         JmmNode child = mainNode.getChild(0);
 
-        Type child_type = types.valueReturner(child, table, currentMethod);
+        Type child_type = types.getExprType(child, table, currentMethod);
         if (!child_type.getName().equals("boolean") || child_type.isArray()) {
             var message = "While condition must be a boolean expression";
             addReport(Report.newError(
