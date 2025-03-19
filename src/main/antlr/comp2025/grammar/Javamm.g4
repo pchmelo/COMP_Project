@@ -65,7 +65,7 @@ statement
     | 'if' '(' expression ')' statement ('else if' '(' expression ')' statement)* ('else' statement)? #IfStmt
     | 'while' '(' expression ')' statement #WhileStmt
     | expression ';' #ExpressionStmt
-    | var=ID op=('=' | '+=' | '-=' | '*=' | '/=') expression ';' #AssignStmt    //
+    | name=ID op=('=' | '+=' | '-=' | '*=' | '/=') expression ';' #AssignStmt    //
     | name=ID '[' index=expression ']' '=' expression ';' #ArrayAssignStmt      //
     | returnStatement    #ReturnStmt                                            //
     ;
@@ -73,6 +73,7 @@ statement
 expression
     : '(' expression ')' #ParenthesesExpr          //
     | name=ID op=('++' | '--') #Postfix          //
+    | '!' expression #NotExpr           ////
     | expression '.' 'length' #ArrayLengthExpr    ////
     | expression '[' expression ']' #ArrayAccessExpr   ////
     | expression '.' name=ID '(' (expression (',' expression)*)? ')' #MethodCallExpr    //
@@ -84,7 +85,6 @@ expression
     | expression op='||' expression #BinaryExpr    //
     | 'new' 'int' '[' expression ']' #NewIntArrayExpr   ////
     | 'new' name=ID '(' ')' #NewObjectExpr      ////
-    | '!' expression #NotExpr           ////
     | '[' (expression (',' expression)*)? ']' #ArrayInit    ////
     | value=INTEGER #IntegerExpr        //
     | value='true' #TrueExpr            //

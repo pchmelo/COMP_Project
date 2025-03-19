@@ -34,7 +34,7 @@ public class WrongOperation extends AnalysisVisitor {
 
         String operator = expression.get("op");
 
-        Symbol variable_ = types.valueFromVarReturner(expression.get("var"),table,currentMethod);
+        Symbol variable_ = types.valueFromVarReturner(expression.get("name"),table,currentMethod);
         Type val0 =  types.valueFromTypeReturner(variable_.getType());
 
         var rightExpression = expression.getChild(0);
@@ -67,7 +67,14 @@ public class WrongOperation extends AnalysisVisitor {
             }
 
             if(!val0.getName().equals(val1.getName()) || val0.isArray() != val1.isArray() ){
-                if((!table.getImports().contains(val0.getName())) && (!table.getImports().contains(val0.getName()))){
+                if(rightExpression.getKind().equals("MethodCallExpr")){
+                    JmmNode variableRightExpression = rightExpression.getChild(0);
+                    Type type_ = types.getExprType(variableRightExpression, table, currentMethod);
+                    if (table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper()))){
+                        return null;
+                    }
+                }
+                if((!table.getImports().contains(val0.getName())) && (!table.getSuper().equals(val0.getName()))){
                     var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
                     addReport(Report.newError(
                             Stage.SEMANTIC,

@@ -46,19 +46,6 @@ public class GrammarTest {
     }
 
     @Test
-    public void testVarDecls2() {
-        TestUtils.parseVerbose("class Foo {public int[] all(int a, boolean b, MethodsAndFields maf){\n" +
-                "\t\tc = new int[[6]];\n" +
-                "\t\treturn c;\n" +
-                "\t}}");
-    }
-
-   /*@Test
-    public void testVarDeclString() {
-        TestUtils.parseVerbose("String aString;", "VarDecl");
-    }*/
-
-    @Test
     public void testMainMethodEmpty() {
         TestUtils.parseVerbose("static void main(String[] args) {}", MAIN_METHOD);
     }

@@ -66,7 +66,16 @@ public class Varargs extends AnalysisVisitor {
 
         Type methodTypeReturn = types.getExprType(mainNode.getChild(0), table, currentMethod);
 
-        if(!methodTypeReturn.getName().equals(currentMethodType.getName()) && !methodTypeReturn.getName().equals("Import")){
+        if (mainNode.getChild(0).getChild(0).getKind().equals("MethodCallExpr")){
+            JmmNode variableRightExpression = mainNode.getChild(0).getChild(0).getChild(0);
+            Type type_ = types.getExprType(variableRightExpression, table, currentMethod);
+            if(table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper()))){
+                return null;
+            }
+        }
+
+
+        if(!methodTypeReturn.getName().equals(currentMethodType.getName())){
             var message = String.format("Return type is different form the method declared");
             addReport(Report.newError(
                     Stage.SEMANTIC,
@@ -81,7 +90,12 @@ public class Varargs extends AnalysisVisitor {
     }
 
     private Void checkCallMethodExpression(JmmNode mainNode, SymbolTable table){
-        Type typeMainNode = types.getExprType(mainNode, table, currentMethod);
+
+        Type type_ = types.getExprType(mainNode.getChild(0), table, currentMethod);
+        if (table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper()))) {
+            return null;
+        }
+        /* Type typeMainNode = types.getExprType(mainNode, table, currentMethod);
 
         if(typeMainNode == null){
             var message = String.format("Method call is not declared");
@@ -109,7 +123,7 @@ public class Varargs extends AnalysisVisitor {
                     null)
             );
             return null;
-        }
+        }*/
 
         SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
 

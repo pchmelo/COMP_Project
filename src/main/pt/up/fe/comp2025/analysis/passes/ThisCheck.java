@@ -11,6 +11,8 @@ import pt.up.fe.comp2025.ast.Kind;
 import pt.up.fe.comp2025.ast.TypeUtils;
 import pt.up.fe.specs.util.SpecsCheck;
 
+import java.util.ArrayList;
+
 public class ThisCheck extends AnalysisVisitor {
     private TypeUtils types = new TypeUtils(null);
     private String currentMethod;
@@ -23,9 +25,27 @@ public class ThisCheck extends AnalysisVisitor {
         addVisit(Kind.METHOD_CALL_EXPR, this::visitMethodCallThis);
         addVisit(Kind.PARENTHESES_EXPR, this::visitSmthingThatShoulntHaveThis);
         addVisit(Kind.EXPRESSION_STMT, this::visitSmthingThatShoulntHaveThis);
+        addVisit(Kind.CLASS_TYPE, this::visitClassType);
     }
 
-    @SuppressWarnings("LanguageDetectionInspection")
+    private Void visitClassType(JmmNode jmmNode, SymbolTable table) {
+
+        if (table.getImports().contains(jmmNode.get("name")) ||table.getClassName().equals(jmmNode.get("name")) || (!table.getSuper().isEmpty() && jmmNode.get("name").equals(table.getSuper()))) {
+            return null;
+        }else{
+            var message = "Type of variable '" + jmmNode.get("name") +"' is not defined";
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    jmmNode.getLine(),
+                    jmmNode.getColumn(),
+                    message,
+                    null)
+            );
+        }
+        return null;
+    }
+
+
     private Void visitSmthingThatShoulntHaveThis(JmmNode jmmNode, SymbolTable table) {
         JmmNode child = jmmNode.getChild(0);
         Type childType = types.getExprType(child,table,currentMethod);
@@ -49,36 +69,39 @@ public class ThisCheck extends AnalysisVisitor {
         Type firstType = types.getExprType(firstExpression,table,currentMethod);
 
         String methodName = jmmNode.get("name");
-        int parametersNumber = jmmNode.getNumChildren() - 1; //excluido a primeira expressão que é antes do '.'
 
-        //Teste inutil já que falha sempre quando a expressão não é array (que é o caso do this). Mas fica aqui como double proof
-        if (firstType.getName().equals("this")){
-
-            if (table.getMethods().stream().noneMatch(method -> method.equals(methodName))) {
-                var message = "Method '" + methodName +"' not found inside class";
-                addReport(Report.newError(
-                        Stage.SEMANTIC,
-                        jmmNode.getLine(),
-                        jmmNode.getColumn(),
-                        message,
-                        null)
-                );
+        Type expressionType = types.getExprType(jmmNode, table, currentMethod);
+        //FUNCAO nao EXISTE?
+        if (expressionType.getName().equals("undefined")){
+            if (!firstType.getName().equals("this") && !table.getClassName().equals(firstType.getName())){
                 return null;
             }
-
         }else{
-            Type expressionType = types.getExprType(jmmNode, table, currentMethod);
-            if (expressionType == null){
-                var message = "Method '" + methodName +"'is not found/supported.";
-                addReport(Report.newError(
-                        Stage.SEMANTIC,
-                        jmmNode.getLine(),
-                        jmmNode.getColumn(),
-                        message,
-                        null)
-                );
-            }else if (expressionType.getName().equals("errado") || firstType.getName().equals("errado")){
-                var message = "Idk what are you doing with Method '" + methodName +"' but whatever it is...it is WRONG";
+            if (firstType.getName().equals("this") || table.getClassName().equals(firstType.getName())){
+                return null;
+            }
+        }
+
+        Type type_ = types.getExprType(jmmNode.getChild(0), table, currentMethod);
+        if(type_.getName().equals("errado")){
+            var message = "Idk what are you doing with Method '" + methodName +"' but whatever it is...it is WRONG";
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    jmmNode.getLine(),
+                    jmmNode.getColumn(),
+                    message,
+                    null)
+            );
+            return null;
+        }
+
+        if (table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper()))) {
+            return null;
+        }else if (type_.getName().equals(table.getClassName()) && !table.getSuper().isEmpty()){
+            return null;
+        }else{
+            if(expressionType.getName().equals("undefined") && (firstType.getName().equals("this") || table.getClassName().equals(firstType.getName()))) {
+                var message = "Method '" + methodName + "' is not declared";
                 addReport(Report.newError(
                         Stage.SEMANTIC,
                         jmmNode.getLine(),
@@ -87,9 +110,9 @@ public class ThisCheck extends AnalysisVisitor {
                         null)
                 );
             }
-
+            return null;
         }
-        return null;
+
     }
 
     private Void visitArrayLengthThis(JmmNode jmmNode, SymbolTable table) {

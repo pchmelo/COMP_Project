@@ -34,7 +34,10 @@ public class Statements extends AnalysisVisitor {
         for (JmmNode child : children) {
             if(child.getHierarchy().getLast().equals("Expression")){
                 Type child_type = types.getExprType(child, table, currentMethod);
-                if (!child_type.getName().equals("boolean") && !child_type.isArray()) {
+                if (!child_type.getName().equals("boolean") || child_type.isArray()) {
+                    if (child_type.getName().equals("undefined")){
+                        return null;
+                    }
                     var message = "If/Else if condition must be a boolean expression";
                     addReport(Report.newError(
                             Stage.SEMANTIC,
@@ -54,6 +57,9 @@ public class Statements extends AnalysisVisitor {
 
         Type child_type = types.getExprType(child, table, currentMethod);
         if (!child_type.getName().equals("boolean") || child_type.isArray()) {
+            if (child_type.getName().equals("undefined")){
+                return null;
+            }
             var message = "While condition must be a boolean expression";
             addReport(Report.newError(
                     Stage.SEMANTIC,

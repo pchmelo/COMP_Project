@@ -91,13 +91,12 @@ public class JmmSymbolTableBuilder {
 
     private List<String> buildImports(List<JmmNode> children) {
         List<String> list = new ArrayList<>();
+        List<String> resultList = List.of();
         for (JmmNode child : children) {
 
-            //To transform "[io, io2]" in "io.io2"
-            List<String> resultList = List.of(child.get("name").substring(1, child.get("name").length() - 1).split(", "));
-            String name = String.join(".", resultList);
-
-            list.add(name);
+            //To transform "[io, io2]" in ["io2"]
+            resultList = List.of(child.get("name").substring(1, child.get("name").length() - 1).split(", "));
+            list.add(resultList.getLast());
         }
         return list;
     }

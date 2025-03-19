@@ -87,37 +87,10 @@ public class TypeUtils {
             case "MethodCallExpr":
                 String methodName = node.get("name");
                 Type type = table.getReturnType(methodName);
-                String variableCaller = node.getChild(0).get("name");
-
-                if(type == null){
-                    if(table.getImports().contains(variableCaller)){
-                        return new Type("Import", false);
-                    }
-                    if (!table.getSuper().isEmpty()){
-                        if(variableCaller.equals(table.getSuper())){
-                            return new Type("Super", false);
-                        }
-                    }
-
-                    Type type_ = getExprType(node.getChild(0), table, currentMethod);
-
-                    // se entra aqui é porque não está mencionado em lado nenhum mas passou no check ._.
-                    if (type_.getName() == "errado"){
-                        return new Type("errado", false);
-                    }
-
-                    if(table.getImports().contains(type_.getName())){
-                        return new Type("Import", false);
-                    }
-                    if (!table.getSuper().isEmpty()){
-                        if(type_.getName().equals(table.getClassName()) || type_.getName().equals(table.getSuper())){
-                            return new Type("Super", false);
-                        }
-                    }
+                if (type == null){
+                    return new Type("undefined", false);
                 }
                 return type;
-
-
             case "ArrayAccessExpr":
                 return getExprType(node.getChild(0), table, currentMethod);
             case "VarRefExpr":
@@ -167,6 +140,14 @@ public class TypeUtils {
         for (Symbol param : table.getParameters(currentMethod)){
             if (param.getName().equals(name)){
                 return param;
+            }
+        }
+        if(table.getImports().contains(name)){
+            return new Symbol(new Type(name,false),name);
+        }
+        if (!table.getSuper().isEmpty()){
+            if(name.equals(table.getSuper())){
+                return new Symbol(new Type(name,false),name);
             }
         }
         return new Symbol(new Type("errado",false),"errado");  //se temos undeclaredvariables muito improvavel de chegar aqui

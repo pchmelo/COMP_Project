@@ -23,6 +23,7 @@ public class UndeclaredVariable extends AnalysisVisitor {
         addVisit(Kind.MAIN_METHOD_DECL, this::visitMethodDecl);
         addVisit(Kind.VAR_REF_EXPR, this::visitVarRefExpr);
         addVisit(Kind.NEW_OBJECT_EXPR, this::visitNewObjectExpr);
+        addVisit(Kind.ASSIGN_STMT, this::visitVarRefExpr);
     }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
@@ -95,6 +96,12 @@ public class UndeclaredVariable extends AnalysisVisitor {
         if (table.getImports().stream()
                 .anyMatch(imp -> imp.equals(varRefName))) {
             return null;
+        }
+
+        if(varRefExpr.getParent().getKind().equals("MethodCallExpr")) {
+            if (table.getSuper().equals(varRefName)) {
+                return null;
+            }
         }
 
 

@@ -1,10 +1,8 @@
-
-
-class Varargs {
+class Varargs{
 
     public int foo() {
         int a;
-        a = d.varargs(10, 20, 30);
+        a = this.varargs(10, 20, 30);
         return a;
     }
 

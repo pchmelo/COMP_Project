@@ -42,7 +42,8 @@ public enum Kind {
     VAR_ARG_TYPE,
     METHOD_CALL_EXPR,
     PARENTHESES_EXPR,
-    EXPRESSION_STMT
+    EXPRESSION_STMT,
+    CLASS_TYPE,
     ;
 
 

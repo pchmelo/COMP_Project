@@ -43,11 +43,19 @@ public class ArrayCheck extends AnalysisVisitor {
         }
 
         if(!assigningType.getName().equals(variableType.getName())){
+            //Technically we don't need to check if it is import or not, since it would've been caught by thisCheck
+            if (assigningType.getName().equals("undefined")){
+                return null;
+            }
             String message = "An element of the array variable '" + variable + "' and type '" + variableType.getName() +"' is being assigned with the type '" + assigningType.getName() +"'";
             addReport(Report.newError(Stage.SEMANTIC, jmmNode.getLine(), jmmNode.getColumn(), message, null));
         }
 
         if(!indexType.getName().equals("int")){
+            //Technically we don't need to check if it is import or not, since it would've been caught by thisCheck
+            if (indexType.getName().equals("undefined")){
+                return null;
+            }
             String message = "Array variable '" + variable + "' is having one of its elements being accessed with a value of type '" + indexType.getName() +"'";
             addReport(Report.newError(Stage.SEMANTIC, jmmNode.getLine(), jmmNode.getColumn(), message, null));
         }
@@ -67,6 +75,9 @@ public class ArrayCheck extends AnalysisVisitor {
         Type expressionType = types.getExprType(expression, table, currentMethod);
 
         if(!expressionType.isArray()){
+            if (expressionType.getName().equals("undefined")){
+                return null;
+            }
             String message = "Length method must be accessed by an array expression";
             addReport(Report.newError(Stage.SEMANTIC, jmmNode.getLine(), jmmNode.getColumn(), message, null));
         }
@@ -88,11 +99,17 @@ public class ArrayCheck extends AnalysisVisitor {
 
         // Error if the index is not an integer
         if (!indexVarType.getName().equals("int")) {
+            if (indexVarType.getName().equals("undefined")){
+                return null;
+            }
             var message = "Trying to access array with index that is not an Integer";
             addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), mainNode.getColumn(), message, null));
         }
 
         if (!arrayVarType.isArray()) {
+            if (arrayVarType.getName().equals("undefined")){
+                return null;
+            }
             var message = "Trying to access a non-array variable as an array";
             addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), mainNode.getColumn(), message, null));
         }
@@ -115,9 +132,13 @@ public class ArrayCheck extends AnalysisVisitor {
             Type nextArrayElementType = types.getExprType(arrayElements.get(i), table, currentMethod);
 
             if (!firstArrayElementType.getName().equals(nextArrayElementType.getName())) {
-                var message = "Trying to initialize an array with different types in the elements";
-                addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), mainNode.getColumn(), message, null));
-                break;
+                if (firstArrayElementType.getName().equals("undefined")){
+                    firstArrayElementType = nextArrayElementType;
+                } else if (!nextArrayElementType.getName().equals("undefined")) {
+                    var message = "Trying to initialize an array with different types in the elements";
+                    addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), mainNode.getColumn(), message, null));
+                    break;
+                }
             }
         }
 
@@ -132,6 +153,9 @@ public class ArrayCheck extends AnalysisVisitor {
         Type arrayLengthType = types.getExprType(arrayLengthNode.getChild(0), table, currentMethod);
 
         if(!arrayLengthType.getName().equals("int")){
+            if (arrayLengthType.getName().equals("undefined")){
+                return null;
+            }
             String message = "Array must have integer length";
             addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), mainNode.getColumn(), message, null));
         }
