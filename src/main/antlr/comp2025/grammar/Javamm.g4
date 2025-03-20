@@ -29,9 +29,10 @@ varDeclaration
     ;
 
 methodDeclaration
-    : ('public')? ('static')? returnType name=ID '(' (argument (',' argument)*)? ')' '{' (varDeclaration | statement)* '}'  #MethodDecl
-    | ('public')? 'static' 'void' name='main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration | statement)* '}' #MainMethodDecl
+    : ('public')? (st='static')? returnType name=ID '(' (argument (',' argument)*)? ')' '{' (varDeclaration | statement)* '}'  #MethodDecl
+    | ('public')? st='static' 'void' name='main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration | statement)* '}' #MainMethodDecl
     ;
+
 
 returnType
     : type    #TypeTagNotUsed
@@ -83,7 +84,7 @@ expression
     | expression op=('==' | '!=') expression #BinaryExpr     //
     | expression op='&&' expression #BinaryExpr    //
     | expression op='||' expression #BinaryExpr    //
-    | 'new' 'int' '[' expression ']' #NewIntArrayExpr   ////
+    | 'new' defaultType '[' expression ']' #NewIntArrayExpr   ////
     | 'new' name=ID '(' ')' #NewObjectExpr      ////
     | '[' (expression (',' expression)*)? ']' #ArrayInit    ////
     | value=INTEGER #IntegerExpr        //

@@ -90,5 +90,47 @@ public class ExtraTests {
         TestUtils.mustFail(result);
     }
 
+    @Test
+    public void varArgs(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarArgs.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void varArgsField(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarArgsFields.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void varArgsDeclaration(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarArgsDeclaration.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void varArgsMethodReturn(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarArgsMethodReturn.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void differentAssignments(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/DifferentAssignments.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void differentAssignmentsError(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/DifferentAssignmentsError.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void varArgsMethod(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarArgsMethod.jmm"));
+        TestUtils.mustFail(result);
+    }
+
 
 }

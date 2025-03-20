@@ -66,7 +66,13 @@ public class WrongOperation extends AnalysisVisitor {
                 );
             }
 
+
+
             if(!val0.getName().equals(val1.getName()) || val0.isArray() != val1.isArray() ){
+                if(val0.getName().equals(val1.getName()) && rightExpression.getHierarchy().getFirst().equals("NewIntArrayExpr")){
+                    return null;
+                }
+
                 if(rightExpression.getKind().equals("MethodCallExpr")){
                     JmmNode variableRightExpression = rightExpression.getChild(0);
                     Type type_ = types.getExprType(variableRightExpression, table, currentMethod);
@@ -74,6 +80,7 @@ public class WrongOperation extends AnalysisVisitor {
                         return null;
                     }
                 }
+
                 if((!table.getImports().contains(val0.getName())) && (!table.getSuper().equals(val0.getName()))){
                     var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
                     addReport(Report.newError(

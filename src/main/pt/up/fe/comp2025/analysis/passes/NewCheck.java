@@ -56,7 +56,7 @@ public class NewCheck extends AnalysisVisitor {
     }
 
     private Void isNewAttributeInt(JmmNode jmmNode, SymbolTable table) {
-        JmmNode newArrayLength = jmmNode.getChild(0);
+        JmmNode newArrayLength = jmmNode.getChild(1);
         Type newArrayType = types.getExprType(newArrayLength, table, currentMethod);
 
         if(!newArrayType.getName().equals("int") || newArrayType.isArray()){

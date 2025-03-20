@@ -37,6 +37,8 @@ public class JmmSymbolTableBuilder {
     public JmmSymbolTable build(JmmNode root) {
 
         reports = new ArrayList<>();
+        Map<String, Boolean> staticMethods = new HashMap<>();
+
 
         // TODO: After your grammar supports more things inside the program (e.g., imports) you will have to change this
         var imports = buildImports(root.getChildren(IMPORT_DECL));
@@ -46,13 +48,16 @@ public class JmmSymbolTableBuilder {
         var superName = buildSuperName(classDecl);
         var fields = buildFields(classDecl);
 
-        var methods = buildMethods(classDecl);
+        var methods = buildMethods(classDecl, staticMethods);
         var returnTypes = buildReturnTypes(classDecl);
         var params = buildParams(classDecl);
         var locals = buildLocals(classDecl);
         var varargs = buildVarArgs(classDecl);
 
-        return new JmmSymbolTable(imports,className, superName , fields, methods, returnTypes, params, locals, varargs);
+        JmmSymbolTable table = new JmmSymbolTable(imports,className, superName , fields, methods, returnTypes, params, locals, varargs);
+        table.putObject("staticMethods", staticMethods);
+
+        return table;
     }
 
     private Map<String,String> buildVarArgs(JmmNode classDecl) {
@@ -202,7 +207,7 @@ public class JmmSymbolTableBuilder {
         return map;
     }
 
-    private List<String> buildMethods(JmmNode classDecl) {
+    private List<String> buildMethods(JmmNode classDecl, Map<String, Boolean> staticMethods) {
 
         /*var methods = classDecl.getChildren(METHOD_DECL).stream()
                 .map(method -> method.get("name"))
@@ -211,6 +216,15 @@ public class JmmSymbolTableBuilder {
         List<JmmNode> children = classDecl.getChildren(METHOD_DECL);
         for (JmmNode child : children){
             methods.add(child.get("name"));
+
+            try{
+                String static_ = child.get("st");
+                staticMethods.put(child.get("name"), true);
+            }
+            catch(Exception e){
+                staticMethods.put(child.get("name"), false);
+            }
+
         }
         // TODO: O que é praticamente fazer direto porque só há um main... ó será que não ?? é que a forma que está a gramatica escrita pode esxitir mais que um
         children = classDecl.getChildren(MAIN_METHOD_DECL);

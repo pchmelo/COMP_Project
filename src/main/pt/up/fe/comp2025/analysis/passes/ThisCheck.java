@@ -12,6 +12,7 @@ import pt.up.fe.comp2025.ast.TypeUtils;
 import pt.up.fe.specs.util.SpecsCheck;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ThisCheck extends AnalysisVisitor {
     private TypeUtils types = new TypeUtils(null);
@@ -77,7 +78,20 @@ public class ThisCheck extends AnalysisVisitor {
                 return null;
             }
         }else{
-            if (firstType.getName().equals("this") || table.getClassName().equals(firstType.getName())){
+            HashMap<String, Boolean> staticMethods = (HashMap<String, Boolean>) table.getObject("staticMethods");
+
+            if ((firstType.getName().equals("this")) || table.getClassName().equals(firstType.getName())){
+                if(firstType.getName().equals("this") && staticMethods.get(methodName)){
+                    var message = "Method '" + methodName + "' is static and cannot be called with 'this'";
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            jmmNode.getLine(),
+                            jmmNode.getColumn(),
+                            message,
+                            null)
+                    );
+                }
+
                 return null;
             }
         }

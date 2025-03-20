@@ -79,11 +79,15 @@ public class TypeUtils {
                     Type right = getExprType(node.getChild(1), table, currentMethod);
                     return left;
                 }
+            case "#DflType":
+                return new Type(node.get("name"), false);
 
             case "IntegerExpr", "ArrayLengthExpr", "Postfix", "IntType":
                 return new Type("int", false);
-            case "TrueExpr" , "FalseExpr", "NotExpr":
+            case "TrueExpr" , "FalseExpr", "NotExpr", "BooleanType":
                 return new Type("boolean", false);
+            case "StringType":
+                return new Type("String", false);
             case "MethodCallExpr":
                 String methodName = node.get("name");
                 Type type = table.getReturnType(methodName);
@@ -119,7 +123,7 @@ public class TypeUtils {
                 }
                 return getExprType(children.getFirst(), table, currentMethod);
             case "NewIntArrayExpr":
-                return new Type("int", true);
+                return getExprType(node.getChild(0), table, currentMethod);
             default:
                 System.out.println("I am "+ kind);
                 return new Type("outro", false);
