@@ -1,0 +1,23 @@
+class IfSequence {
+
+    public static void main(String[] args) {
+
+    }
+
+    public int foo() {
+        int a;
+
+        if (a) {
+        }
+        else if (true && false) {
+
+        }
+        else if (false == true) {
+        }
+        else
+        {
+        }
+
+        return 0;
+    }
+}

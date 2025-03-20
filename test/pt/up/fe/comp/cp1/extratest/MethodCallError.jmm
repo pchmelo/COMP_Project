@@ -1,0 +1,36 @@
+class MethodCallError {
+
+    public static void main(String[] args) {
+
+    }
+
+    public boolean bar (int a) {
+        return true;
+    }
+
+    public int ten() {
+        return 10;
+    }
+
+    public int close(int a) {
+        return this.ten();
+    }
+
+    public int open(int [] a) {
+        return a.length;
+    }
+
+
+    public int foo() {
+        boolean b;
+        MethodCallError a;
+        int result;
+
+        b = this.bar(10);
+        result = a.error();
+
+        result = this.open([1,2, this.close(10)]);
+
+        return result;
+    }
+}

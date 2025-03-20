@@ -1,0 +1,19 @@
+class ArrayTest extends C {
+
+    public static void main(String[] args) {
+
+    }
+
+    public int bar () {
+        return 4;
+    }
+
+    public int foo() {
+        int [] a;
+
+        a = new int [5];
+        a = [9, 7, this.bar(), this.away()];
+
+        return 0;
+    }
+}

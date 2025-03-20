@@ -105,7 +105,7 @@ public class TypeUtils {
                 Type type_ = getExprType(arrayElements.get(0), table, currentMethod);
                 return new Type(type_.getName(),true);
             case "ThisExpr":
-                return new Type("this", false);  //tecnicamente dará sempre erro sozinho. só não dá erro quando this.metodo pois o type é return type do metodo e para this.varivel que é a variavel...
+                 return new Type("this", false);  //tecnicamente dará sempre erro sozinho. só não dá erro quando this.metodo pois o type é return type do metodo e para this.varivel que é a variavel...
             case "ParenthesesExpr":
                 return getExprType(node.getChild(0),table,currentMethod);
             case "NewObjectExpr":

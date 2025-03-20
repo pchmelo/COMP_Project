@@ -97,7 +97,7 @@ public class ThisCheck extends AnalysisVisitor {
 
         if (table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper()))) {
             return null;
-        }else if (type_.getName().equals(table.getClassName()) && !table.getSuper().isEmpty()){
+        }else if ((type_.getName().equals(table.getClassName()) || (type_.getName().equals("this")))  && !table.getSuper().isEmpty()){
             return null;
         }else{
             if(expressionType.getName().equals("undefined") && (firstType.getName().equals("this") || table.getClassName().equals(firstType.getName()))) {

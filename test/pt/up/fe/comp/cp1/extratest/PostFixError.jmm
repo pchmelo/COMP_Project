@@ -1,0 +1,23 @@
+class PostFixError {
+
+    public static void main(String[] args) {
+
+    }
+
+    public boolean error (int a) {
+        return true;
+    }
+
+    public int foo() {
+        int a;
+        boolean b;
+
+        a = 1;
+        b = 0;
+
+        a++;
+        b--;
+
+        return 0;
+    }
+}

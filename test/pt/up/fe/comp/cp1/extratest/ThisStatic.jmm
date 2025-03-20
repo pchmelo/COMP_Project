@@ -1,0 +1,19 @@
+class ThisStatic {
+
+    public static void main(String[] args) {
+
+    }
+
+    public static boolean bar (int a) {
+        return true;
+    }
+
+    public int foo() {
+        boolean b;
+        int a;
+
+        b = this.bar(a);
+
+        return 0;
+    }
+}

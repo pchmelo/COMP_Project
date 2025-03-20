@@ -70,7 +70,7 @@ public class WrongOperation extends AnalysisVisitor {
                 if(rightExpression.getKind().equals("MethodCallExpr")){
                     JmmNode variableRightExpression = rightExpression.getChild(0);
                     Type type_ = types.getExprType(variableRightExpression, table, currentMethod);
-                    if (table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper()))){
+                    if (table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper())) || (type_.getName().equals("this") && !table.getSuper().isEmpty()) ){
                         return null;
                     }
                 }

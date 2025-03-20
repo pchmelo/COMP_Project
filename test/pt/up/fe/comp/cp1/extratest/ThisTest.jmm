@@ -1,0 +1,21 @@
+class ThisTest {
+
+    public static void main(String[] args) {
+
+    }
+
+    public boolean bar (int a) {
+        return true;
+    }
+
+    public int foo() {
+        boolean b;
+        int a;
+        ThisTest c;
+
+        b = this.bar(a);
+        c = this;
+
+        return 0;
+    }
+}
