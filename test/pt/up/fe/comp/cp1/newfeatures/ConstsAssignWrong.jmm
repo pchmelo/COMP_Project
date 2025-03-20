@@ -1,0 +1,19 @@
+class ConstsAssignWrong {
+
+    public static void main(String[] args) {
+
+    }
+
+    public int ten() {
+        return 10;
+    }
+
+    public int foo() {
+        const int hundred = 100;
+        const int ten = this.ten();
+
+        hundred = 1;
+
+        return 0;
+    }
+}

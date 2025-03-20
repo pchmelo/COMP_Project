@@ -71,6 +71,7 @@ statement
     | 'if' '(' expression ')' statement ('else if' '(' expression ')' statement)* ('else' statement)? #IfStmt
     | 'while' '(' expression ')' statement #WhileStmt
     | expression ';' #ExpressionStmt
+    | 'const' defaultType name=ID '=' expression ';' #ConstStmt
     | name=ID op=('=' | '+=' | '-=' | '*=' | '/=') expression ';' #AssignStmt    //
     | name=ID '[' index=expression ']' '=' expression ';' #ArrayAssignStmt      //
     | returnStatement    #ReturnStmt                                            //

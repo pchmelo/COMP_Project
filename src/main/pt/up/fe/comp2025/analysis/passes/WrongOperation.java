@@ -35,12 +35,23 @@ public class WrongOperation extends AnalysisVisitor {
         String operator = expression.get("op");
 
         Symbol variable_ = types.valueFromVarReturner(expression.get("name"),table,currentMethod);
-        Type val0 =  types.valueFromTypeReturner(variable_.getType());
+        Type val0 =  variable_.getType();
 
         var rightExpression = expression.getChild(0);
         Type val1 = types.getExprType(rightExpression, table, currentMethod);
 
         if(operator.equals("=")){
+            if ((boolean) val0.getObject("isConst")) {
+                var message = "Cannot assign a value to a constant";
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        expression.getLine(),
+                        expression.getColumn(),
+                        message,
+                        null)
+                );
+            }
+
             if(val1.getName().equals("this")){
                 if (val1.isArray()){
                     var message = "Cannot assign an array of 'this' to anything";
