@@ -39,7 +39,6 @@ public class JmmSymbolTableBuilder {
         reports = new ArrayList<>();
         Map<String, Boolean> staticMethods = new HashMap<>();
 
-
         // TODO: After your grammar supports more things inside the program (e.g., imports) you will have to change this
         var imports = buildImports(root.getChildren(IMPORT_DECL));
         var classDecl = root.getChild(imports.size()); //Para saltar imediatamente para a ClassDeclaration
@@ -197,6 +196,16 @@ public class JmmSymbolTableBuilder {
             List<JmmNode> children = method.getChildren(VAR_DECL);
             for (JmmNode child : children){
                 Type returnType = typerReturner(child);
+                returnType.putObject("isConst", false);
+
+                Symbol tempAux = new Symbol(returnType, child.get("name"));
+                locals.add(tempAux);
+            }
+            children = method.getChildren(CONST_STMT);
+            for (JmmNode child : children){
+                Type returnType = typerReturner(child);
+                returnType.putObject("isConst", true);
+
                 Symbol tempAux = new Symbol(returnType, child.get("name"));
                 locals.add(tempAux);
             }

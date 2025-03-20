@@ -157,13 +157,6 @@ public class TypeUtils {
         return new Symbol(new Type("errado",false),"errado");  //se temos undeclaredvariables muito improvavel de chegar aqui
     }
 
-    public Type valueFromTypeReturner(Type returnType){
-        if (returnType.isArray()) {
-            return new Type(returnType.getName(), true);
-
-        }
-        return new Type(returnType.getName(), false);
-    }
 
 
 }

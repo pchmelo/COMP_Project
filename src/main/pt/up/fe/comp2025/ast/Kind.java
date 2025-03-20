@@ -44,6 +44,7 @@ public enum Kind {
     PARENTHESES_EXPR,
     EXPRESSION_STMT,
     CLASS_TYPE,
+    CONST_STMT,
     ;
 
 
