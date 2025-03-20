@@ -152,9 +152,8 @@ public class JmmSymbolTableBuilder {
                 case "ClassType":
                     returnType = TypeUtils.newObjectType(child.getChild(0).get("name"));
                     break;
-                case "ArrayType", "VarArgType":
+                case "ArrayType":
                     returnType = TypeUtils.newArrayType(child.getChild(0).getChild(0).get("name"));
-                    returnType.putObject("isVarArg", true);
                     break;
                 default:
                     returnType = TypeUtils.newObjectType(child.getChild(0).get("name"));
@@ -181,6 +180,16 @@ public class JmmSymbolTableBuilder {
                 Symbol aux = new Symbol(returnType, child.get("name"));
                 symbolList.add(aux);
             }
+
+            List<JmmNode> vararchildren = method.getChildren(VAR_ARG_TYPE);
+            for (JmmNode varargNode : vararchildren) {
+                Type returnType = typerReturner(varargNode);
+                Type newReturnType = TypeUtils.newArrayType(returnType.getName());
+                newReturnType.putObject("isVarArg", true);
+                Symbol aux = new Symbol(newReturnType, varargNode.get("name"));
+                symbolList.add(aux);
+            }
+
             map.put(name, symbolList);
         }
 

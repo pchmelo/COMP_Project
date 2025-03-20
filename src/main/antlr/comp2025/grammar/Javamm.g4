@@ -29,9 +29,11 @@ varDeclaration
     ;
 
 methodDeclaration
-    : ('public')? (st='static')? returnType name=ID '(' (argument (',' argument)*)? ')' '{' (varDeclaration | statement)* '}'  #MethodDecl
+    : ('public')? (st='static')? returnType name=ID '(' ( varargDeclaration | argument (',' argument)* (',' varargDeclaration)?  )? ')' '{' (varDeclaration | statement)* '}'  #MethodDecl
     | ('public')? st='static' 'void' name='main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration | statement)* '}' #MainMethodDecl
     ;
+
+//(v | m a* b?)?
 
 
 returnType
@@ -48,9 +50,12 @@ argument
     : type name=ID #Param
     ;
 
+varargDeclaration
+    : type '...' name=ID        #VarArgType
+    ;
+
 type
     : defaultType '[' ']'       #ArrayType
-    | defaultType '...'         #VarArgType
     | defaultType               #DflType
     | name=ID                   #ClassType
     ;
