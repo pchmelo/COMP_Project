@@ -132,5 +132,45 @@ public class ExtraTests {
         TestUtils.mustFail(result);
     }
 
+    @Test
+    public void VarAssignStmt(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarAssignStmt.jmm"));
+        TestUtils.noErrors(result);
+    }
 
+    @Test
+    public void VarAssignStmtThis(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarAssignStmtThis.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void VarAssignStmtThisArray(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarAssignStmtThisArray.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void VarAssignStmtThisSuper(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarAssignStmtThisSuper.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void VarAssignStmtError(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarAssignStmtError.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void VarAssignStmtClassError(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarAssignStmtClassError.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void VarAssignStmtClass(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarAssignStmtClass.jmm"));
+        TestUtils.noErrors(result);
+    }
 }

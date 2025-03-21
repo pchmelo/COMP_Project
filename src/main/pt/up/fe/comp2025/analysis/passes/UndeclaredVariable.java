@@ -24,6 +24,7 @@ public class UndeclaredVariable extends AnalysisVisitor {
         addVisit(Kind.VAR_REF_EXPR, this::visitVarRefExpr);
         addVisit(Kind.NEW_OBJECT_EXPR, this::visitNewObjectExpr);
         addVisit(Kind.ASSIGN_STMT, this::visitVarRefExpr);
+        addVisit(Kind.VAR_ASSIGN_STMT, this::visitVarRefExpr);  //JUST TO CHECK IF ITS ACTUALLY BEING STORE ON LOCALS
     }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {

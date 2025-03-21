@@ -72,6 +72,7 @@ statement
     | 'while' '(' expression ')' statement #WhileStmt
     | expression ';' #ExpressionStmt
     | 'const' defaultType name=ID '=' expression ';' #ConstStmt
+    | type name=ID '=' expression ';' #VarAssignStmt
     | name=ID op=('=' | '+=' | '-=' | '*=' | '/=') expression ';' #AssignStmt    //
     | name=ID '[' index=expression ']' '=' expression ';' #ArrayAssignStmt      //
     | returnStatement    #ReturnStmt                                            //

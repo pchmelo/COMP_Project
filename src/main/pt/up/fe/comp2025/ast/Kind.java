@@ -45,6 +45,7 @@ public enum Kind {
     EXPRESSION_STMT,
     CLASS_TYPE,
     CONST_STMT,
+    VAR_ASSIGN_STMT
     ;
 
 

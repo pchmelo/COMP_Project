@@ -27,6 +27,85 @@ public class WrongOperation extends AnalysisVisitor {
         addVisit(Kind.MAIN_METHOD_DECL, this::visitMethodDecl);
         addVisit(Kind.BINARY_EXPR, this::visitBinaryExpr);
         addVisit(Kind.ASSIGN_STMT, this::visitAssignmentExpr);
+        addVisit(Kind.VAR_ASSIGN_STMT, this::visitVarAssignmentExpr);
+    }
+
+    private Void visitVarAssignmentExpr(JmmNode jmmNode, SymbolTable table) {
+        SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
+        Symbol variable_ = types.valueFromVarReturner(jmmNode.get("name"),table,currentMethod);
+        Type val0 =  variable_.getType();
+
+        JmmNode expression = jmmNode.getChild(1);
+        Type val1 = types.getExprType(expression,table,currentMethod);
+
+        if(val1.getName().equals("this")){
+            if (val1.isArray()){
+                var message = "Cannot assign an array of 'this' to anything";
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        expression.getLine(),
+                        expression.getColumn(),
+                        message,
+                        null)
+                );
+            }
+
+            if (val0.getName().equals(table.getClassName()) || val0.getName().equals(table.getSuper() )){
+                return null;
+            }
+            var message = "Cannot assign 'this' to a variable with type " + val0.getName();
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    expression.getLine(),
+                    expression.getColumn(),
+                    message,
+                    null)
+            );
+        }
+
+
+        if(!val0.getName().equals(val1.getName()) || val0.isArray() != val1.isArray() ){
+            if(val0.getName().equals(val1.getName()) && expression.getHierarchy().getFirst().equals("NewIntArrayExpr")){
+                return null;
+            }
+
+            if(expression.getKind().equals("MethodCallExpr")){
+                JmmNode variableRightExpression = expression.getChild(0);
+                Type type_ = types.getExprType(variableRightExpression, table, currentMethod);
+                if (table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper())) || (type_.getName().equals("this") && !table.getSuper().isEmpty()) ){
+                    return null;
+                }
+            }
+
+            if(val0.getName().equals(table.getClassName()) || val1.getName().equals(table.getClassName())){
+                if (!table.getSuper().equals(val1.getName()) && !table.getSuper().equals(val0.getName())){
+                    var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            expression.getLine(),
+                            expression.getColumn(),
+                            message,
+                            null)
+                    );
+                }
+                return null;
+            }
+
+            if((!table.getImports().contains(val0.getName())) && (!table.getSuper().equals(val0.getName()))){
+                var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        expression.getLine(),
+                        expression.getColumn(),
+                        message,
+                        null)
+                );
+                return null;
+            }
+
+        }
+
+        return null;
     }
 
     private Void visitAssignmentExpr(JmmNode expression, SymbolTable table) {
@@ -92,17 +171,6 @@ public class WrongOperation extends AnalysisVisitor {
                     }
                 }
 
-                if((!table.getImports().contains(val0.getName())) && (!table.getSuper().equals(val0.getName()))){
-                    var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
-                    addReport(Report.newError(
-                            Stage.SEMANTIC,
-                            expression.getLine(),
-                            expression.getColumn(),
-                            message,
-                            null)
-                    );
-                }
-
                 if(val0.getName().equals(table.getClassName()) || val1.getName().equals(table.getClassName())){
                     if (!table.getSuper().equals(val1.getName()) && !table.getSuper().equals(val0.getName())){
                         var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
@@ -114,6 +182,18 @@ public class WrongOperation extends AnalysisVisitor {
                                 null)
                         );
                     }
+                    return null;
+                }
+
+                if((!table.getImports().contains(val0.getName())) && (!table.getSuper().equals(val0.getName()))){
+                    var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            expression.getLine(),
+                            expression.getColumn(),
+                            message,
+                            null)
+                    );
                 }
 
 

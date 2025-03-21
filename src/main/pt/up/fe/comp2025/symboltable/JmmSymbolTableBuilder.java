@@ -218,7 +218,14 @@ public class JmmSymbolTableBuilder {
                 Symbol tempAux = new Symbol(returnType, child.get("name"));
                 locals.add(tempAux);
             }
+            children = method.getChildren(VAR_ASSIGN_STMT);
+            for (JmmNode child : children){
+                Type returnType = typerReturner(child);
+                returnType.putObject("isConst", false);
 
+                Symbol tempAux = new Symbol(returnType, child.get("name"));
+                locals.add(tempAux);
+            }
             map.put(name, locals);
         }
 

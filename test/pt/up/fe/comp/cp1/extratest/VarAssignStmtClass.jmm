@@ -1,0 +1,16 @@
+import C;
+
+class A extends B{
+
+    public int foo() {
+        int a;
+        B b;
+        C c;
+
+        A d = b;
+        B e = d;
+
+        return a;
+    }
+
+}

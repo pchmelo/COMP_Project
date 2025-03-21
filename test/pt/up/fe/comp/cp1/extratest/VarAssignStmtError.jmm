@@ -1,0 +1,12 @@
+class VarAssignStmtError {
+
+    public int foo() {
+        int a;
+        int b;
+
+        int d = true;
+
+        return a;
+    }
+
+}
