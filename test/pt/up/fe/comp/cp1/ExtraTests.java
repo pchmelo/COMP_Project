@@ -43,22 +43,11 @@ public class ExtraTests {
     }
 
     @Test
-    public void postFix(){
-        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/PostFix.jmm"));
-        TestUtils.noErrors(result);
-    }
-
-    @Test
-    public void postFixError(){
-        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/PostFixError.jmm"));
-        TestUtils.mustFail(result);
-    }
-
-    @Test
     public void methodCall(){
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MethodCall.jmm"));
         TestUtils.noErrors(result);
     }
+
 
     @Test
     public void methodCallError(){
@@ -114,17 +103,6 @@ public class ExtraTests {
         TestUtils.mustFail(result);
     }
 
-    @Test
-    public void differentAssignments(){
-        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/DifferentAssignments.jmm"));
-        TestUtils.noErrors(result);
-    }
-
-    @Test
-    public void differentAssignmentsError(){
-        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/DifferentAssignmentsError.jmm"));
-        TestUtils.mustFail(result);
-    }
 
     @Test
     public void varArgsMethod(){

@@ -23,4 +23,28 @@ public class NewFeaturesTest {
         TestUtils.mustFail(result);
     }
 
+    @Test
+    public void postFix(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/newfeatures/PostFix.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void postFixError(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/newfeatures/PostFixError.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void differentAssignments(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/newfeatures/DifferentAssignments.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void differentAssignmentsError(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/newfeatures/DifferentAssignmentsError.jmm"));
+        TestUtils.mustFail(result);
+    }
+
 }
