@@ -75,6 +75,19 @@ public class ThisCheck extends AnalysisVisitor {
         //FUNCAO nao EXISTE?
         if (expressionType.getName().equals("undefined")){
             if (!firstType.getName().equals("this") && !table.getClassName().equals(firstType.getName())){
+                if (firstType.getName().equals("String") || firstType.isArray()){
+                    return null;
+                } else if (firstType.getName().equals("int") || firstType.getName().equals("boolean")) {
+
+                    var message = "Maybe the type of variable cannot call method '" + methodName + "'.";
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            jmmNode.getLine(),
+                            jmmNode.getColumn(),
+                            message,
+                            null)
+                    );
+                }
                 return null;
             }
         }else{
@@ -97,7 +110,7 @@ public class ThisCheck extends AnalysisVisitor {
         }
 
         Type type_ = types.getExprType(jmmNode.getChild(0), table, currentMethod);
-        if(type_.getName().equals("errado") || !(type_.getName().equals("String") && !type_.isArray())){
+        if(type_.getName().equals("errado")){
             var message = "Idk what are you doing with Method '" + methodName +"' but whatever it is...it is WRONG";
             addReport(Report.newError(
                     Stage.SEMANTIC,
@@ -108,7 +121,6 @@ public class ThisCheck extends AnalysisVisitor {
             );
             return null;
         }
-
 
         if (table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper()))) {
             return null;

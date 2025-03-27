@@ -72,6 +72,9 @@ public class Varargs extends AnalysisVisitor {
             if(table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper()))){
                 return null;
             }
+            if (type_.getName().equals("String") || type_.isArray()){
+                return null;
+            }
         }
 
 
@@ -96,7 +99,7 @@ public class Varargs extends AnalysisVisitor {
             return null;
         }
 
-        if (type_.getName().equals("String") && !type_.isArray()) {
+        if (type_.getName().equals("String") || type_.isArray()){
             return null;
         }
 

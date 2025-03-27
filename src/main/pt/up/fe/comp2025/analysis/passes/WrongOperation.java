@@ -76,7 +76,7 @@ public class WrongOperation extends AnalysisVisitor {
                     return null;
                 }
 
-                if (type_.getName().equals("String") && !type_.isArray()) {
+                if (type_.getName().equals("String") || type_.isArray()){
                     return null;
                 }
 
@@ -175,7 +175,7 @@ public class WrongOperation extends AnalysisVisitor {
                         return null;
                     }
 
-                    if (type_.getName().equals("String") && !type_.isArray()) {
+                    if (type_.getName().equals("String") || type_.isArray()){
                         return null;
                     }
                 }
