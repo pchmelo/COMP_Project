@@ -97,7 +97,7 @@ public class ThisCheck extends AnalysisVisitor {
         }
 
         Type type_ = types.getExprType(jmmNode.getChild(0), table, currentMethod);
-        if(type_.getName().equals("errado")){
+        if(type_.getName().equals("errado") || !(type_.getName().equals("String") && !type_.isArray())){
             var message = "Idk what are you doing with Method '" + methodName +"' but whatever it is...it is WRONG";
             addReport(Report.newError(
                     Stage.SEMANTIC,
@@ -108,6 +108,7 @@ public class ThisCheck extends AnalysisVisitor {
             );
             return null;
         }
+
 
         if (table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper()))) {
             return null;

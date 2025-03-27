@@ -75,6 +75,11 @@ public class WrongOperation extends AnalysisVisitor {
                 if (table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper())) || (type_.getName().equals("this") && !table.getSuper().isEmpty()) ){
                     return null;
                 }
+
+                if (type_.getName().equals("String") && !type_.isArray()) {
+                    return null;
+                }
+
             }
 
             if(val0.getName().equals(table.getClassName()) || val1.getName().equals(table.getClassName())){
@@ -167,6 +172,10 @@ public class WrongOperation extends AnalysisVisitor {
                     JmmNode variableRightExpression = rightExpression.getChild(0);
                     Type type_ = types.getExprType(variableRightExpression, table, currentMethod);
                     if (table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper())) || (type_.getName().equals("this") && !table.getSuper().isEmpty()) ){
+                        return null;
+                    }
+
+                    if (type_.getName().equals("String") && !type_.isArray()) {
                         return null;
                     }
                 }

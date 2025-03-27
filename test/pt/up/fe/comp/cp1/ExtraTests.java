@@ -162,4 +162,10 @@ public class ExtraTests {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/ExampleCode.jmm"));
         TestUtils.noErrors(result);
     }
+
+    @Test
+    public void ImportExample(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/ImportExample.jmm"));
+        TestUtils.noErrors(result);
+    }
 }

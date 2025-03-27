@@ -95,6 +95,11 @@ public class Varargs extends AnalysisVisitor {
         if (table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper())) || (type_.getName().equals("this") && !table.getSuper().isEmpty()) ) {
             return null;
         }
+
+        if (type_.getName().equals("String") && !type_.isArray()) {
+            return null;
+        }
+
         /* Type typeMainNode = types.getExprType(mainNode, table, currentMethod);
 
         if(typeMainNode == null){
