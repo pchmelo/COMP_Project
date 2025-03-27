@@ -86,6 +86,12 @@ public class ExtraTests {
     }
 
     @Test
+    public void varArgsArrayParam(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarArgsArrayParam.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
     public void varArgsField(){
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarArgsFields.jmm"));
         TestUtils.mustFail(result);
@@ -102,7 +108,6 @@ public class ExtraTests {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarArgsMethodReturn.jmm"));
         TestUtils.mustFail(result);
     }
-
 
     @Test
     public void varArgsMethod(){
@@ -149,6 +154,12 @@ public class ExtraTests {
     @Test
     public void VarAssignStmtClass(){
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VarAssignStmtClass.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void ExampleCode(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/ExampleCode.jmm"));
         TestUtils.noErrors(result);
     }
 }
