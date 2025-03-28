@@ -7,7 +7,7 @@ class A extends B{
         B b;
         C c;
 
-        A d;
+        A d = new A();
         B e = d;
 
         return a;

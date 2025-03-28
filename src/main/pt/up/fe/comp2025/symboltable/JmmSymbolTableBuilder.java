@@ -38,6 +38,7 @@ public class JmmSymbolTableBuilder {
 
         reports = new ArrayList<>();
         Map<String, Boolean> staticMethods = new HashMap<>();
+        Map<String, Boolean> isObjectInstantiatedMap = new HashMap<>();
         Map<String, String> bomb = new HashMap<>();
 
         // TODO: After your grammar supports more things inside the program (e.g., imports) you will have to change this
@@ -46,16 +47,17 @@ public class JmmSymbolTableBuilder {
         SpecsCheck.checkArgument(CLASS_DECL.check(classDecl), () -> "Expected a class declaration: " + classDecl);
         String className = classDecl.get("name");
         var superName = buildSuperName(classDecl);
-        var fields = buildFields(classDecl);
+        var fields = buildFields(classDecl, isObjectInstantiatedMap);
 
         var methods = buildMethods(classDecl, staticMethods);
         var returnTypes = buildReturnTypes(classDecl);
-        var params = buildParams(classDecl);
-        var locals = buildLocals(classDecl);
+        var params = buildParams(classDecl, isObjectInstantiatedMap);
+        var locals = buildLocals(classDecl, isObjectInstantiatedMap);
         var varargs = buildVarArgs(classDecl);
 
         JmmSymbolTable table = new JmmSymbolTable(imports,className, superName , fields, methods, returnTypes, params, locals, varargs);
         table.putObject("staticMethods", staticMethods);
+        table.putObject("isObjectInstantiatedMap",isObjectInstantiatedMap);
         bomb.put(className,"");
         bomb.put(superName,"");
         table.putObject("bombs", bomb);
@@ -79,13 +81,14 @@ public class JmmSymbolTableBuilder {
         return varargs;
     }
 
-    private List<Symbol> buildFields(JmmNode classDecl) {
+    private List<Symbol> buildFields(JmmNode classDecl, Map<String,Boolean> isObjectInstantiatedMap) {
         List<Symbol> fields = new ArrayList<>();
         List<JmmNode> children = classDecl.getChildren(VAR_DECL);
         for (JmmNode child : children){
             Type returnType = typerReturner(child);
             Symbol tempAux = new Symbol(returnType, child.get("name"));
             fields.add(tempAux);
+            isObjectInstantiatedMap.put(child.get("name"), false);
         }
         return fields;
     }
@@ -167,7 +170,7 @@ public class JmmSymbolTableBuilder {
         return returnType;
     }
 
-    private Map<String, List<Symbol>> buildParams(JmmNode classDecl) {
+    private Map<String, List<Symbol>> buildParams(JmmNode classDecl, Map<String,Boolean> isObjectInstantiatedMap) {
         Map<String, List<Symbol>> map = new HashMap<>();
         /* var params = method.getChildren(PARAM).stream()
                     // TODO: When you support new types, this code has to be updated
@@ -183,6 +186,7 @@ public class JmmSymbolTableBuilder {
                 Type returnType = typerReturner(child);
                 Symbol aux = new Symbol(returnType, child.get("name"));
                 symbolList.add(aux);
+                isObjectInstantiatedMap.put(child.get("name"), true); //we consider the parameters to be instantiated when someone calls the method
             }
 
             List<JmmNode> vararchildren = method.getChildren(VAR_ARG_TYPE);
@@ -205,7 +209,7 @@ public class JmmSymbolTableBuilder {
         return map;
     }
 
-    private Map<String, List<Symbol>> buildLocals(JmmNode classDecl) {
+    private Map<String, List<Symbol>> buildLocals(JmmNode classDecl, Map<String,Boolean> isObjectInstantiatedMap) {
 
         var map = new HashMap<String, List<Symbol>>();
         List<JmmNode> bigList = classDecl.getChildren(METHOD_DECL);
@@ -223,6 +227,7 @@ public class JmmSymbolTableBuilder {
 
                 Symbol tempAux = new Symbol(returnType, child.get("name"));
                 locals.add(tempAux);
+                isObjectInstantiatedMap.put(child.get("name"), false);
             }
             children = method.getChildren(CONST_STMT);
             for (JmmNode child : children){
@@ -231,6 +236,7 @@ public class JmmSymbolTableBuilder {
 
                 Symbol tempAux = new Symbol(returnType, child.get("name"));
                 locals.add(tempAux);
+                isObjectInstantiatedMap.put(child.get("name"), false);
             }
             children = method.getChildren(VAR_ASSIGN_STMT);
             for (JmmNode child : children){
@@ -239,6 +245,7 @@ public class JmmSymbolTableBuilder {
 
                 Symbol tempAux = new Symbol(returnType, child.get("name"));
                 locals.add(tempAux);
+                isObjectInstantiatedMap.put(child.get("name"), false);
             }
             map.put(name, locals);
         }

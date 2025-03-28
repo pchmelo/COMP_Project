@@ -82,6 +82,12 @@ public class WrongOperation extends AnalysisVisitor {
             );
         }
 
+        //if a = new A(); then a is instantiated
+        if (expression.getKind().equals("NewObjectExpr")){
+            Map<String, Boolean> isObjectInstantiatedMap = (Map<String, Boolean>) table.getObject("isObjectInstantiatedMap");
+            isObjectInstantiatedMap.put(variable_.getName(),true);
+            table.putObject("isObjectInstantiatedMap", isObjectInstantiatedMap);
+        }
 
         if(!val0.getName().equals(val1.getName()) || val0.isArray() != val1.isArray() ){
             if(val0.getName().equals(val1.getName()) && expression.getHierarchy().getFirst().equals("NewIntArrayExpr")){
@@ -114,6 +120,23 @@ public class WrongOperation extends AnalysisVisitor {
                 return null;
             }
 
+            if(table.getImports().contains(val1.getName()) || val1.getName().equals(table.getClassName()) || val1.getName().equals(table.getSuper())){
+                if (expression.getKind().equals("VarRefExpr")){
+                    Map<String, Boolean> isObjectInstantiatedMap = (Map<String, Boolean>) table.getObject("isObjectInstantiatedMap");
+                    if (!isObjectInstantiatedMap.get(expression.get("name"))){
+                        var message = "Type error: Object variable used in the right expression wasn't instantiated before assignment";
+                        addReport(Report.newError(
+                                Stage.SEMANTIC,
+                                expression.getLine(),
+                                expression.getColumn(),
+                                message,
+                                null)
+                        );
+                        return null;
+                    }
+                }
+            }
+
             //IM DONE WITH SIMPLIFYING CODE
             Map<String, String> bombs = (Map<String, String>) table.getObject("bombs");
 
@@ -130,9 +153,22 @@ public class WrongOperation extends AnalysisVisitor {
                 return null;
             }
             // Case 3: val0 is imports and val1 className or super
-            if (table.getImports().contains(val0.getName())) {
+            if (table.getImports().contains(val0.getName()) && (val1.getName().equals(table.getClassName()) || val1.getName().equals(table.getSuper()))) {
+                //cannot do import = class or super if no super
+                if(table.getSuper().isEmpty()){
+                    var message = "Type error: cannot assign something of an Import class to a variable of type class, if class doesn't extend";
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            expression.getLine(),
+                            expression.getColumn(),
+                            message,
+                            null)
+                    );
+                    return null;
+                }
+
                 String insideBomb = bombs.get(val0.getName());
-                if (!insideBomb.isEmpty() && (val1.getName().equals(table.getClassName()) || val1.getName().equals(table.getSuper()))) {
+                if (!insideBomb.isEmpty()) {
                     var message = "Type error: cannot assign something of an Import class (which was assumed to be extended) to a variable of type class or extended class. Boom";
                     addReport(Report.newError(
                             Stage.SEMANTIC,
@@ -226,7 +262,12 @@ public class WrongOperation extends AnalysisVisitor {
                 );
             }
 
-
+            //if a = new A(); then a is instantiated
+            if (rightExpression.getKind().equals("NewObjectExpr")){
+                Map<String, Boolean> isObjectInstantiatedMap = (Map<String, Boolean>) table.getObject("isObjectInstantiatedMap");
+                isObjectInstantiatedMap.put(variable_.getName(),true);
+                table.putObject("isObjectInstantiatedMap", isObjectInstantiatedMap);
+            }
 
             if(!val0.getName().equals(val1.getName()) || val0.isArray() != val1.isArray() ){
                 if(val0.getName().equals(val1.getName()) && rightExpression.getHierarchy().getFirst().equals("NewIntArrayExpr")){
@@ -258,6 +299,23 @@ public class WrongOperation extends AnalysisVisitor {
                     return null;
                 }
 
+                if(table.getImports().contains(val1.getName()) || val1.getName().equals(table.getClassName()) || val1.getName().equals(table.getSuper())){
+                    if (rightExpression.getKind().equals("VarRefExpr")){
+                        Map<String, Boolean> isObjectInstantiatedMap = (Map<String, Boolean>) table.getObject("isObjectInstantiatedMap");
+                        if (!isObjectInstantiatedMap.get(rightExpression.get("name"))){
+                            var message = "Type error: Object variable used in the right expression wasn't instantiated before assignment";
+                            addReport(Report.newError(
+                                    Stage.SEMANTIC,
+                                    expression.getLine(),
+                                    expression.getColumn(),
+                                    message,
+                                    null)
+                            );
+                            return null;
+                        }
+                    }
+                }
+
                 //IM DONE WITH SIMPLIFYING CODE
                 Map<String, String> bombs = (Map<String, String>) table.getObject("bombs");
 
@@ -274,9 +332,22 @@ public class WrongOperation extends AnalysisVisitor {
                     return null;
                 }
                 // Case 3: val0 is imports and val1 className or super
-                if (table.getImports().contains(val0.getName())) {
+                if (table.getImports().contains(val0.getName()) && (val1.getName().equals(table.getClassName()) || val1.getName().equals(table.getSuper()))) {
+                    //cannot do import = class or super if no super
+                    if(table.getSuper().isEmpty()){
+                        var message = "Type error: cannot assign something of an Import class to a variable of type class, if class doesn't extend";
+                        addReport(Report.newError(
+                                Stage.SEMANTIC,
+                                expression.getLine(),
+                                expression.getColumn(),
+                                message,
+                                null)
+                        );
+                        return null;
+                    }
+
                     String insideBomb = bombs.get(val0.getName());
-                    if (!insideBomb.isEmpty() && (val1.getName().equals(table.getClassName()) || val1.getName().equals(table.getSuper()))) {
+                    if (!insideBomb.isEmpty()) {
                         var message = "Type error: cannot assign something of an Import class (which was assumed to be extended) to a variable of type class or extended class. Boom";
                         addReport(Report.newError(
                                 Stage.SEMANTIC,
