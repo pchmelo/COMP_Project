@@ -101,8 +101,54 @@ public class WrongOperation extends AnalysisVisitor {
 
             }
 
+            //class = extend
+            if (val0.getName().equals(table.getClassName()) && val1.getName().equals(table.getSuper())){
+                var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        expression.getLine(),
+                        expression.getColumn(),
+                        message,
+                        null)
+                );
+                return null;
+            }
+
+            //IM DONE WITH SIMPLIFYING CODE
+            Map<String, String> bombs = (Map<String, String>) table.getObject("bombs");
+
+            // Case 1: val0 is className and val1 is imports
+            if (val0.getName().equals(table.getClassName()) && table.getImports().contains(val1.getName())) {
+                handleBombs(table,val0.getName(), val1.getName(), expression,
+                        "Type error: cannot assign class type to something of an Import class. Boom");
+                return null;
+            }
+            // Case 2: val0 is super and val1 is imports
+            if (table.getSuper().contains(val0.getName()) && table.getImports().contains(val1.getName())) {
+                handleBombs(table, val0.getName(), val1.getName(), expression,
+                        "Type error: cannot assign extended class type to something of an Import class. Boom");
+                return null;
+            }
+            // Case 3: val0 is imports and val1 className or super
+            if (table.getImports().contains(val0.getName())) {
+                String insideBomb = bombs.get(val0.getName());
+                if (!insideBomb.isEmpty() && (val1.getName().equals(table.getClassName()) || val1.getName().equals(table.getSuper()))) {
+                    var message = "Type error: cannot assign something of an Import class (which was assumed to be extended) to a variable of type class or extended class. Boom";
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            expression.getLine(),
+                            expression.getColumn(),
+                            message,
+                            null)
+                    );
+                } else {
+                    bombs.put(val1.getName(), val0.getName());
+                }
+                return null;
+            }
+
             if(val0.getName().equals(table.getClassName()) || val1.getName().equals(table.getClassName())){
-                if ((!table.getSuper().equals(val1.getName()) && !table.getSuper().equals(val0.getName())) || (val0.getName().equals(table.getClassName()) && val1.getName().equals(table.getSuper()))) {
+                if (!table.getSuper().equals(val1.getName()) && !table.getSuper().equals(val0.getName())) {
                     var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
                     addReport(Report.newError(
                             Stage.SEMANTIC,
