@@ -38,9 +38,10 @@ public class JmmSymbolTableBuilder {
 
         reports = new ArrayList<>();
         Map<String, Boolean> staticMethods = new HashMap<>();
+        Map<String, String> bomb = new HashMap<>();
 
         // TODO: After your grammar supports more things inside the program (e.g., imports) you will have to change this
-        var imports = buildImports(root.getChildren(IMPORT_DECL));
+        var imports = buildImports(root.getChildren(IMPORT_DECL), bomb);
         var classDecl = root.getChild(imports.size()); //Para saltar imediatamente para a ClassDeclaration
         SpecsCheck.checkArgument(CLASS_DECL.check(classDecl), () -> "Expected a class declaration: " + classDecl);
         String className = classDecl.get("name");
@@ -55,6 +56,9 @@ public class JmmSymbolTableBuilder {
 
         JmmSymbolTable table = new JmmSymbolTable(imports,className, superName , fields, methods, returnTypes, params, locals, varargs);
         table.putObject("staticMethods", staticMethods);
+        bomb.put(className,"");
+        bomb.put(superName,"");
+        table.putObject("bombs", bomb);
 
         return table;
     }
@@ -93,7 +97,7 @@ public class JmmSymbolTableBuilder {
         return "";
     }
 
-    private List<String> buildImports(List<JmmNode> children) {
+    private List<String> buildImports(List<JmmNode> children, Map<String, String> bomb) {
         List<String> list = new ArrayList<>();
         List<String> resultList = List.of();
         for (JmmNode child : children) {
@@ -101,6 +105,7 @@ public class JmmSymbolTableBuilder {
             //To transform "[io, io2]" in ["io2"]
             resultList = List.of(child.get("name").substring(1, child.get("name").length() - 1).split(", "));
             list.add(resultList.getLast());
+            bomb.put(resultList.getLast(),"");
         }
         return list;
     }
@@ -191,6 +196,11 @@ public class JmmSymbolTableBuilder {
 
             map.put(name, symbolList);
         }
+        for (var method : classDecl.getChildren(MAIN_METHOD_DECL)) {
+            List<Symbol> symbolList = new ArrayList<>();
+            symbolList.add(new Symbol(TypeUtils.newArrayType("String"), method.get("argName")));
+            map.put("main", symbolList);
+        }
 
         return map;
     }
@@ -198,8 +208,12 @@ public class JmmSymbolTableBuilder {
     private Map<String, List<Symbol>> buildLocals(JmmNode classDecl) {
 
         var map = new HashMap<String, List<Symbol>>();
+        List<JmmNode> bigList = classDecl.getChildren(METHOD_DECL);
+        List<JmmNode> bigList2 = classDecl.getChildren(MAIN_METHOD_DECL);
+        List<JmmNode> combinedList = new ArrayList<>(bigList);
+        combinedList.addAll(bigList2);
 
-        for (var method : classDecl.getChildren(METHOD_DECL)) {
+        for (var method : combinedList) {
             var name = method.get("name");
             List<Symbol> locals = new ArrayList<>();
             List<JmmNode> children = method.getChildren(VAR_DECL);

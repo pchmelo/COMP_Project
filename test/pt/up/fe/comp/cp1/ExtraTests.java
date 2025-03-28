@@ -168,4 +168,35 @@ public class ExtraTests {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/ImportExample.jmm"));
         TestUtils.noErrors(result);
     }
+
+    @Test
+    public void ImportCheck(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/ImportCheck.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void ImportCheck2(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/ImportCheck2.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void ImportCheck3(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/ImportCheck3.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    //im not doing every test to fail I NEED FOOD
+    @Test
+    public void ImportCheck4(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/ImportCheck4.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void ImportCheck5(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/ImportCheck5.jmm"));
+        TestUtils.mustFail(result);
+    }
 }
