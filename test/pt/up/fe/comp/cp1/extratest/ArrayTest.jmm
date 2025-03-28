@@ -1,0 +1,31 @@
+class ArrayTest extends C {
+
+    public static void main(String[] args) {
+
+    }
+
+    public int bar () {
+        return 4;
+    }
+
+    public boolean bool () {
+        return true;
+    }
+
+    public int [] giveMeArray() {
+        return [1, 2, 3, 4, 5];
+    }
+
+    public int foo() {
+        int [] a;
+        boolean [] b;
+
+        b = new boolean [5];
+        b = [true, false, true, false, this.bool()];
+
+        a = new int [5];
+        a = [9, 7, this.bar(), this.away()];
+
+        return 0;
+    }
+}

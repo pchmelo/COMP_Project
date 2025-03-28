@@ -63,7 +63,7 @@ public class TypeUtils {
         return new Type("int", false);
     }
 
-    public Type valueReturner(JmmNode node, SymbolTable table, String currentMethod) {
+    public Type getExprType(JmmNode node, SymbolTable table, String currentMethod) {
         String kind = node.getKind();
         switch (kind){
             case "BinaryExpr":  //o codigo de binary op não precisa disto mas pus porque pode ser necessario ig
@@ -75,21 +75,28 @@ public class TypeUtils {
                     return new Type("int", false);
                 }else{
                     //For '+' guessing based on the left node
-                    Type left = valueReturner(node.getChild(0), table, currentMethod);
-                    Type right = valueReturner(node.getChild(1), table, currentMethod);
+                    Type left = getExprType(node.getChild(0), table, currentMethod);
+                    Type right = getExprType(node.getChild(1), table, currentMethod);
                     return left;
                 }
+            case "#DflType":
+                return new Type(node.get("name"), false);
 
             case "IntegerExpr", "ArrayLengthExpr", "Postfix", "IntType":
                 return new Type("int", false);
-            case "TrueExpr" , "FalseExpr":
+            case "TrueExpr" , "FalseExpr", "NotExpr", "BooleanType":
                 return new Type("boolean", false);
+            case "StringType":
+                return new Type("String", false);
             case "MethodCallExpr":
                 String methodName = node.get("name");
-                Type returnType = table.getReturnType(methodName);
-                return valueFromTypeReturner(returnType);
+                Type type = table.getReturnType(methodName);
+                if (type == null){
+                    return new Type("undefined", false);
+                }
+                return type;
             case "ArrayAccessExpr":
-                return valueReturner(node.getChild(0), table, currentMethod);
+                return getExprType(node.getChild(0), table, currentMethod);
             case "VarRefExpr":
                 Symbol variable_ = valueFromVarReturner(node.get("name"),table,currentMethod);
                 return variable_.getType();
@@ -99,23 +106,24 @@ public class TypeUtils {
                 if(arrayElements.isEmpty()){
                     return null;
                 }
-                Type type_ = valueReturner(arrayElements.get(0), table, currentMethod);
+                Type type_ = getExprType(arrayElements.get(0), table, currentMethod);
                 return new Type(type_.getName(),true);
             case "ThisExpr":
-                new Type("this", false);  //tecnicamente dará sempre erro sozinho. só não dá erro quando this.metodo pois o type é return type do metodo e para this.varivel que é a variavel...
+                 return new Type("this", false);  //tecnicamente dará sempre erro sozinho. só não dá erro quando this.metodo pois o type é return type do metodo e para this.varivel que é a variavel...
             case "ParenthesesExpr":
-                return valueReturner(node.getChild(0),table,currentMethod);
+                return getExprType(node.getChild(0),table,currentMethod);
             case "NewObjectExpr":
                 return new Type(node.get("name"), false);
             case "VarArgType":
-                return valueReturner(node.getChild(0),table,currentMethod);
+                return getExprType(node.getChild(0),table,currentMethod);
             case "ReturnStatement":
                 List<JmmNode> children = node.getChildren();
                 if(children.isEmpty()){
                     return new Type("void", false);
                 }
-                return valueReturner(children.getFirst(), table, currentMethod);
-
+                return getExprType(children.getFirst(), table, currentMethod);
+            case "NewIntArrayExpr":
+                return getExprType(node.getChild(0), table, currentMethod);
             default:
                 System.out.println("I am "+ kind);
                 return new Type("outro", false);
@@ -138,16 +146,17 @@ public class TypeUtils {
                 return param;
             }
         }
+        if(table.getImports().contains(name)){
+            return new Symbol(new Type(name,false),name);
+        }
+        if (!table.getSuper().isEmpty()){
+            if(name.equals(table.getSuper())){
+                return new Symbol(new Type(name,false),name);
+            }
+        }
         return new Symbol(new Type("errado",false),"errado");  //se temos undeclaredvariables muito improvavel de chegar aqui
     }
 
-    public Type valueFromTypeReturner(Type returnType){
-        if (returnType.isArray()) {
-            return new Type(returnType.getName(), true);
-
-        }
-        return new Type(returnType.getName(), false);
-    }
 
 
 }

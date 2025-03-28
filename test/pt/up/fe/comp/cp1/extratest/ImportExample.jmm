@@ -1,0 +1,24 @@
+import java.lang.Integer;
+
+class StringUtils {
+
+    // hasInt(“123abc”, 123) = true
+    // hasInt(“68ef”, 78) = false
+    boolean hasInt(String a, int match) {
+        String matchString;
+        boolean result;
+
+        matchString = Integer.toString(match);
+        result = a.contains(matchString);
+        return result;
+    }
+
+    boolean test2(String[] a, int match) {
+            String matchString;
+            boolean result;
+
+            matchString = Integer.toString(match);
+            result = a[0].contains(matchString);
+            return result;
+        }
+}

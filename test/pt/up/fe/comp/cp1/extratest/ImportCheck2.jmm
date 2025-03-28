@@ -1,0 +1,19 @@
+import B;
+import C;
+
+class A extends B {
+
+    int foo(String a) {
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        A a;
+        B b;
+        C c;
+        int i;
+
+        a = new B(); // this is NOT valid! Because A extends B, B can’t extend A, and so we can infer this is not correct!
+
+    }
+}

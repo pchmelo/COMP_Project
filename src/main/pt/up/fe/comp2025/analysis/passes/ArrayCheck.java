@@ -23,6 +23,66 @@ public class ArrayCheck extends AnalysisVisitor {
         addVisit(Kind.MAIN_METHOD_DECL, this::visitMethodDecl);
         addVisit(Kind.ARRAY_ACCESS_EXPR, this::ArrayAccess);
         addVisit(Kind.ARRAY_INIT, this::ArrayInicialization);
+        addVisit(Kind.ARRAY_LENGTH_EXPR, this::IsExpressionArray);
+        addVisit(Kind.ARRAY_ASSIGN_STMT, this::IsArrayAssignmentRight);
+    }
+
+    private Void IsArrayAssignmentRight(JmmNode jmmNode, SymbolTable table) {
+        String variable = jmmNode.get("name");
+        JmmNode indexExpression = jmmNode.getChild(0);
+        JmmNode assigningExpression = jmmNode.getChild(1);
+
+        Symbol variable_ = types.valueFromVarReturner(variable,table,currentMethod);
+        Type variableType = variable_.getType();
+        Type indexType = types.getExprType(indexExpression,table,currentMethod);
+        Type assigningType = types.getExprType(assigningExpression,table,currentMethod);
+
+        if(!variableType.isArray()){
+            String message = "Array variable '" + variable + "' which is having its element assigned is not actually an array";
+            addReport(Report.newError(Stage.SEMANTIC, jmmNode.getLine(), jmmNode.getColumn(), message, null));
+        }
+
+        if(!assigningType.getName().equals(variableType.getName())){
+            //Technically we don't need to check if it is import or not, since it would've been caught by thisCheck
+            if (assigningType.getName().equals("undefined")){
+                return null;
+            }
+            String message = "An element of the array variable '" + variable + "' and type '" + variableType.getName() +"' is being assigned with the type '" + assigningType.getName() +"'";
+            addReport(Report.newError(Stage.SEMANTIC, jmmNode.getLine(), jmmNode.getColumn(), message, null));
+        }
+
+        if(!indexType.getName().equals("int")){
+            //Technically we don't need to check if it is import or not, since it would've been caught by thisCheck
+            if (indexType.getName().equals("undefined")){
+                return null;
+            }
+            String message = "Array variable '" + variable + "' is having one of its elements being accessed with a value of type '" + indexType.getName() +"'";
+            addReport(Report.newError(Stage.SEMANTIC, jmmNode.getLine(), jmmNode.getColumn(), message, null));
+        }
+
+        if(indexType.isArray()){
+            String message = "Array variable '" + variable + "' is having one of its elements being accessed with an array";
+            addReport(Report.newError(Stage.SEMANTIC, jmmNode.getLine(), jmmNode.getColumn(), message, null));
+        }
+
+        return null;
+    }
+
+    private Void IsExpressionArray(JmmNode jmmNode, SymbolTable table) {
+        SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
+
+        JmmNode expression = jmmNode.getChild(0);
+        Type expressionType = types.getExprType(expression, table, currentMethod);
+
+        if(!expressionType.isArray()){
+            if (expressionType.getName().equals("undefined")){
+                return null;
+            }
+            String message = "Length method must be accessed by an array expression";
+            addReport(Report.newError(Stage.SEMANTIC, jmmNode.getLine(), jmmNode.getColumn(), message, null));
+        }
+
+        return null;
     }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
@@ -34,16 +94,22 @@ public class ArrayCheck extends AnalysisVisitor {
     private Void ArrayAccess(JmmNode mainNode, SymbolTable table){
         SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
 
-        Type arrayVarType =  types.valueReturner(mainNode.getChild(0), table, currentMethod);
-        Type indexVarType = types.valueReturner(mainNode.getChild(1), table, currentMethod);
+        Type arrayVarType =  types.getExprType(mainNode.getChild(0), table, currentMethod);
+        Type indexVarType = types.getExprType(mainNode.getChild(1), table, currentMethod);
 
         // Error if the index is not an integer
         if (!indexVarType.getName().equals("int")) {
+            if (indexVarType.getName().equals("undefined")){
+                return null;
+            }
             var message = "Trying to access array with index that is not an Integer";
             addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), mainNode.getColumn(), message, null));
         }
 
         if (!arrayVarType.isArray()) {
+            if (arrayVarType.getName().equals("undefined")){
+                return null;
+            }
             var message = "Trying to access a non-array variable as an array";
             addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), mainNode.getColumn(), message, null));
         }
@@ -60,15 +126,19 @@ public class ArrayCheck extends AnalysisVisitor {
             return null;
         }
 
-        Type firstArrayElementType = types.valueReturner(arrayElements.get(0), table, currentMethod);
+        Type firstArrayElementType = types.getExprType(arrayElements.get(0), table, currentMethod);
 
         for (int i = 1; i < arrayElements.size(); i++) {
-            Type nextArrayElementType = types.valueReturner(arrayElements.get(i), table, currentMethod);
+            Type nextArrayElementType = types.getExprType(arrayElements.get(i), table, currentMethod);
 
             if (!firstArrayElementType.getName().equals(nextArrayElementType.getName())) {
-                var message = "Trying to initialize an array with different types in the elements";
-                addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), mainNode.getColumn(), message, null));
-                break;
+                if (firstArrayElementType.getName().equals("undefined")){
+                    firstArrayElementType = nextArrayElementType;
+                } else if (!nextArrayElementType.getName().equals("undefined")) {
+                    var message = "Trying to initialize an array with different types in the elements";
+                    addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), mainNode.getColumn(), message, null));
+                    break;
+                }
             }
         }
 
@@ -80,9 +150,12 @@ public class ArrayCheck extends AnalysisVisitor {
     //Verifica se o tipo que inicializa o array é um inteiro (int)
     private Void ArrayLengthInitCheck(JmmNode mainNode, SymbolTable table){
         JmmNode arrayLengthNode = mainNode.getChild(1);
-        Type arrayLengthType = types.valueReturner(arrayLengthNode.getChild(0), table, currentMethod);
+        Type arrayLengthType = types.getExprType(arrayLengthNode.getChild(0), table, currentMethod);
 
         if(!arrayLengthType.getName().equals("int")){
+            if (arrayLengthType.getName().equals("undefined")){
+                return null;
+            }
             String message = "Array must have integer length";
             addReport(Report.newError(Stage.SEMANTIC, mainNode.getLine(), mainNode.getColumn(), message, null));
         }

@@ -29,9 +29,12 @@ varDeclaration
     ;
 
 methodDeclaration
-    : ('public')? ('static')? returnType name=ID '(' (argument (',' argument)*)? ')' '{' (varDeclaration | statement)* '}'  #MethodDecl
-    | ('public')? 'static' 'void' name='main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration | statement)* '}' #MainMethodDecl
+    : ('public')? (st='static')? returnType name=ID '(' ( varargDeclaration | argument (',' argument)* (',' varargDeclaration)?  )? ')' '{' (varDeclaration | statement)* '}'  #MethodDecl
+    | ('public')? st='static' 'void' name='main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration | statement)* '}' #MainMethodDecl
     ;
+
+//(v | m a* b?)?
+
 
 returnType
     : type    #TypeTagNotUsed
@@ -47,9 +50,12 @@ argument
     : type name=ID #Param
     ;
 
+varargDeclaration
+    : type '...' name=ID        #VarArgType
+    ;
+
 type
     : defaultType '[' ']'       #ArrayType
-    | defaultType '...'         #VarArgType
     | defaultType               #DflType
     | name=ID                   #ClassType
     ;
@@ -65,16 +71,19 @@ statement
     | 'if' '(' expression ')' statement ('else if' '(' expression ')' statement)* ('else' statement)? #IfStmt
     | 'while' '(' expression ')' statement #WhileStmt
     | expression ';' #ExpressionStmt
-    | var=ID op=('=' | '+=' | '-=' | '*=' | '/=') expression ';' #AssignStmt
-    | var=ID '[' index=expression ']' '=' expression ';' #ArrayAssignStmt
-    | returnStatement    #ReturnStmt
+    | 'const' defaultType name=ID '=' expression ';' #ConstStmt
+    | type name=ID '=' expression ';' #VarAssignStmt
+    | name=ID op=('=' | '+=' | '-=' | '*=' | '/=') expression ';' #AssignStmt    //
+    | name=ID '[' index=expression ']' '=' expression ';' #ArrayAssignStmt      //
+    | returnStatement    #ReturnStmt                                            //
     ;
 
 expression
     : '(' expression ')' #ParenthesesExpr          //
-    | value=ID op=('++' | '--') #Postfix          //
-    | expression '.' 'length' #ArrayLengthExpr    //
-    | expression '[' expression ']' #ArrayAccessExpr   //
+    | name=ID op=('++' | '--') #Postfix          //
+    | '!' expression #NotExpr           ////
+    | expression '.' 'length' #ArrayLengthExpr    ////
+    | expression '[' expression ']' #ArrayAccessExpr   ////
     | expression '.' name=ID '(' (expression (',' expression)*)? ')' #MethodCallExpr    //
     | expression op=('*' | '/') expression #BinaryExpr     //
     | expression op=('+' | '-') expression #BinaryExpr    //
@@ -82,10 +91,9 @@ expression
     | expression op=('==' | '!=') expression #BinaryExpr     //
     | expression op='&&' expression #BinaryExpr    //
     | expression op='||' expression #BinaryExpr    //
-    | 'new' 'int' '[' expression ']' #NewIntArrayExpr
-    | 'new' name=ID '(' ')' #NewObjectExpr
-    | '!' expression #NotExpr
-    | '[' (expression (',' expression)*)? ']' #ArrayInit
+    | 'new' defaultType '[' expression ']' #NewIntArrayExpr   ////
+    | 'new' name=ID '(' ')' #NewObjectExpr      ////
+    | '[' (expression (',' expression)*)? ']' #ArrayInit    ////
     | value=INTEGER #IntegerExpr        //
     | value='true' #TrueExpr            //
     | value='false' #FalseExpr          //

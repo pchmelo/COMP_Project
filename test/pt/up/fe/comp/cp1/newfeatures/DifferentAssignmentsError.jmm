@@ -1,0 +1,31 @@
+class DifferentAssignmentsError {
+
+    public static void main(String[] args) {
+
+    }
+
+    public boolean error () {
+        return true;
+    }
+
+    public int ten () {
+        return 10;
+    }
+
+    public int foo() {
+        int a;
+        boolean b;
+
+        a += 1;
+        a -= 1;
+        a *= 1;
+        a /= this.ten();
+
+        b += true;
+        b -= false;
+        b *= true;
+        b /= this.error();
+
+        return 0;
+    }
+}

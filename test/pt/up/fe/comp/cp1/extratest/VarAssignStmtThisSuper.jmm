@@ -1,0 +1,17 @@
+import F;
+
+class VarAssignStmtThisSuper extends C {
+
+    public int foo() {
+        int a;
+        int b;
+
+        C c = this;
+        int d = this.algo();
+        boolean e = C.algo();
+        int[] f = F.algo();
+
+        return a;
+    }
+
+}

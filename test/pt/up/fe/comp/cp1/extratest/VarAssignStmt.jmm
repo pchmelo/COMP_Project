@@ -1,0 +1,17 @@
+class VarAssignStmt {
+
+    public int foo() {
+        int a;
+        int b;
+
+        int c = 23;
+        boolean d = true;
+        int[] e = [1,2,3];
+        VarAssignStmt f = this;
+        int[] g = new int [1];
+        boolean[] h = new boolean [1];
+
+        return a;
+    }
+
+}

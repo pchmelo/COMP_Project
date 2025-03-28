@@ -1,0 +1,31 @@
+import B;
+import C;
+
+class A extends B {
+
+    int foo(String a) {
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        A a;
+        B b;
+        C c;
+        int i;
+
+        c = new A(); // assume B extends C; assume constructor takes no parameters
+        c = new B(); // assume B extends C; assume constructor takes no parameters
+
+        a = new C(); // assume C extends A; assume constructor takes no parameters
+        b = new C(); // assume C extends B; assume constructor takes no parameters
+
+        // The following examples are also valid assuming `a` was correctly initialized:
+
+
+        i = a.foo(args[0]); // this is expected :)
+        i = a.foo(new A()); // assume foo is overloaded and B declares an overload that accepts A as its parameter
+
+        a.bar(); // assume B declares bar, assume return type is void
+        c.print(1, 2, 3); // assume C declares a method print with 3 parameters of type int and void as return type
+    }
+}

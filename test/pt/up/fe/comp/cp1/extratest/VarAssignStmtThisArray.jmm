@@ -1,0 +1,12 @@
+class VarAssignStmtThisArray {
+
+    public int foo() {
+        int a;
+        int b;
+
+        int c = [this,this];
+
+        return a;
+    }
+
+}

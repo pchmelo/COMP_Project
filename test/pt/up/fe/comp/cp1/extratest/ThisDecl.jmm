@@ -1,0 +1,18 @@
+class ThisDecl extends B {
+
+    public static void main(String[] args) {
+
+    }
+
+    public boolean error (int a) {
+        return true;
+    }
+
+    public int foo() {
+        this a;
+
+        a = this.foo();
+
+        return 0;
+    }
+}

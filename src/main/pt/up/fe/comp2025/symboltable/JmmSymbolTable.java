@@ -19,6 +19,7 @@ public class JmmSymbolTable extends AJmmSymbolTable {
     private final List<Symbol> fields;
     private final Map<String, List<Symbol>> params;
     private final Map<String, List<Symbol>> locals;
+    private final Map<String, String> varargs;
 
 
     public JmmSymbolTable(List<String> imports,
@@ -28,7 +29,8 @@ public class JmmSymbolTable extends AJmmSymbolTable {
                           List<String> methods,
                           Map<String, Type> returnTypes,
                           Map<String, List<Symbol>> params,
-                          Map<String, List<Symbol>> locals) {
+                          Map<String, List<Symbol>> locals,
+                          Map<String, String> varargs) {
 
         this.imports = imports;
         this.className = className;
@@ -38,11 +40,17 @@ public class JmmSymbolTable extends AJmmSymbolTable {
         this.returnTypes = returnTypes;
         this.params = params;
         this.locals = locals;
+        this.varargs = varargs;
     }
 
     @Override
     public List<String> getImports() {
         return imports;
+    }
+
+
+    public Map<String, String> getVarargs() {
+        return varargs;
     }
 
     @Override
@@ -77,17 +85,11 @@ public class JmmSymbolTable extends AJmmSymbolTable {
 
     @Override
     public List<Symbol> getParameters(String methodSignature) {
-        if(methodSignature.equals("main")) {
-            return new ArrayList<>();
-        }
         return params.get(methodSignature);
     }
 
     @Override
     public List<Symbol> getLocalVariables(String methodSignature) {
-        if(methodSignature.equals("main")) {
-            return new ArrayList<>();
-        }
         return locals.get(methodSignature);
     }
 

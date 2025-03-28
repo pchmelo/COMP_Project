@@ -1,0 +1,29 @@
+class MethodCall {
+
+    public static void main(String[] args) {
+
+    }
+
+    public boolean bar (int a) {
+        return true;
+    }
+
+    public int ten() {
+        return 10;
+    }
+
+    public int close(int a) {
+        return this.ten();
+    }
+
+    public int foo() {
+        boolean b;
+        MethodCall a;
+        int result;
+
+        b = this.bar(10);
+        result = a.close();
+
+        return result;
+    }
+}

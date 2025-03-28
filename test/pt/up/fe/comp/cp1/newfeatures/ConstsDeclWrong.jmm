@@ -1,0 +1,17 @@
+class ConstsDeclWrong {
+
+    public static void main(String[] args) {
+
+    }
+
+    public boolean ten() {
+        return true;
+    }
+
+    public int foo() {
+        const int hundred = 100;
+        const int ten = this.ten();
+
+        return 0;
+    }
+}

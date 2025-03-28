@@ -1,8 +1,12 @@
-class Varargs{
+class VarargsDeclaration{
 
     public int foo() {
         int a;
+        int b;
+        int ... c;
+
         a = this.varargs(10, 20, 30);
+
         return a;
     }
 
