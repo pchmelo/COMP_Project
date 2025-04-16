@@ -66,7 +66,7 @@ public class Varargs extends AnalysisVisitor {
 
         Type methodTypeReturn = types.getExprType(mainNode.getChild(0), table, currentMethod);
 
-        if (mainNode.getChild(0).getChild(0).getKind().equals("MethodCallExpr")){
+        /*if (mainNode.getChild(0).getChild(0).getKind().equals("MethodCallExpr")){
             JmmNode variableRightExpression = mainNode.getChild(0).getChild(0).getChild(0);
             Type type_ = types.getExprType(variableRightExpression, table, currentMethod);
             if(table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper()))){
@@ -75,10 +75,17 @@ public class Varargs extends AnalysisVisitor {
             if (type_.getName().equals("String") || type_.isArray()){
                 return null;
             }
+        }*/
+
+        /**FIX MUITO FEIO :(**/
+        if (methodTypeReturn.isArray() && !mainNode.getChild(0).getChildren().isEmpty()){
+            JmmNode expressionNode = mainNode.getChild(0).getChild(0);
+            if (expressionNode.getKind().equals("ArrayAccessExpr")){
+                return null;
+            }
         }
 
-
-        if(!methodTypeReturn.getName().equals(currentMethodType.getName())){
+        if(!methodTypeReturn.getName().equals(currentMethodType.getName()) || methodTypeReturn.isArray() != currentMethodType.isArray() ){
             var message = String.format("Return type is different form the method declared");
             addReport(Report.newError(
                     Stage.SEMANTIC,
@@ -159,6 +166,12 @@ public class Varargs extends AnalysisVisitor {
                 }
                 currentParamType = parameters.get(i).getType();
                 if(!currentParamType.getName().equals(sendedParamType.getName())){
+
+                    //vvvv Skip error if the argument is 'this' and method requires className type
+                    if (table.getClassName().equals(currentParamType.getName()) && sendedParamType.getName().equals("this")){
+                        continue;
+                    }
+
                     var message = String.format("Argument type is different from the method declared");
                     addReport(Report.newError(
                             Stage.SEMANTIC,

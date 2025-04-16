@@ -1,9 +1,5 @@
 class ThisTest extends B {
 
-    public static void main(String[] args) {
-
-    }
-
     public boolean error (int a) {
         return true;
     }

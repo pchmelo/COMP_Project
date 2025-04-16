@@ -2,6 +2,11 @@ class Field {
 
     int a;
     boolean b;
+    int main;
+
+    public static void main(String[] args) {
+
+    }
 
     public int foo() {
         int c;

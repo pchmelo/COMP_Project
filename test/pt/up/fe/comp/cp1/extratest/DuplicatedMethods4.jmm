@@ -1,0 +1,18 @@
+class Field {
+
+    public int bar (int a, int d, int[] c) {
+        return 4;
+    }
+
+    public int bar (int a, int[] d, int b) {
+        return 4;
+    }
+
+    public int bar (int a, boolean d, int b) {
+        return 4;
+    }
+
+    public int bar2 (int a, int d, int[] c) {
+        return 4;
+    }
+}

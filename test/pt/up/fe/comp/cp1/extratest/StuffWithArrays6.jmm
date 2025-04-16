@@ -1,0 +1,10 @@
+class Field {
+
+    public int bar (int a) {
+        int[] c = new int [ 5 ];
+        a += c[7];
+        c[6] = 5;
+        return a - c[5];
+    }
+
+}

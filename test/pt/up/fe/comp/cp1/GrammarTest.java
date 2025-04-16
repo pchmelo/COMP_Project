@@ -41,6 +41,11 @@ public class GrammarTest {
     }
 
     @Test
+    public void testClass2() {
+        TestUtils.parseVerbose("class Foo extends Bar { int a; int b; int main;}");
+    }
+
+    @Test
     public void testVarDecls() {
         TestUtils.parseVerbose("class Foo {int a; int[] b; int c; boolean d; Bar e;}");
     }

@@ -1,0 +1,8 @@
+class Field {
+    int a;
+    int c;
+
+    public static void main(String[] args) {
+        int a;
+    }
+}

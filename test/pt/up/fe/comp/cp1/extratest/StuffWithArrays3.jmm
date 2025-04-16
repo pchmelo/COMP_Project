@@ -1,0 +1,11 @@
+class Field {
+
+    public int bar (int a) {
+        int[] b;
+        b = [1,2,3];
+        int c = b.length;
+        int d = a * c[2];
+        return d;
+    }
+
+}

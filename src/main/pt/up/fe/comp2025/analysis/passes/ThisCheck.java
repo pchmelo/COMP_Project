@@ -27,6 +27,22 @@ public class ThisCheck extends AnalysisVisitor {
         addVisit(Kind.PARENTHESES_EXPR, this::visitSmthingThatShoulntHaveThis);
         addVisit(Kind.EXPRESSION_STMT, this::visitSmthingThatShoulntHaveThis);
         addVisit(Kind.CLASS_TYPE, this::visitClassType);
+        addVisit(Kind.THIS_EXPR, this::visitThisExprType);
+    }
+
+    /**To check whether this is being called on the main function **/
+    private Void visitThisExprType(JmmNode thisNode, SymbolTable table) {
+        if (currentMethod.equals("main")){
+            var message = "'this' cannot be used on static functions such as main";
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    thisNode.getLine(),
+                    thisNode.getColumn(),
+                    message,
+                    null)
+            );
+        }
+        return null;
     }
 
     private Void visitClassType(JmmNode jmmNode, SymbolTable table) {

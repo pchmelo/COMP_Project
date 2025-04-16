@@ -10,6 +10,7 @@ class Varargs{
     }
 
     public int varargs(int... a) {
+        this.foo();
         return a[0];
     }
 }

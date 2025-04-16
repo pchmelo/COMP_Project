@@ -1,9 +1,5 @@
 class IfSequence {
 
-    public static void main(String[] args) {
-
-    }
-
     public int foo() {
         boolean a;
 

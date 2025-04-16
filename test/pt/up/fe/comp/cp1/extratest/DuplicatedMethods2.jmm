@@ -1,0 +1,12 @@
+class Field {
+
+    public int bar (int a, int d, int c, int ... b) {
+        int e;
+        return 4;
+    }
+
+    public string bar (int a, int d, int c, int ... b) {
+        int e;
+        return 4;
+    }
+}

@@ -79,9 +79,12 @@ public class TypeUtils {
                     Type right = getExprType(node.getChild(1), table, currentMethod);
                     return left;
                 }
-            case "#DflType":
+            case "DflType":
+                return new Type(node.getChild(0).get("name"), false);
+            case "ArrayType":
+                return new Type(node.getChild(0).get("name"), true);
+            case "ClassType":
                 return new Type(node.get("name"), false);
-
             case "IntegerExpr", "ArrayLengthExpr", "Postfix", "IntType":
                 return new Type("int", false);
             case "TrueExpr" , "FalseExpr", "NotExpr", "BooleanType":
