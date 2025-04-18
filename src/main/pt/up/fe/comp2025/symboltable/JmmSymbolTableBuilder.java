@@ -40,6 +40,7 @@ public class JmmSymbolTableBuilder {
         Map<String, Boolean> staticMethods = new HashMap<>();
         Map<String, Boolean> isObjectInstantiatedMap = new HashMap<>();
         Map<String, String> bomb = new HashMap<>();
+        Map<String, Type> methodCallType = new HashMap<>();
 
         // TODO: After your grammar supports more things inside the program (e.g., imports) you will have to change this
         var imports = buildImports(root.getChildren(IMPORT_DECL), bomb);
@@ -61,6 +62,7 @@ public class JmmSymbolTableBuilder {
         bomb.put(className,"");
         bomb.put(superName,"");
         table.putObject("bombs", bomb);
+        table.putObject("methodCallType", methodCallType);
 
         return table;
     }
@@ -117,7 +119,6 @@ public class JmmSymbolTableBuilder {
         Map<String, Type> map = new HashMap<>();
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             var name = method.get("name");
-            // TODO: After you add more types besides 'int', you will have to update this
             JmmNode child = method.getChild(0);
             Type returnType;
             if (child.getKind().equals("VoidType")){
@@ -172,11 +173,6 @@ public class JmmSymbolTableBuilder {
 
     private Map<String, List<Symbol>> buildParams(JmmNode classDecl, Map<String,Boolean> isObjectInstantiatedMap) {
         Map<String, List<Symbol>> map = new HashMap<>();
-        /* var params = method.getChildren(PARAM).stream()
-                    // TODO: When you support new types, this code has to be updated
-                    .map(param -> new Symbol(TypeUtils.newIntType(), param.get("name")))
-                    .toList();*/
-
 
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             var name = method.get("name");
@@ -254,10 +250,6 @@ public class JmmSymbolTableBuilder {
     }
 
     private List<String> buildMethods(JmmNode classDecl, Map<String, Boolean> staticMethods) {
-
-        /*var methods = classDecl.getChildren(METHOD_DECL).stream()
-                .map(method -> method.get("name"))
-                .toList();*/
         List<String> methods = new ArrayList<>();
         List<JmmNode> children = classDecl.getChildren(METHOD_DECL);
         for (JmmNode child : children){

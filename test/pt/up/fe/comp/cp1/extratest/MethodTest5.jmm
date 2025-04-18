@@ -1,0 +1,7 @@
+class A extends B{
+  void f1() {
+   int a;
+   a = f2();
+   int b = f2();
+  }
+}

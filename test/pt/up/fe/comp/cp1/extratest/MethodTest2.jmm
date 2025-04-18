@@ -1,0 +1,4 @@
+class A {
+  void f1() { f2(); }
+  void f2() { int a;}
+}

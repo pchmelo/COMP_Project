@@ -1,0 +1,5 @@
+import B;
+
+class A {
+  void f1() { f2(); }
+}

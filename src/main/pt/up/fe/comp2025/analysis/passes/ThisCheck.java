@@ -28,6 +28,30 @@ public class ThisCheck extends AnalysisVisitor {
         addVisit(Kind.EXPRESSION_STMT, this::visitSmthingThatShoulntHaveThis);
         addVisit(Kind.CLASS_TYPE, this::visitClassType);
         addVisit(Kind.THIS_EXPR, this::visitThisExprType);
+        addVisit(Kind.METHOD_CALL, this::visitMethodCall);
+    }
+
+    private Void visitMethodCall(JmmNode node, SymbolTable table) {
+        for (String method : table.getMethods()){
+            if(method.equals(node.get("name"))){
+                return null;
+            }
+        }
+
+        if (!table.getSuper().isEmpty() || !table.getImports().isEmpty() ){
+            return null;
+        }
+
+        var message = "cannot use a function that's not declared while there's also no extend class or import";
+        addReport(Report.newError(
+                Stage.SEMANTIC,
+                node.getLine(),
+                node.getColumn(),
+                message,
+                null)
+        );
+
+        return null;
     }
 
     /**To check whether this is being called on the main function **/

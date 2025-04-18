@@ -41,19 +41,8 @@ public class OverdeclaredCheck extends AnalysisVisitor {
         //Actual Test
         int count = 0;
         for (String methodOther : table.getMethods()) {
-            if (methodOther.equals(currentMethod)  &&  table.getParameters(currentMethod).size() == table.getParameters(methodOther).size() ){
-                boolean existRepeatedVariables = true;
-                for (int i=0; i < table.getParameters(currentMethod).size() ; i++ ){
-                    Type paramMethodCurrent = table.getParameters(currentMethod).get(i).getType();
-                    Type paramMethodOther = table.getParameters(methodOther).get(i).getType();
-                    if (!paramMethodCurrent.equals(paramMethodOther)){
-                        existRepeatedVariables = false;
-                        break;
-                    }
-                }
-                if (existRepeatedVariables) {
-                    count += 1;
-                }
+            if (methodOther.equals(currentMethod)){
+                    count++;
             }
         }
 

@@ -85,6 +85,7 @@ expression
     | expression '.' 'length' #ArrayLengthExpr    ////
     | expression '[' expression ']' #ArrayAccessExpr   ////
     | expression '.' name=ID '(' (expression (',' expression)*)? ')' #MethodCallExpr    //
+    | name=ID '(' (expression (',' expression)*)? ')' #MethodCall
     | expression op=('*' | '/') expression #BinaryExpr     //
     | expression op=('+' | '-') expression #BinaryExpr    //
     | expression op=('>' | '<' | '>=' | '<=') expression #BinaryExpr     //

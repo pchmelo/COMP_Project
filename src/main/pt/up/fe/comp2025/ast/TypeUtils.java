@@ -7,6 +7,7 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2025.symboltable.JmmSymbolTable;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Utility methods regarding types.
@@ -91,6 +92,21 @@ public class TypeUtils {
                 return new Type("boolean", false);
             case "StringType":
                 return new Type("String", false);
+            case "MethodCall":
+                Map<String, Type> methodCallType = (Map<String, Type>) table.getObject("methodCallType");
+                String methodCallName = node.get("name");
+                Type methodType = methodCallType.get(methodCallName);
+                if (methodType == null){
+                    //if method exists inside class, then it will not return null
+                    methodType = table.getReturnType(methodCallName);
+                    if (methodType != null){
+                        methodCallType.put(methodCallName, methodType); //get the type of the method inside the table map
+                        return methodType;
+                    }
+                    //method doesn't exist on class => assume current left type
+                    return new Type("undefined", false);
+                }
+                return methodType;
             case "MethodCallExpr":
                 String methodName = node.get("name");
                 Type type = table.getReturnType(methodName);

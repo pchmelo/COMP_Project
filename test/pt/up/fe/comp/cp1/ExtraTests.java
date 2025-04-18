@@ -311,7 +311,7 @@ public class ExtraTests {
     @Test
     public void DuplicatedMethods4(){
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/DuplicatedMethods4.jmm"));
-        TestUtils.noErrors(result);
+        TestUtils.mustFail(result);
     }
 
     @Test
@@ -426,5 +426,41 @@ public class ExtraTests {
     public void CallHasThisParam(){
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/CallHasThisParam.jmm"));
         TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void MethodTest(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MethodTest.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void MethodTest2(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MethodTest2.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void MethodTest3(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MethodTest3.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void MethodTest4(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MethodTest4.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void MethodTest5(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MethodTest5.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void MethodTest6(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MethodTest6.jmm"));
+        TestUtils.mustFail(result);
     }
 }
