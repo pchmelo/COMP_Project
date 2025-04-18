@@ -6,7 +6,7 @@ import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2025.ast.TypeUtils;
 
-import java.util.stream.Collectors;
+import java.util.List;
 
 import static pt.up.fe.comp2025.ast.Kind.*;
 
@@ -43,13 +43,25 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     protected void buildVisitor() {
 
         addVisit(PROGRAM, this::visitProgram);
+        addVisit(IMPORT_DECL, this::visitImportDecl);
         addVisit(CLASS_DECL, this::visitClass);
         addVisit(METHOD_DECL, this::visitMethodDecl);
         addVisit(PARAM, this::visitParam);
         addVisit(RETURN_STMT, this::visitReturn);
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
 
-//        setDefaultVisit(this::defaultVisit);
+        setDefaultVisit(this::defaultVisit);
+    }
+
+    private String visitImportDecl(JmmNode importNode, Void unused) {
+        //To transform "[io, io2]" in ["io","io2"] and then "io.io2"
+        List<String> wordList = List.of(importNode.get("name").substring(1, importNode.get("name").length() - 1).split(", "));
+        StringBuilder importName = new StringBuilder();
+        for(int i = 0; i < wordList.size() - 1; i++){
+            importName.append(wordList.get(i)).append(".");
+        }
+        importName.append(wordList.getLast());
+        return "import " + importName + ";" + NL;
     }
 
 
@@ -91,9 +103,10 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
 
         StringBuilder code = new StringBuilder();
+        JmmNode returnStatement = node.getChild(0);
 
 
-        var expr = node.getNumChildren() > 0 ? exprVisitor.visit(node.getChild(0)) : OllirExprResult.EMPTY;
+        var expr = returnStatement.getNumChildren() > 0 ? exprVisitor.visit(returnStatement.getChild(0)) : OllirExprResult.EMPTY;
 
 
         code.append(expr.getComputation());
@@ -136,8 +149,15 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         // params
         // TODO: Hardcoded for a single parameter, needs to be expanded
-        var paramsCode = visit(node.getChild(1));
-        code.append("(" + paramsCode + ")");
+        //var paramsCode = visit(node.getChild(1));
+        //code.append("(" + paramsCode + ")");
+        code.append("(");
+        List<JmmNode> paramList = node.getChildren(PARAM);  //doesn't include varargs
+        for (JmmNode paramNode : paramList){
+            var paramsCode = visit(paramNode);
+            code.append(paramsCode + ",");
+        }
+        code.append(")");
 
         // type
         // TODO: Hardcoded for int, needs to be expanded
@@ -145,11 +165,27 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(retType);
         code.append(L_BRACKET);
 
+        List<JmmNode> listNode = node.getChildren();
+        int count = 1 + table.getParameters(name).size();
+        List<JmmNode> childNodeList = listNode.subList(count, listNode.size());
+
+        StringBuilder stmtsCode = new StringBuilder();
+        for(int i=0; i < childNodeList.size(); i++){
+            JmmNode childNode = childNodeList.get(i);
+            if (!childNode.getKind().equals("VarDecl")) {
+                var childCode = visit(childNode);
+                stmtsCode.append("   ").append(childCode).append("\n");
+            }
+        }
+
 
         // rest of its children stmts
-        var stmtsCode = node.getChildren(STMT).stream()
+        /*var stmtsCode = childNodeList.stream()
                 .map(this::visit)
-                .collect(Collectors.joining("\n   ", "   ", ""));
+                .collect(Collectors.joining("\n   ", "   ", ""));*/
+
+
+
 
         code.append(stmtsCode);
         code.append(R_BRACKET);
@@ -165,6 +201,10 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         code.append(NL);
         code.append(table.getClassName());
+
+        if (node.hasAttribute("superName")){
+            code.append(" extends ").append(table.getSuper());
+        }
         
         code.append(L_BRACKET);
         code.append(NL);
@@ -217,6 +257,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             visit(child);
         }
 
-        return "";
+        return "hey";
     }
 }

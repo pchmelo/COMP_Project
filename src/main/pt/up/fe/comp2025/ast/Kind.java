@@ -48,6 +48,7 @@ public enum Kind {
     VAR_ASSIGN_STMT,
     THIS_EXPR,
     METHOD_CALL,
+    INTEGER_EXPR,
     ;
 
 
