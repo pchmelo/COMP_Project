@@ -218,6 +218,7 @@ public class WrongOperation extends AnalysisVisitor {
                 return null;
             }
 
+            /*
             if((!table.getImports().contains(val0.getName())) && (!table.getSuper().equals(val0.getName()))){
                 var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
                 addReport(Report.newError(
@@ -230,7 +231,22 @@ public class WrongOperation extends AnalysisVisitor {
                 return null;
             }
 
+             */
+
+            var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    expression.getLine(),
+                    expression.getColumn(),
+                    message,
+                    null)
+            );
+
+            return null;
+
         }
+
+
 
         return null;
     }
