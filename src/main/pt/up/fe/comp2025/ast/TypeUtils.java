@@ -120,7 +120,12 @@ public class TypeUtils {
                 }
                 return type;
             case "ArrayAccessExpr":
+                Type arrayType = getExprType(node.getChild(0), table, currentMethod);
+                if (arrayType.isArray()){
+                    return new Type(arrayType.getName(), false);
+                }
                 return getExprType(node.getChild(0), table, currentMethod);
+
             case "VarRefExpr":
                 Symbol variable_ = valueFromVarReturner(node.get("name"),table,currentMethod);
                 return variable_.getType();

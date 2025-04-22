@@ -256,4 +256,10 @@ public class GrammarTest {
     public void IncompatibleReturn(){TestUtils.parseVerbose(
         "class IncompatibleReturn { public static void main(String[] args) { } public int foo(int a) {return a + 1;}}");
     }
+
+    @Test
+    public void fieldMain(){
+        TestUtils.parseVerbose(
+                "class Field { int a; boolean b; int main; public static void main(String[] args) { } public int foo() { int c; int res; res = a + c; return res; } }");
+    }
 }

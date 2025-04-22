@@ -180,6 +180,8 @@ public class JmmSymbolTableBuilder {
             List<Symbol> symbolList = new ArrayList<>();
             for (JmmNode child : children){
                 Type returnType = typerReturner(child);
+                returnType.putObject("isConst", false);
+
                 Symbol aux = new Symbol(returnType, child.get("name"));
                 symbolList.add(aux);
                 isObjectInstantiatedMap.put(child.get("name"), true); //we consider the parameters to be instantiated when someone calls the method
@@ -188,6 +190,7 @@ public class JmmSymbolTableBuilder {
             List<JmmNode> vararchildren = method.getChildren(VAR_ARG_TYPE);
             for (JmmNode varargNode : vararchildren) {
                 Type returnType = typerReturner(varargNode);
+                returnType.putObject("isConst", false);
                 Type newReturnType = TypeUtils.newArrayType(returnType.getName());
                 newReturnType.putObject("isVarArg", true);
                 Symbol aux = new Symbol(newReturnType, varargNode.get("name"));
