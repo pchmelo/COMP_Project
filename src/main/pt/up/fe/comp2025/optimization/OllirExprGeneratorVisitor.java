@@ -35,8 +35,37 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         addVisit(VAR_REF_EXPR, this::visitVarRef);
         addVisit(BINARY_EXPR, this::visitBinExpr);
         addVisit(INTEGER_EXPR, this::visitInteger);
+        addVisit(METHOD_CALL_EXPR, this::visitMethodCallExpr);
+        addVisit(NEW_INT_ARRAY_EXPR, this::visitNewIntArrayExpr);
+        setDefaultVisit(this::defaultVisit);
+    }
 
-//        setDefaultVisit(this::defaultVisit);
+    private OllirExprResult visitNewIntArrayExpr(JmmNode node, Void unused) {
+        //tmp0.array.i32 :=.array.i32 new(array, 1.i32).array.i32;
+        var lhsOllirExpr = visit(node.getChild(1));
+        var lhsCode =  lhsOllirExpr.getCode();
+
+        String codePart1 = "new(array," + lhsCode  +").array.i32" + lhsOllirExpr.getComputation();
+
+        return new OllirExprResult(codePart1);
+    }
+
+    private OllirExprResult visitMethodCallExpr(JmmNode node, Void unused) {
+        //invokestatic(io, "println", 2.i32).V;
+        JmmNode lhs = node.getChild(0);
+        String lhsCode;
+        if (lhs.getKind().equals("VarRefExpr")){
+            lhsCode = lhs.get("name");
+        }else{
+            var lhsOllirExpr = visit(node.getChild(0));
+            lhsCode =  lhsOllirExpr.getComputation();
+        }
+
+        var rhsOllirExpr = visit(node.getChild(1));
+
+        String code = "invokestatic(" + lhsCode + ", \"" +node.get("name") + "\", " + rhsOllirExpr.getCode() + ").V";
+
+        return new OllirExprResult(code);
     }
 
 

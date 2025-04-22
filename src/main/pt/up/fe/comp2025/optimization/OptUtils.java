@@ -40,12 +40,20 @@ public class OptUtils {
 
     public String toOllirType(JmmNode typeNode) {
 
-        TYPE.checkOrThrow(typeNode);
+       //HHHHHH??? TYPE.checkOrThrow(typeNode);
+        if (typeNode.getKind().equals("VoidType")){
+            return toOllirType("void");
+        }else if (typeNode.getKind().equals("TypeTagNotUsed")){
+            return toOllirType(types.convertType(typeNode.getChild(0)));
+        }
 
         return toOllirType(types.convertType(typeNode));
     }
 
     public String toOllirType(Type type) {
+        if (type.isArray()){
+            return ".array" + toOllirType(type.getName());
+        }
         return toOllirType(type.getName());
     }
 
@@ -53,6 +61,8 @@ public class OptUtils {
 
         String type = "." + switch (typeName) {
             case "int" -> "i32";
+            case "boolean" -> "bool";
+            case "String" -> "String";
             default -> throw new NotImplementedException(typeName);
         };
 

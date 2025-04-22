@@ -43,12 +43,17 @@ public class TypeUtils {
     }
 
     public static Type convertType(JmmNode typeNode) {
-
         // TODO: When you support new types, this must be updated
-        var name = typeNode.get("name");
-        var isArray = false;
-
-        return new Type(name, isArray);
+        String name;
+        if (typeNode.getKind().equals("ClassType")){
+            name = typeNode.get("name");
+            var isArray = false;
+            return new Type(name, isArray);
+        }else{
+            name = typeNode.getChild(0).get("name");
+            var isArray = typeNode.getKind().equals("ArrayType");
+            return new Type(name, isArray);
+        }
     }
 
 
