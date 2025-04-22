@@ -16,13 +16,33 @@ public class OptUtils {
 
     private final AccumulatorMap<String> temporaries;
 
+    private AccumulatorMap<String> thens;
+
     private final TypeUtils types;
 
     public OptUtils(TypeUtils types) {
         this.types = types;
         this.temporaries = new AccumulatorMap<>();
+        this.thens = new AccumulatorMap<>();
     }
 
+    public String nextThen() {
+
+        return nextTemp("then");
+    }
+
+    public String nextThen(String prefix) {
+
+        // Subtract 1 because the base is 1
+        var nextThenNum = thens.add(prefix) - 1;
+
+        return prefix + nextThenNum;
+    }
+
+    public Void resetThen() {
+        thens = new AccumulatorMap<>();
+        return null ;
+    }
 
     public String nextTemp() {
 
