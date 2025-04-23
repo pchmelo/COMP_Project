@@ -30,7 +30,7 @@ varDeclaration
 
 methodDeclaration
     : ('public')? (st='static')? returnType name=ID '(' ( varargDeclaration | argument (',' argument)* (',' varargDeclaration)?  )? ')' '{' (varDeclaration | statement)* '}'  #MethodDecl
-    | ('public')? st='static' 'void' name='main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration | statement)* '}' #MainMethodDecl
+    //| ('public')? st='static' 'void' name='main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration | statement)* '}' #MainMethodDecl
     ;
 
 //(v | m a* b?)?

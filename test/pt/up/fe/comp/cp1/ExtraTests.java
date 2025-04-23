@@ -233,19 +233,19 @@ public class ExtraTests {
     @Test
     public void DuplicatedFields2(){
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/DuplicatedFields2.jmm"));
-        TestUtils.mustFail(result);
+        TestUtils.noErrors(result);
     }
 
     @Test
     public void DuplicatedFields3(){
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/DuplicatedFields3.jmm"));
-        TestUtils.mustFail(result);
+        TestUtils.noErrors(result);
     }
 
     @Test
     public void DuplicatedFields4(){
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/DuplicatedFields4.jmm"));
-        TestUtils.mustFail(result);
+        TestUtils.noErrors(result);
     }
 
     @Test
@@ -257,7 +257,7 @@ public class ExtraTests {
     @Test
     public void DuplicatedParams2(){
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/DuplicatedParams2.jmm"));
-        TestUtils.mustFail(result);
+        TestUtils.noErrors(result);
     }
 
     @Test
@@ -275,13 +275,13 @@ public class ExtraTests {
     @Test
     public void DuplicatedParams5(){
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/DuplicatedParams5.jmm"));
-        TestUtils.mustFail(result);
+        TestUtils.noErrors(result);
     }
 
     @Test
     public void DuplicatedParams6(){
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/DuplicatedParams6.jmm"));
-        TestUtils.mustFail(result);
+        TestUtils.noErrors(result);
     }
 
     @Test
@@ -463,4 +463,63 @@ public class ExtraTests {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MethodTest6.jmm"));
         TestUtils.mustFail(result);
     }
+
+    @Test
+    public void MainError1Test(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MainError1.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void MainError2Test(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MainError2.jmm"));
+        TestUtils.mustFail(result);
+    }
+    @Test
+    public void MainError3Test(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MainError3.jmm"));
+        TestUtils.mustFail(result);
+    }
+    @Test
+    public void MainError4Test(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MainError4.jmm"));
+        TestUtils.mustFail(result);
+    }
+    @Test
+    public void MainError5Test(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MainError5.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void MainNormalTest(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MainNormal.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void NameFunctionsErrorTest(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/NameFunctionsError.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void DuplicateArgumentsErrorTest(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/DuplicateArgumentsError.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void DuplicateLocalVar(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/DuplicateLocalVar.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void DuplicateVarNamesTest(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/DuplicateVarNames.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+
 }

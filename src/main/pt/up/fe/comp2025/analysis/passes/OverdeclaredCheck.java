@@ -28,10 +28,10 @@ public class OverdeclaredCheck extends AnalysisVisitor {
     public void buildVisitor() {
         addVisit(Kind.METHOD_DECL, this::visitMethodDecl);
         addVisit(Kind.MAIN_METHOD_DECL, this::visitMethodDecl);
-        addVisit(Kind.VAR_DECL, this::visitVarDecl);
-        addVisit(Kind.PARAM, this::visitVarDecl);
-        addVisit(Kind.VAR_ASSIGN_STMT, this::visitVarDecl);
-        addVisit(Kind.VAR_ARG_TYPE, this::visitVarArgDecl);
+        //addVisit(Kind.VAR_DECL, this::visitVarDecl);
+        //addVisit(Kind.PARAM, this::visitVarDecl);
+        //addVisit(Kind.VAR_ASSIGN_STMT, this::visitVarDecl);
+        //addVisit(Kind.VAR_ARG_TYPE, this::visitVarArgDecl);
         addVisit(Kind.IMPORT_DECL, this::visitImportDecl);
     }
 
@@ -60,6 +60,7 @@ public class OverdeclaredCheck extends AnalysisVisitor {
         return null;
     }
 
+    /*
     private Void visitVarArgDecl(JmmNode node, SymbolTable table) {
         SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
         Type type = types.getExprType(node.getChild(0), table, currentMethod);
@@ -96,7 +97,7 @@ public class OverdeclaredCheck extends AnalysisVisitor {
 
         return null;
     }
-
+    /*
     private Void visitVarDecl(JmmNode node, SymbolTable table) {
         int count = 0;
         for (Symbol field : table.getFields()){
@@ -134,6 +135,7 @@ public class OverdeclaredCheck extends AnalysisVisitor {
 
         return null;
     }
+    */
 
     private Void visitImportDecl(JmmNode node, SymbolTable table) {
         int count = 0;

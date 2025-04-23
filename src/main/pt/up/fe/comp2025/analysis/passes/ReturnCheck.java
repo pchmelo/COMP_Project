@@ -91,8 +91,8 @@ public class ReturnCheck extends AnalysisVisitor {
             );
         }
 
-        if (!isThereStuff && isVoidReturn){
-            var message = String.format("You forgot to add stuff before returning void. Empty useless method", method);
+        if (isVoidReturn && count >= 1) {
+            var message = String.format("Methods return Void must not have a return", method);
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     method.getLine(),

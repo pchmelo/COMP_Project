@@ -153,6 +153,8 @@ public class TypeUtils {
                 return getExprType(children.getFirst(), table, currentMethod);
             case "NewIntArrayExpr":
                 return getExprType(node.getChild(0), table, currentMethod);
+            case "Param":
+                return getExprType(node.getChild(0), table, currentMethod);
             default:
                 System.out.println("I am "+ kind);
                 return new Type("outro", false);

@@ -35,6 +35,66 @@ public class Varargs extends AnalysisVisitor {
         List<JmmNode> children = mainNode.getChildren();
         boolean isVarArg = false;
 
+        //teste para a class main
+        if(currentMethod.equals("main")){
+            //testa para ver se é static
+            try{
+                var static_var = mainNode.get("st");
+            }
+            catch (Exception e){
+                var message = String.format("Main must be static");
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        mainNode.getLine(),
+                        mainNode.getColumn(),
+                        message,
+                        null)
+                );
+            }
+
+            //testa para ver se é void
+            if(!mainNode.getChild(0).getKind().equals("VoidType")){
+                var message = String.format("Main must be void");
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        mainNode.getLine(),
+                        mainNode.getColumn(),
+                        message,
+                        null)
+                );
+            }
+
+            //testa para ver se tem 1 argumento "String" []
+            Type argument = types.getExprType(mainNode.getChild(1), table, currentMethod);
+            if(!argument.getName().equals("String") || !argument.isArray()){
+                var message = String.format("Main must have 1 argument of type String []");
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        mainNode.getLine(),
+                        mainNode.getColumn(),
+                        message,
+                        null)
+                );
+            }
+
+            try{
+                //check if the main method has any other arguments
+                if(mainNode.getChild(2).getKind().equals("Param") || mainNode.getChild(2).getKind().equals("VarArgType")){
+                    var message = String.format("Main must not have any other arguments");
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            mainNode.getLine(),
+                            mainNode.getColumn(),
+                            message,
+                            null)
+                    );
+                }
+            }
+            catch (Exception e){
+                //do nothing
+            }
+        }
+
         for (JmmNode child : children) {
             if (child.getHierarchy().getLast().equals("Argument")) {
                 if (child.getChild(0).getHierarchy().getFirst().equals("VarArgType")) {
@@ -83,6 +143,10 @@ public class Varargs extends AnalysisVisitor {
             if (expressionNode.getKind().equals("ArrayAccessExpr")){
                 return null;
             }
+        }
+
+        if(methodTypeReturn.getName().equals("undefined")){
+            return null;
         }
 
         if(!methodTypeReturn.getName().equals(currentMethodType.getName()) || methodTypeReturn.isArray() != currentMethodType.isArray() ){

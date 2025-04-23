@@ -1,0 +1,8 @@
+class NameFunctionsError{
+    public int f(int a){
+        return 1;
+    }
+    public int f(int b, int b){
+        return 1;
+    }
+}

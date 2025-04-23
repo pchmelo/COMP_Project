@@ -5,7 +5,7 @@ class Field {
     int main;
 
     public static void main(String[] args) {
-
+        int i;
     }
 
     public int foo() {

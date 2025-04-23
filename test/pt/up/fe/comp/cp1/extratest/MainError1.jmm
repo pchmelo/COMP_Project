@@ -1,0 +1,5 @@
+class MainError1 {
+    public void main(String[] args) {
+        int b;
+    }
+}

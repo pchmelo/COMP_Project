@@ -17,8 +17,6 @@ import org.junit.Test;
 import pt.up.fe.comp.TestUtils;
 
 public class GrammarTest {
-
-
     private static final String IMPORT = "importDeclaration";
     private static final String MAIN_METHOD = "methodDeclaration";
     private static final String INSTANCE_METHOD = "methodDeclaration";
