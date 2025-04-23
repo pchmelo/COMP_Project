@@ -1,0 +1,10 @@
+class Field {
+
+    public void bar (int a) {
+        int b;
+    }
+
+    public static void main(String[] args) {
+        int b;
+    }
+}

@@ -1,0 +1,11 @@
+import A;
+import A;
+
+class Field {
+
+    int a;
+
+    public static void main(String[] args) {
+
+    }
+}

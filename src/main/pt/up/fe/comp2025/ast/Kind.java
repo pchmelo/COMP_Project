@@ -45,7 +45,11 @@ public enum Kind {
     EXPRESSION_STMT,
     CLASS_TYPE,
     CONST_STMT,
-    VAR_ASSIGN_STMT
+    VAR_ASSIGN_STMT,
+    THIS_EXPR,
+    METHOD_CALL,
+    INTEGER_EXPR,
+    BRACKET_STMT,
     ;
 
 

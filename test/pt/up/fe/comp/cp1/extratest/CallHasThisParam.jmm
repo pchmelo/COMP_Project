@@ -1,0 +1,15 @@
+class Field {
+
+    public int bar (Field c) {
+        int b;
+        b = 4;
+        return b;
+    }
+
+    public int bar2 (int a) {
+            int b;
+            b = this.bar(this);
+            return b;
+    }
+
+}

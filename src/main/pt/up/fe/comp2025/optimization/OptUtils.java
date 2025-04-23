@@ -16,13 +16,31 @@ public class OptUtils {
 
     private final AccumulatorMap<String> temporaries;
 
+    private int thens;
+
     private final TypeUtils types;
 
     public OptUtils(TypeUtils types) {
         this.types = types;
         this.temporaries = new AccumulatorMap<>();
+        this.thens = -1;
     }
 
+    public int nextThen() {
+        // Subtract 1 because the base is 1
+        thens++;
+        return thens;
+    }
+
+    public Void resetThen() {
+        thens = -1;
+        return null ;
+    }
+
+    public int previousThen() {
+        thens--;
+        return thens;
+    }
 
     public String nextTemp() {
 
@@ -40,12 +58,20 @@ public class OptUtils {
 
     public String toOllirType(JmmNode typeNode) {
 
-        TYPE.checkOrThrow(typeNode);
+       //HHHHHH??? TYPE.checkOrThrow(typeNode);
+        if (typeNode.getKind().equals("VoidType")){
+            return toOllirType("void");
+        }else if (typeNode.getKind().equals("TypeTagNotUsed")){
+            return toOllirType(types.convertType(typeNode.getChild(0)));
+        }
 
         return toOllirType(types.convertType(typeNode));
     }
 
     public String toOllirType(Type type) {
+        if (type.isArray()){
+            return ".array" + toOllirType(type.getName());
+        }
         return toOllirType(type.getName());
     }
 
@@ -53,7 +79,10 @@ public class OptUtils {
 
         String type = "." + switch (typeName) {
             case "int" -> "i32";
-            default -> throw new NotImplementedException(typeName);
+            case "boolean" -> "bool";
+            case "String" -> "String";
+            default -> typeName;
+            //default -> throw new NotImplementedException(typeName);
         };
 
         return type;

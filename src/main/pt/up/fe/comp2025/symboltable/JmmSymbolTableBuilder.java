@@ -40,6 +40,7 @@ public class JmmSymbolTableBuilder {
         Map<String, Boolean> staticMethods = new HashMap<>();
         Map<String, Boolean> isObjectInstantiatedMap = new HashMap<>();
         Map<String, String> bomb = new HashMap<>();
+        Map<String, Type> methodCallType = new HashMap<>();
 
         // TODO: After your grammar supports more things inside the program (e.g., imports) you will have to change this
         var imports = buildImports(root.getChildren(IMPORT_DECL), bomb);
@@ -61,6 +62,7 @@ public class JmmSymbolTableBuilder {
         bomb.put(className,"");
         bomb.put(superName,"");
         table.putObject("bombs", bomb);
+        table.putObject("methodCallType", methodCallType);
 
         return table;
     }
@@ -87,6 +89,13 @@ public class JmmSymbolTableBuilder {
         for (JmmNode child : children){
             Type returnType = typerReturner(child);
             Symbol tempAux = new Symbol(returnType, child.get("name"));
+
+            boolean exists = fields.stream().anyMatch(symbol -> symbol.getName().equals(tempAux.getName()));
+            if (exists) {
+                var message = String.format("Cannot have more than 1 field with the same name: %s", child.get("name"));
+                reports.add(newError(child, message));
+            }
+
             fields.add(tempAux);
             isObjectInstantiatedMap.put(child.get("name"), false);
         }
@@ -117,7 +126,6 @@ public class JmmSymbolTableBuilder {
         Map<String, Type> map = new HashMap<>();
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             var name = method.get("name");
-            // TODO: After you add more types besides 'int', you will have to update this
             JmmNode child = method.getChild(0);
             Type returnType;
             if (child.getKind().equals("VoidType")){
@@ -172,11 +180,6 @@ public class JmmSymbolTableBuilder {
 
     private Map<String, List<Symbol>> buildParams(JmmNode classDecl, Map<String,Boolean> isObjectInstantiatedMap) {
         Map<String, List<Symbol>> map = new HashMap<>();
-        /* var params = method.getChildren(PARAM).stream()
-                    // TODO: When you support new types, this code has to be updated
-                    .map(param -> new Symbol(TypeUtils.newIntType(), param.get("name")))
-                    .toList();*/
-
 
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             var name = method.get("name");
@@ -184,17 +187,35 @@ public class JmmSymbolTableBuilder {
             List<Symbol> symbolList = new ArrayList<>();
             for (JmmNode child : children){
                 Type returnType = typerReturner(child);
+                returnType.putObject("isConst", false);
+                
                 Symbol aux = new Symbol(returnType, child.get("name"));
+
+                boolean exists = symbolList.stream().anyMatch(symbol -> symbol.getName().equals(aux.getName()));
+                if (exists) {
+                    var message = String.format("Cannot have more than 1 parameters with same name", child);
+                    reports.add(newError(child, message));
+                }
                 symbolList.add(aux);
-                isObjectInstantiatedMap.put(child.get("name"), true); //we consider the parameters to be instantiated when someone calls the method
+                isObjectInstantiatedMap.put(child.get("name"), true);
+
+
             }
 
             List<JmmNode> vararchildren = method.getChildren(VAR_ARG_TYPE);
             for (JmmNode varargNode : vararchildren) {
                 Type returnType = typerReturner(varargNode);
+                returnType.putObject("isConst", false);
                 Type newReturnType = TypeUtils.newArrayType(returnType.getName());
                 newReturnType.putObject("isVarArg", true);
                 Symbol aux = new Symbol(newReturnType, varargNode.get("name"));
+
+                boolean exists = symbolList.stream().anyMatch(symbol -> symbol.getName().equals(aux.getName()));
+                if (exists) {
+                    var message = String.format("Cannot have more than 1 parameters with same name", varargNode);
+                    reports.add(newError(varargNode, message));
+                }
+
                 symbolList.add(aux);
             }
 
@@ -226,6 +247,19 @@ public class JmmSymbolTableBuilder {
                 returnType.putObject("isConst", false);
 
                 Symbol tempAux = new Symbol(returnType, child.get("name"));
+
+                boolean exists = false;
+                for (Symbol symbol : locals) {
+                    if (symbol.getName().equals(tempAux.getName())) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (exists) {
+                    var message = String.format("Cannot have more than 1 local var with same name", child);
+                    reports.add(newError(child, message));
+                }
+
                 locals.add(tempAux);
                 isObjectInstantiatedMap.put(child.get("name"), false);
             }
@@ -235,6 +269,19 @@ public class JmmSymbolTableBuilder {
                 returnType.putObject("isConst", true);
 
                 Symbol tempAux = new Symbol(returnType, child.get("name"));
+
+                boolean exists = false;
+                for (Symbol symbol : locals) {
+                    if (symbol.getName().equals(tempAux.getName())) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (exists) {
+                    var message = String.format("Cannot have more than 1 local var with same name", child);
+                    reports.add(newError(child, message));
+                }
+
                 locals.add(tempAux);
                 isObjectInstantiatedMap.put(child.get("name"), false);
             }
@@ -244,6 +291,18 @@ public class JmmSymbolTableBuilder {
                 returnType.putObject("isConst", false);
 
                 Symbol tempAux = new Symbol(returnType, child.get("name"));
+
+                boolean exists = false;
+                for (Symbol symbol : locals) {
+                    if (symbol.getName().equals(tempAux.getName())) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (exists) {
+                    var message = String.format("Cannot have more than 1 local var with same name", child);
+                    reports.add(newError(child, message));
+                }
                 locals.add(tempAux);
                 isObjectInstantiatedMap.put(child.get("name"), false);
             }
@@ -254,10 +313,6 @@ public class JmmSymbolTableBuilder {
     }
 
     private List<String> buildMethods(JmmNode classDecl, Map<String, Boolean> staticMethods) {
-
-        /*var methods = classDecl.getChildren(METHOD_DECL).stream()
-                .map(method -> method.get("name"))
-                .toList();*/
         List<String> methods = new ArrayList<>();
         List<JmmNode> children = classDecl.getChildren(METHOD_DECL);
         for (JmmNode child : children){

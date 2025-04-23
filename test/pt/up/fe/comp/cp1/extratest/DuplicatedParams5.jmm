@@ -1,0 +1,8 @@
+class Field {
+
+    public int bar (int a, int d, int c, int ... b) {
+        int e;
+        int[] b;
+        return 4;
+    }
+}

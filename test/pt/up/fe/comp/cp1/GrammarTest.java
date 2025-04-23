@@ -17,8 +17,6 @@ import org.junit.Test;
 import pt.up.fe.comp.TestUtils;
 
 public class GrammarTest {
-
-
     private static final String IMPORT = "importDeclaration";
     private static final String MAIN_METHOD = "methodDeclaration";
     private static final String INSTANCE_METHOD = "methodDeclaration";
@@ -38,6 +36,11 @@ public class GrammarTest {
     @Test
     public void testClass() {
         TestUtils.parseVerbose("class Foo extends Bar {}");
+    }
+
+    @Test
+    public void testClass2() {
+        TestUtils.parseVerbose("class Foo extends Bar { int a; int b; int main;}");
     }
 
     @Test
@@ -250,5 +253,11 @@ public class GrammarTest {
     @Test
     public void IncompatibleReturn(){TestUtils.parseVerbose(
         "class IncompatibleReturn { public static void main(String[] args) { } public int foo(int a) {return a + 1;}}");
+    }
+
+    @Test
+    public void fieldMain(){
+        TestUtils.parseVerbose(
+                "class Field { int a; boolean b; int main; public static void main(String[] args) { } public int foo() { int c; int res; res = a + c; return res; } }");
     }
 }

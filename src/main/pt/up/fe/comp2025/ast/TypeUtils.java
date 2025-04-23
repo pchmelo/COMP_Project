@@ -7,6 +7,7 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2025.symboltable.JmmSymbolTable;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Utility methods regarding types.
@@ -42,12 +43,17 @@ public class TypeUtils {
     }
 
     public static Type convertType(JmmNode typeNode) {
-
         // TODO: When you support new types, this must be updated
-        var name = typeNode.get("name");
-        var isArray = false;
-
-        return new Type(name, isArray);
+        String name;
+        if (typeNode.getKind().equals("ClassType")){
+            name = typeNode.get("name");
+            var isArray = false;
+            return new Type(name, isArray);
+        }else{
+            name = typeNode.getChild(0).get("name");
+            var isArray = typeNode.getKind().equals("ArrayType");
+            return new Type(name, isArray);
+        }
     }
 
 
@@ -79,15 +85,33 @@ public class TypeUtils {
                     Type right = getExprType(node.getChild(1), table, currentMethod);
                     return left;
                 }
-            case "#DflType":
+            case "DflType":
+                return new Type(node.getChild(0).get("name"), false);
+            case "ArrayType":
+                return new Type(node.getChild(0).get("name"), true);
+            case "ClassType":
                 return new Type(node.get("name"), false);
-
             case "IntegerExpr", "ArrayLengthExpr", "Postfix", "IntType":
                 return new Type("int", false);
             case "TrueExpr" , "FalseExpr", "NotExpr", "BooleanType":
                 return new Type("boolean", false);
             case "StringType":
                 return new Type("String", false);
+            case "MethodCall":
+                Map<String, Type> methodCallType = (Map<String, Type>) table.getObject("methodCallType");
+                String methodCallName = node.get("name");
+                Type methodType = methodCallType.get(methodCallName);
+                if (methodType == null){
+                    //if method exists inside class, then it will not return null
+                    methodType = table.getReturnType(methodCallName);
+                    if (methodType != null){
+                        methodCallType.put(methodCallName, methodType); //get the type of the method inside the table map
+                        return methodType;
+                    }
+                    //method doesn't exist on class => assume current left type
+                    return new Type("undefined", false);
+                }
+                return methodType;
             case "MethodCallExpr":
                 String methodName = node.get("name");
                 Type type = table.getReturnType(methodName);
@@ -96,7 +120,12 @@ public class TypeUtils {
                 }
                 return type;
             case "ArrayAccessExpr":
+                Type arrayType = getExprType(node.getChild(0), table, currentMethod);
+                if (arrayType.isArray()){
+                    return new Type(arrayType.getName(), false);
+                }
                 return getExprType(node.getChild(0), table, currentMethod);
+
             case "VarRefExpr":
                 Symbol variable_ = valueFromVarReturner(node.get("name"),table,currentMethod);
                 return variable_.getType();
@@ -123,6 +152,8 @@ public class TypeUtils {
                 }
                 return getExprType(children.getFirst(), table, currentMethod);
             case "NewIntArrayExpr":
+                return getExprType(node.getChild(0), table, currentMethod);
+            case "Param":
                 return getExprType(node.getChild(0), table, currentMethod);
             default:
                 System.out.println("I am "+ kind);

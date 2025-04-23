@@ -9,7 +9,8 @@ import java.util.List;
 /**
  * Represents an analysis pass.
  */
-public interface AnalysisPass {
+public interface
+AnalysisPass {
 
     /**
      * Analyses the given node.

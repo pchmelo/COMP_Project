@@ -1,0 +1,8 @@
+import A.C;
+import B.A;
+import A.B;
+
+class Field {
+
+    int a;
+}

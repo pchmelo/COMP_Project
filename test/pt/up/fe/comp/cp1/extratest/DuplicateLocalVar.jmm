@@ -1,0 +1,6 @@
+class DuplicateLocalVar{
+    void f() {
+        int a;
+        int a;
+    }
+}

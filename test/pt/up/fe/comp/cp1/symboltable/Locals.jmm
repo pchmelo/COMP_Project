@@ -29,6 +29,6 @@ class MethodsAndFields{
 	}
 	
 	public static void main(String[] args){
-		
+
 	}
 }

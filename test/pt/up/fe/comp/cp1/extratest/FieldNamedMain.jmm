@@ -1,0 +1,19 @@
+class Field {
+
+    int a;
+    boolean b;
+    int main;
+
+    public static void main(String[] args) {
+        int i;
+    }
+
+    public int foo() {
+        int c;
+        int res;
+
+        res = a + c;
+
+        return res;
+    }
+}

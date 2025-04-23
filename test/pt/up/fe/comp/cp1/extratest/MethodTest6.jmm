@@ -1,0 +1,16 @@
+class A extends B{
+  int f2(){
+    int d = 1 + 2;
+    return 4;
+  }
+
+  void f1() {
+   int a;
+   a = f2() + f3(a,5);
+  }
+
+  void f4() {
+   int a;
+   a = f5() + f6(a,5);
+  }
+}

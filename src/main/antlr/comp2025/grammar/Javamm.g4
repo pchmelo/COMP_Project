@@ -30,7 +30,7 @@ varDeclaration
 
 methodDeclaration
     : ('public')? (st='static')? returnType name=ID '(' ( varargDeclaration | argument (',' argument)* (',' varargDeclaration)?  )? ')' '{' (varDeclaration | statement)* '}'  #MethodDecl
-    | ('public')? st='static' 'void' name='main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration | statement)* '}' #MainMethodDecl
+    //| ('public')? st='static' 'void' name='main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration | statement)* '}' #MainMethodDecl
     ;
 
 //(v | m a* b?)?
@@ -85,6 +85,7 @@ expression
     | expression '.' 'length' #ArrayLengthExpr    ////
     | expression '[' expression ']' #ArrayAccessExpr   ////
     | expression '.' name=ID '(' (expression (',' expression)*)? ')' #MethodCallExpr    //
+    | name=ID '(' (expression (',' expression)*)? ')' #MethodCall
     | expression op=('*' | '/') expression #BinaryExpr     //
     | expression op=('+' | '-') expression #BinaryExpr    //
     | expression op=('>' | '<' | '>=' | '<=') expression #BinaryExpr     //

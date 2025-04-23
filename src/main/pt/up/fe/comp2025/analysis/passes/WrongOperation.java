@@ -94,6 +94,27 @@ public class WrongOperation extends AnalysisVisitor {
                 return null;
             }
 
+            if (expression.getKind().equals("MethodCall")){
+                String methodCallName = expression.get("name");
+                Type methodType = types.getExprType(expression,table,currentMethod);
+                //if method call has never been called
+                if (methodType.getName().equals("undefined")){
+                    //method doesn't exist on class => assume current left type and insert it on table
+                    Map<String, Type> methodCallType = (Map<String, Type>) table.getObject("methodCallType");
+                    methodCallType.put(methodCallName, val0);
+                }else if (methodType != val0){ //if it has been called before and doesn't match current assignment
+                    var message = "Type error: cannot assign " + val0.getName() + " type with a method call of type " + val1.getName() + ".";
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            expression.getLine(),
+                            expression.getColumn(),
+                            message,
+                            null)
+                    );
+                }
+                return null;
+            }
+
             if(expression.getKind().equals("MethodCallExpr")){
                 JmmNode variableRightExpression = expression.getChild(0);
                 Type type_ = types.getExprType(variableRightExpression, table, currentMethod);
@@ -197,6 +218,7 @@ public class WrongOperation extends AnalysisVisitor {
                 return null;
             }
 
+
             if((!table.getImports().contains(val0.getName())) && (!table.getSuper().equals(val0.getName()))){
                 var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
                 addReport(Report.newError(
@@ -209,7 +231,22 @@ public class WrongOperation extends AnalysisVisitor {
                 return null;
             }
 
+
+
+            var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    expression.getLine(),
+                    expression.getColumn(),
+                    message,
+                    null)
+            );
+
+            return null;
+
         }
+
+
 
         return null;
     }
@@ -271,6 +308,28 @@ public class WrongOperation extends AnalysisVisitor {
 
             if(!val0.getName().equals(val1.getName()) || val0.isArray() != val1.isArray() ){
                 if(val0.getName().equals(val1.getName()) && rightExpression.getHierarchy().getFirst().equals("NewIntArrayExpr")){
+                    return null;
+                }
+
+                //if a = f2() and f2() is a methodCall
+                if (rightExpression.getKind().equals("MethodCall")){
+                    String methodCallName = rightExpression.get("name");
+                    Type methodType = types.getExprType(rightExpression,table,currentMethod);
+                    //if method call has never been called
+                    if (methodType.getName().equals("undefined")){
+                        //method doesn't exist on class => assume current left type and insert it on table
+                        Map<String, Type> methodCallType = (Map<String, Type>) table.getObject("methodCallType");
+                        methodCallType.put(methodCallName, val0);
+                    }else if (methodType != val0){ //if it has been called before and doesn't match current assignment
+                        var message = "Type error: cannot assign " + val0.getName() + " type with a method call of type " + val1.getName() + ".";
+                        addReport(Report.newError(
+                                Stage.SEMANTIC,
+                                expression.getLine(),
+                                expression.getColumn(),
+                                message,
+                                null)
+                        );
+                    }
                     return null;
                 }
 
@@ -422,6 +481,19 @@ public class WrongOperation extends AnalysisVisitor {
         Type val0 = types.getExprType(expression0, table, currentMethod);
         JmmNode expression1 = expression.getChild(1);
         Type val1 = types.getExprType(expression1, table, currentMethod);
+
+        //if f2() + 2 and f2() is a methodCall and method call has never been called =>  assume the opposite type and insert it on table
+        if (expression0.getKind().equals("MethodCall") && val0.getName().equals("undefined")){
+            val0 = val1;
+            Map<String, Type> methodCallType = (Map<String, Type>) table.getObject("methodCallType");
+            methodCallType.put(expression0.get("name"), val0);
+        }
+        // 2 + f2() and f2 is ......
+        if (expression1.getKind().equals("MethodCall") && val1.getName().equals("undefined")){
+            val1 = val0;
+            Map<String, Type> methodCallType = (Map<String, Type>) table.getObject("methodCallType");
+            methodCallType.put(expression1.get("name"), val1);
+        }
 
         String operator = expression.get("op");
 

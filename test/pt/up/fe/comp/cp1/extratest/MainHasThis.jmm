@@ -1,0 +1,9 @@
+class Field {
+
+    public static void main(String[] args) {
+        Field c;
+        c = this;
+        return;
+    }
+
+}

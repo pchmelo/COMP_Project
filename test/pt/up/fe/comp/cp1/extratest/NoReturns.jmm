@@ -1,0 +1,6 @@
+class Field {
+
+    public int bar (int a) {
+        int b;
+    }
+}

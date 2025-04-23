@@ -1,0 +1,7 @@
+import B;
+
+class A extends B {
+  void f() {
+    this.fb();
+  }
+}

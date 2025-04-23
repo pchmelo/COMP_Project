@@ -1,0 +1,4 @@
+class DuplicateArgumentsError{
+   void f(int a, int a) {
+   }
+}
