@@ -21,12 +21,16 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
     private final TypeUtils types;
     private final OptUtils ollirTypes;
-
+    private String currentMethod;
 
     public OllirExprGeneratorVisitor(SymbolTable table) {
         this.table = table;
         this.types = new TypeUtils(table);
         this.ollirTypes = new OptUtils(types);
+    }
+
+    public void ChangeCurrentMethod(String currentMethod){
+        this.currentMethod = currentMethod;
     }
 
 
@@ -89,7 +93,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         computation.append(rhs.getComputation());
 
         // code to compute self
-        Type resType = types.getExprType(node);
+        Type resType = types.getExprType(node,table,currentMethod);
         String resOllirType = ollirTypes.toOllirType(resType);
         String code = ollirTypes.nextTemp() + resOllirType;
 
@@ -97,7 +101,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
                 .append(ASSIGN).append(resOllirType).append(SPACE)
                 .append(lhs.getCode()).append(SPACE);
 
-        Type type = types.getExprType(node);
+        Type type = types.getExprType(node,table,currentMethod);
         computation.append(node.get("op")).append(ollirTypes.toOllirType(type)).append(SPACE)
                 .append(rhs.getCode()).append(END_STMT);
 
@@ -108,7 +112,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     private OllirExprResult visitVarRef(JmmNode node, Void unused) {
 
         var id = node.get("name");
-        Type type = types.getExprType(node);
+        Type type = types.getExprType(node,table,currentMethod);
         String ollirType = ollirTypes.toOllirType(type);
 
         String code = id + ollirType;
