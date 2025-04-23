@@ -82,7 +82,7 @@ expression
     : '(' expression ')' #ParenthesesExpr          //
     | name=ID op=('++' | '--') #Postfix          //
     | '!' expression #NotExpr           ////
-    | expression '.' 'length' #ArrayLengthExpr    ////
+    | expression '.length' #ArrayLengthExpr    ////
     | expression '[' expression ']' #ArrayAccessExpr   ////
     | expression '.' name=ID '(' (expression (',' expression)*)? ')' #MethodCallExpr    //
     | name=ID '(' (expression (',' expression)*)? ')' #MethodCall

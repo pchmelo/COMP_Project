@@ -11,6 +11,10 @@ class VarAssignStmtThisSuper extends C {
         boolean e = C.algo();
         int[] f = F.algo();
 
+        int y = f.length;
+        int length = 0;
+
+
         return a;
     }
 
