@@ -6,6 +6,7 @@ import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2025.ast.TypeUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +25,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private final String R_BRACKET = "}\n";
 
     private String currentMethod;
+    private String currentSpace;
 
     private final SymbolTable table;
 
@@ -54,20 +56,57 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
         addVisit(EXPRESSION_STMT, this::visitExpr);
         addVisit(IF_STMT, this::visitIfStmt);
+        addVisit(BRACKET_STMT, this::visitBracketStmt);
 
         setDefaultVisit(this::defaultVisit);
     }
 
+    private String visitBracketStmt(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        code.append(visit(node.getChild(0)));
+        return code.toString();
+    }
+
     private String visitIfStmt(JmmNode node, Void unused) {
+        int size = node.getChildren().size();
+        var tempNums = ollirTypes.nextThen();
+        String thenName = "then" + tempNums;
+        String endName = "end" + tempNums;
+
         StringBuilder code = new StringBuilder("if (");
         code.append(exprVisitor.visit(node.getChild(0)).getCode());
-        code.append(") goto");
-        
+        code.append(") goto ").append(thenName).append(END_STMT);
+        if (size == 3) {
+            code.append(exprVisitor.visit(node.getChild(2)).getCode());
+        }else if (size == 5) {
+            tempNums = ollirTypes.nextThen();
+            String thenNameInside = "then" + tempNums ;
+            String endNameInside = "end" + tempNums ;
+            StringBuilder codeInside = new StringBuilder("if (");
+            codeInside.append(exprVisitor.visit(node.getChild(2)).getCode());
+            codeInside.append(") goto ");
+            codeInside.append(thenNameInside);
+            codeInside.append(END_STMT);
+            codeInside.append(exprVisitor.visit(node.getChild(4)).getCode());
+            codeInside.append("goto ").append(endNameInside).append(END_STMT);
+            codeInside.append(thenNameInside + ":");
+            codeInside.append(NL);
+            codeInside.append(visit(node.getChild(3)));
+            codeInside.append(endNameInside).append(":");
+            codeInside.append(NL);
+            code.append(codeInside);
+        }
+        code.append(currentSpace).append("goto ").append(endName).append(END_STMT);
+        code.append(currentSpace).append(thenName).append(":").append(NL);
+        code.append(visit(node.getChild(1)));
+        code.append(currentSpace).append(endName).append(":").append(NL);
+        ollirTypes.resetThen();
         return code.toString();
     }
 
     private String visitMainMethodDecl(JmmNode node, Void unused) {
         currentMethod = "main";
+        exprVisitor.ChangeCurrentMethod(currentMethod);
         StringBuilder code = new StringBuilder(".method public static main");
         // params
         var paramsCode = "("+ node.get("argName") + ".array.String)";
@@ -81,13 +120,14 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         StringBuilder stmtsCode = new StringBuilder();
         for(int i=0; i < listNode.size(); i++){
+            currentSpace ="   ";
             JmmNode childNode = listNode.get(i);
             if (!childNode.getKind().equals("VarDecl")) {
                 var childCode = visit(childNode);
                 stmtsCode.append("   ").append(childCode).append("\n");
             }
         }
-
+        currentSpace ="";
         code.append(stmtsCode);
         code.append(R_BRACKET);
         code.append(NL);
@@ -229,6 +269,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     private String visitMethodDecl(JmmNode node, Void unused) {
         currentMethod = node.get("name");
+        exprVisitor.ChangeCurrentMethod(currentMethod);
 
         StringBuilder code = new StringBuilder(".method ");
 

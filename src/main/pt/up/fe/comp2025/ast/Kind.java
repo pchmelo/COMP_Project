@@ -49,6 +49,7 @@ public enum Kind {
     THIS_EXPR,
     METHOD_CALL,
     INTEGER_EXPR,
+    BRACKET_STMT,
     ;
 
 

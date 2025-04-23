@@ -7,10 +7,14 @@ class Arithmetic_and {
 		a = true && false;
 		
 		if(a) {
+               io.print(3);
+		} else if (a) {
 			io.print(1);
 		} else {
-			io.print(0);		
+			io.print(2);
 		}
+
+
 
 	}
 }
