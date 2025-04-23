@@ -6,11 +6,15 @@ class SimpleWhileStat {
         int c;
         int i;
         i = 0;
-		
+
         while (i < a) {
+
+            while(i < a){
+                i = i + 2;
+            }
             i = i + 1;
         }
-		
+
         return i;
     }
 

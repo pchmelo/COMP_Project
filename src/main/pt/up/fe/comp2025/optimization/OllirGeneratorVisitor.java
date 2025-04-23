@@ -57,6 +57,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(EXPRESSION_STMT, this::visitExpr);
         addVisit(IF_STMT, this::visitIfStmt);
         addVisit(BRACKET_STMT, this::visitBracketStmt);
+        addVisit(WHILE_STMT, this::whileStmt);
 
         setDefaultVisit(this::defaultVisit);
     }
@@ -408,6 +409,39 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         StringBuilder code = new StringBuilder();
         var exprCode= exprVisitor.visit(node.getChild(0)).getCode();
         code.append(exprCode).append(END_STMT);
+
+        return code.toString();
+    }
+
+    private String whileStmt(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        code.append(NL);
+        int whileTempNums = ollirTypes.nextWhile();
+        int ifLabelNum = ollirTypes.nextThen();
+
+
+        String whileName = "while" + whileTempNums + ":";
+        String condition = visit(node.getChild(0));
+        String ifName = "if(!.bool tmp" + ollirTypes.getTempCount() + ".bool) goto endif" + ifLabelNum + ";";
+
+        String insideWhile = "";
+        String insideWhile_t = "";
+
+        for(int i = 0; i < node.getChild(1).getNumChildren(); i++){
+            insideWhile_t = visit(node.getChild(i));
+            insideWhile += insideWhile_t;
+        }
+
+        String goTo = "goto while" + whileTempNums + ";";
+        String endIf = "endif" + ifLabelNum + ":";
+
+        code.append(whileName).append(NL);
+        code.append(condition).append(NL);
+        code.append(ifName).append(NL);
+        code.append(insideWhile).append(NL);
+        code.append(goTo).append(NL);
+        code.append(endIf).append(NL);
+
 
         return code.toString();
     }

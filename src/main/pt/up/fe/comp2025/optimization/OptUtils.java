@@ -6,6 +6,8 @@ import pt.up.fe.comp2025.ast.TypeUtils;
 import pt.up.fe.specs.util.collections.AccumulatorMap;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 
+import java.util.Optional;
+
 import static pt.up.fe.comp2025.ast.Kind.TYPE;
 
 /**
@@ -18,18 +20,27 @@ public class OptUtils {
 
     private int thens;
 
+    private int whiles;
+
     private final TypeUtils types;
 
     public OptUtils(TypeUtils types) {
         this.types = types;
         this.temporaries = new AccumulatorMap<>();
         this.thens = -1;
+        this.whiles = -1;
     }
 
     public int nextThen() {
         // Subtract 1 because the base is 1
         thens++;
         return thens;
+    }
+
+    public int nextWhile() {
+        // Subtract 1 because the base is 1
+        whiles++;
+        return whiles;
     }
 
     public Void resetThen() {
@@ -53,6 +64,10 @@ public class OptUtils {
         var nextTempNum = temporaries.add(prefix) - 1;
 
         return prefix + nextTempNum;
+    }
+
+    public Integer getTempCount() {
+        return temporaries.getAccMap().size();
     }
 
 
