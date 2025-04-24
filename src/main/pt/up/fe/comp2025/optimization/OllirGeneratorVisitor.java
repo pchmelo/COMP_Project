@@ -62,44 +62,46 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     private String visitBracketStmt(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
-        code.append(visit(node.getChild(0)));
+        for (JmmNode child : node.getChildren()){
+            code.append("   ").append(visit(child));
+        }
         return code.toString();
     }
 
     private String visitIfStmt(JmmNode node, Void unused) {
         int size = node.getChildren().size();
-        var tempNums = ollirTypes.nextThen();
-        String thenName = "then" + tempNums;
-        String endName = "end" + tempNums;
+        int tempNums = ollirTypes.currentThen();
         String ifCurrentSpace = currentSpace;
-        currentSpace = currentSpace + "   ";
 
-        StringBuilder code = new StringBuilder(ifCurrentSpace);
-        code.append("if (");
-        code.append(exprVisitor.visit(node.getChild(0)).getCode());
-        code.append(") goto ").append(thenName).append(END_STMT);
-        if (size == 3) {
-            code.append(currentSpace).append(exprVisitor.visit(node.getChild(2)).getCode());
-        }else if (size == 5) {
+        StringBuilder code = new StringBuilder();
+        StringBuilder ifSpace = new StringBuilder(currentSpace);
+        for (int i=0; i < size - 1 ; i += 2 ){
             tempNums = ollirTypes.nextThen();
             String thenNameInside = "then" + tempNums ;
-            String endNameInside = "end" + tempNums ;
-            String codeInside =
-                    currentSpace + "if (" + exprVisitor.visit(node.getChild(2)).getCode() + ") goto " + thenNameInside + END_STMT +
-                    currentSpace + visit(node.getChild(4)) +
-                    currentSpace + "goto " + endNameInside + END_STMT +
-                    currentSpace + thenNameInside + ":" + NL +
-                    currentSpace + visit(node.getChild(3)) +
-                    currentSpace + endNameInside + ":" + NL;
-            code.append(codeInside);
+            String ifCondition = currentSpace + "if (" + exprVisitor.visit(node.getChild(i)).getCode() + ") goto " + thenNameInside + END_STMT;
+            code.append(ifCondition);
+            ifSpace.append("   ");
+            currentSpace = ifSpace.toString();
         }
-        code.append(ifCurrentSpace).append("goto ").append(endName).append(END_STMT);
-        code.append(ifCurrentSpace).append(thenName).append(":").append(NL);
-        code.append(ifCurrentSpace).append(visit(node.getChild(1)));
-        code.append(ifCurrentSpace).append(endName).append(":").append(NL);
+        ifSpace.delete(0,3);
+        currentSpace = ifSpace.toString();
+        if (size % 2 == 1) {
+            code.append(visit(node.getChildren().getLast()));
+        }
+        currentSpace = ifSpace.toString();
+        for (int i= size / 2 * 2 - 1; i > 0; i -= 2){
+            String thenNameInside = "then" + tempNums ;
+            String endNameInside = "endif" + tempNums ;
+            code.append(currentSpace).append("goto ").append(endNameInside).append(END_STMT);
+            code.append(currentSpace).append(thenNameInside).append(":").append(NL);
+            code.append(visit(node.getChild(i)));
+            code.append(currentSpace).append(endNameInside).append(":").append(NL);
+            ifSpace.delete(0,3);
+            currentSpace = ifSpace.toString();
+            tempNums = ollirTypes.previousThen();
+        }
 
         currentSpace = ifCurrentSpace;
-
         return code.toString();
     }
 

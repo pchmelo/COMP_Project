@@ -43,14 +43,25 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         addVisit(NEW_INT_ARRAY_EXPR, this::visitNewIntArrayExpr);
         addVisit(TRUE_EXPR, this::visitBooleanExpr);
         addVisit(FALSE_EXPR, this::visitBooleanExpr);
+        addVisit(ARRAY_LENGTH_EXPR, this::visitArrayLenExpr);
 
         setDefaultVisit(this::defaultVisit);
     }
 
+    private OllirExprResult visitArrayLenExpr(JmmNode node, Void unused) {
+        //tmp1.i32 :=.i32 arraylength(a.array.i32).i32; tmp1.i32;
+        var intType = TypeUtils.newIntType();
+        String ollirBooleanType = ollirTypes.toOllirType(intType);
+        String currentTemp = ollirTypes.nextTemp() + ollirBooleanType;
+        String computation = currentTemp + " " + ASSIGN + ollirBooleanType + " arraylength(" + visit(node.getChild(0)).getCode() + ")" + ollirBooleanType + END_STMT;
+
+        return new OllirExprResult(currentTemp, computation);
+    }
+
     private OllirExprResult visitBooleanExpr(JmmNode node, Void unused) {
-        var intType = TypeUtils.newBooleanType();
-        String ollirIntType = ollirTypes.toOllirType(intType);
-        String code = node.get("value") + ollirIntType;
+        var booleanType = TypeUtils.newBooleanType();
+        String ollirBooleanType = ollirTypes.toOllirType(booleanType);
+        String code = node.get("value") + ollirBooleanType;
         return new OllirExprResult(code);
     }
 
@@ -74,12 +85,18 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             var lhsOllirExpr = visit(node.getChild(0));
             lhsCode =  lhsOllirExpr.getComputation();
         }
+        StringBuilder rhsCode = new StringBuilder() ;
+        StringBuilder code = new StringBuilder();
+        for (int i = 1; i < node.getChildren().size() ; i++){
+            var rhsOllirExpr = visit(node.getChild(i));
+            code.append(rhsOllirExpr.getComputation());
+            rhsCode.append(", ").append(rhsOllirExpr.getCode());
+        }
 
-        var rhsOllirExpr = visit(node.getChild(1));
 
-        String code = "invokestatic(" + lhsCode + ", \"" +node.get("name") + "\", " + rhsOllirExpr.getCode() + ").V";
+        code.append("invokestatic(" + lhsCode + ", \"" + node.get("name") + "\"" + rhsCode + ").V");
 
-        return new OllirExprResult(code);
+        return new OllirExprResult(code.toString());
     }
 
 

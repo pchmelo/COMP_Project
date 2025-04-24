@@ -42,6 +42,10 @@ public class OptUtils {
         return thens;
     }
 
+    public int currentThen() {
+        return thens;
+    }
+
     public String nextTemp() {
 
         return nextTemp("tmp");
