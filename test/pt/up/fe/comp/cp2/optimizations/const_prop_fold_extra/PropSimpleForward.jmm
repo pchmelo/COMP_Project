@@ -1,7 +1,6 @@
-class PropSimple {
+class PropSimpleExtraForward {
     public int foo(){
-	  int a;
-	  a = 1;
+	  int a = 1;
 	  return a;
 	}
     public static void main(String[] args) {
