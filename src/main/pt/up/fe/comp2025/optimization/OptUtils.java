@@ -53,6 +53,10 @@ public class OptUtils {
         return thens;
     }
 
+    public int currentThen() {
+        return thens;
+    }
+
     public String nextTemp() {
 
         return nextTemp("tmp");
@@ -78,6 +82,8 @@ public class OptUtils {
             return toOllirType("void");
         }else if (typeNode.getKind().equals("TypeTagNotUsed")){
             return toOllirType(types.convertType(typeNode.getChild(0)));
+        } else if (typeNode.getHierarchy().getLast().equals("DefaultType")) {
+            return toOllirType(typeNode.get("name"));
         }
 
         return toOllirType(types.convertType(typeNode));
@@ -96,6 +102,7 @@ public class OptUtils {
             case "int" -> "i32";
             case "boolean" -> "bool";
             case "String" -> "String";
+            case "void" -> "V";
             default -> typeName;
             //default -> throw new NotImplementedException(typeName);
         };
