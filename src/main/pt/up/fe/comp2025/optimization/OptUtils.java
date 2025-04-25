@@ -67,6 +67,8 @@ public class OptUtils {
             return toOllirType("void");
         }else if (typeNode.getKind().equals("TypeTagNotUsed")){
             return toOllirType(types.convertType(typeNode.getChild(0)));
+        } else if (typeNode.getHierarchy().getLast().equals("DefaultType")) {
+            return toOllirType(typeNode.get("name"));
         }
 
         return toOllirType(types.convertType(typeNode));

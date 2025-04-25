@@ -56,8 +56,24 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(EXPRESSION_STMT, this::visitExpr);
         addVisit(IF_STMT, this::visitIfStmt);
         addVisit(BRACKET_STMT, this::visitBracketStmt);
+        addVisit(ARRAY_ASSIGN_STMT, this::visitArrayAssignStmt);
 
         setDefaultVisit(this::defaultVisit);
+    }
+
+    private String visitArrayAssignStmt(JmmNode node, Void unused) {
+        //a[0.i32].i32 :=.i32 1.i32;
+        StringBuilder code = new StringBuilder();
+        var ollirIndexExpr = exprVisitor.visit(node.getChild(0));
+        var ollirRhsExpr = exprVisitor.visit(node.getChild(1));
+        code.append(ollirIndexExpr.getComputation());
+        code.append(ollirRhsExpr.getComputation());
+        Type variableType = types.valueFromVarReturner(node.get("name"),table,currentMethod).getType();
+        Type newVariableType = new Type(variableType.getName(),false);
+        String ollirNewVariableType = ollirTypes.toOllirType(newVariableType);
+        code.append(currentSpace).append(node.get("name")).append("[").append(ollirIndexExpr.getCode()).append("]").append(ollirNewVariableType).append(" ").append(ASSIGN).append(ollirNewVariableType).append(" ").append(ollirRhsExpr.getCode()).append(END_STMT);
+
+        return code.toString();
     }
 
     private String visitBracketStmt(JmmNode node, Void unused) {
@@ -122,7 +138,9 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         StringBuilder code = new StringBuilder();
 
         // code to compute the children
-        code.append(rhs.getComputation());
+        if (!rhs.getComputation().isEmpty()){
+            code.append(currentSpace).append(rhs.getComputation()).append(END_STMT);
+        }
 
         // code to compute self
         // statement has type of lhs
@@ -131,18 +149,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         String typeString = ollirTypes.toOllirType(lhsType);
         var varCode = node.get("name") + typeString;
 
-        var tempVar = ollirTypes.nextTemp() + typeString;
-
-        code.append(tempVar);
-        code.append(SPACE);
-
-        code.append(ASSIGN);
-        code.append(typeString);
-        code.append(SPACE);
-
-        code.append(rhs.getCode());
-
-        code.append(END_STMT);
         //        String codePart2 = "\n k.array.i32 :=.array.i32 tmp0.array.i32" ;
             code.append(currentSpace);
             code.append(varCode);
@@ -152,7 +158,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append(typeString);
             code.append(SPACE);
 
-            code.append(tempVar);
+            code.append(rhs.getCode());
 
             code.append(END_STMT);
 
@@ -173,6 +179,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         var expressionComputation = rhs.getComputation();
         if (!expressionComputation.isEmpty()){
             code.append(expressionComputation);
+            code.append(END_STMT);
             code.append(currentSpace);
         }
 
@@ -211,6 +218,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         var expressionComputation = expr.getComputation();
         if (!expressionComputation.isEmpty()){
             code.append(expressionComputation);
+            code.append(END_STMT);
             code.append(currentSpace);
         }
         code.append("ret");
@@ -385,8 +393,14 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private String visitExpr(JmmNode node, Void unused) {
 
         StringBuilder code = new StringBuilder();
-        var exprCode= exprVisitor.visit(node.getChild(0)).getCode();
-        code.append(currentSpace).append(exprCode).append(END_STMT);
+        var exprVisit= exprVisitor.visit(node.getChild(0));
+        var exprComputation = exprVisit.getComputation();
+        var exprCode = exprVisit.getCode();
+        if (!exprComputation.isEmpty()){
+            code.append(currentSpace).append(exprComputation).append(END_STMT);
+        }
+
+        //code.append(currentSpace).append(exprCode).append(END_STMT);
 
         return code.toString();
     }
