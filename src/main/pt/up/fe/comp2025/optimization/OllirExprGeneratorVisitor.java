@@ -51,8 +51,13 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         addVisit(NOT_EXPR, this::visitNotExpr);
         addVisit(PARENTHESES_EXPR, this::visitParenthesesExpr);
         addVisit(POSTFIX, this::visitPostfix);
+        addVisit(THIS_EXPR, this::visitThisExpr);
 
         setDefaultVisit(this::defaultVisit);
+    }
+
+    private OllirExprResult visitThisExpr(JmmNode node, Void unused) {
+        return new OllirExprResult("this." + table.getClassName(), "");
     }
 
     private OllirExprResult visitPostfix(JmmNode node, Void unused) {
@@ -177,15 +182,28 @@ d.io :=.io tmp0.io;*/
         }
         String code = "";
         if (!node.getParent().getKind().equals("ExpressionStmt")){
-            Type resType = types.getExprType(node.getParent(),table,currentMethod);
-            String resOllirType = ollirTypes.toOllirType(resType);
-            code += ollirTypes.nextTemp() + resOllirType;
-            computation.append(code + SPACE + ASSIGN + resOllirType + SPACE);
+            if (node.getParent().getKind().equals("AssignStmt")){
+                Type resType = types.valueFromVarReturner(node.getParent().get("name"),table,currentMethod).getType();
+                String resOllirType = ollirTypes.toOllirType(resType);
+                code += ollirTypes.nextTemp() + resOllirType;
+                computation.append(code + SPACE + ASSIGN + resOllirType + SPACE);
+            }else{
+                Type resType = types.getExprType(node.getParent(),table,currentMethod);
+                String resOllirType = ollirTypes.toOllirType(resType);
+                code += ollirTypes.nextTemp() + resOllirType;
+                computation.append(code + SPACE + ASSIGN + resOllirType + SPACE);
+            }
         }else{
             computation.append(TAB);
         }
 
-        computation.append("invokestatic(" + lhsCode + ", \"" + node.get("name") + "\"" + rhsCode + ").V");
+        if (node.getChild(0).getKind().equals("ThisExpr")){
+            computation.append("invokevirtual(");
+        }else{
+            computation.append("invokestatic(");
+        }
+
+        computation.append( lhsCode + ", \"" + node.get("name") + "\"" + rhsCode + ").V");
         return new OllirExprResult(code, computation.toString());
     }
 

@@ -4,6 +4,10 @@ class CompileArithmetic {
 
     }
 
+    public int foo1(int u) {
+        return 1;
+    }
+
     public int foo() {
         int a;
         int b;
@@ -12,7 +16,7 @@ class CompileArithmetic {
         b = 2;
         a = a + 1;
 
-        a--;
+        a = this.func(1);
 
         return a + b;
     }
