@@ -43,11 +43,6 @@ public class OptUtils {
         return whiles;
     }
 
-    public Void resetThen() {
-        thens = -1;
-        return null ;
-    }
-
     public int previousThen() {
         thens--;
         return thens;
@@ -68,10 +63,6 @@ public class OptUtils {
         var nextTempNum = temporaries.add(prefix) - 1;
 
         return prefix + nextTempNum;
-    }
-
-    public Integer getTempCount() {
-        return temporaries.getAccMap().size();
     }
 
 
@@ -109,6 +100,4 @@ public class OptUtils {
 
         return type;
     }
-
-
 }

@@ -16,6 +16,8 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     private static final String SPACE = " ";
     private static final String ASSIGN = ":=";
     private final String END_STMT = ";\n";
+    private final String R_PAREN = ")";
+    private final String TAB = "   ";
 
     private final SymbolTable table;
 
@@ -46,8 +48,55 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         addVisit(ARRAY_LENGTH_EXPR, this::visitArrayLenExpr);
         addVisit(ARRAY_ACCESS_EXPR, this::visitArrayAccessExpr);
         addVisit(NEW_OBJECT_EXPR, this::visitNewObjExpr);
+        addVisit(NOT_EXPR, this::visitNotExpr);
+        addVisit(PARENTHESES_EXPR, this::visitParenthesesExpr);
+        addVisit(POSTFIX, this::visitPostfix);
 
         setDefaultVisit(this::defaultVisit);
+    }
+
+    private OllirExprResult visitPostfix(JmmNode node, Void unused) {
+        //tmp0.i32 :=.i32 a.i32 +.i32 a.i32; a.i32 :=.i32 tmp0.i32;
+        StringBuilder computation = new StringBuilder();
+
+        Type intType = TypeUtils.newIntType();
+        String resOllirType = ollirTypes.toOllirType(intType);
+        String code = ollirTypes.nextTemp() + resOllirType;
+
+        var id = node.get("name");
+        String variable = id + resOllirType;
+
+        String operation;
+        if (node.get("op").equals("++")){
+            operation = "+";
+        }else{
+            operation = "-";
+        }
+
+        computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(variable).append(SPACE).append(operation).append(resOllirType).append(SPACE).append("1.i32").append(END_STMT).append(TAB);
+        computation.append(variable).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(code);
+
+        return new OllirExprResult("", computation);
+    }
+
+    private OllirExprResult visitParenthesesExpr(JmmNode node, Void unused) {
+        var ollirExp = visit(node.getChild(0));
+        return new OllirExprResult(ollirExp.getCode(), ollirExp.getComputation());
+    }
+
+    private OllirExprResult visitNotExpr(JmmNode node, Void unused) {
+        // tmp0.bool :=.bool !.bool 0.bool;
+        Type newBooleanType = TypeUtils.newBooleanType();
+        String ollirType = ollirTypes.toOllirType(newBooleanType);
+        String code = ollirTypes.nextTemp() + ollirType;
+        String computation = "";
+
+        var ollirExp = visit(node.getChild(0));
+        computation += printComputation(ollirExp.getComputation());
+
+        computation += code + SPACE + ASSIGN + ollirType + SPACE + "!" + ollirType + SPACE + ollirExp.getCode();
+
+        return new OllirExprResult(code, computation);
     }
 
     private OllirExprResult visitNewObjExpr(JmmNode node, Void unused) {
@@ -57,8 +106,8 @@ d.io :=.io tmp0.io;*/
         Type newObjectType = TypeUtils.newObjectType(node.get("name"));
         String ollirType = ollirTypes.toOllirType(newObjectType);
         String code = ollirTypes.nextTemp() + ollirType;
-        String computation = code + SPACE + ASSIGN + ollirType + SPACE + "new(" + node.get("name") + ")" + ollirType + END_STMT
-                + "   " + "invokespecial(" + code + ", \"<init>\").V";
+        String computation = code + SPACE + ASSIGN + ollirType + SPACE + "new(" + node.get("name") + R_PAREN + ollirType + END_STMT
+                + TAB + "invokespecial(" + code + ", \"<init>\").V";
 
         return new OllirExprResult(code, computation);
     }
@@ -72,14 +121,10 @@ d.io :=.io tmp0.io;*/
         var ollirFirstExp = visit(node.getChild(0));
         var ollirSecondExp = visit(node.getChild(1));
         String computation = "";
-        if (!ollirFirstExp.getComputation().isEmpty()){
-            computation += ollirFirstExp.getComputation() + END_STMT + "   ";
-        }
-        if (!ollirSecondExp.getComputation().isEmpty()){
-            computation += ollirSecondExp.getComputation() + END_STMT + "   ";
-        }
+        computation += printComputationTab(ollirFirstExp.getComputation());
+        computation += printComputationTab(ollirSecondExp.getComputation());
 
-        computation += currentTemp + " " + ASSIGN + ollirType + " " + ollirFirstExp.getCode() + "[" + ollirSecondExp.getCode() + "]" + ollirType;
+        computation += currentTemp + SPACE + ASSIGN + ollirType + SPACE + ollirFirstExp.getCode() + "[" + ollirSecondExp.getCode() + "]" + ollirType;
 
         return new OllirExprResult(currentTemp, computation);
     }
@@ -89,7 +134,7 @@ d.io :=.io tmp0.io;*/
         var intType = TypeUtils.newIntType();
         String ollirBooleanType = ollirTypes.toOllirType(intType);
         String currentTemp = ollirTypes.nextTemp() + ollirBooleanType;
-        String computation = currentTemp + " " + ASSIGN + ollirBooleanType + " arraylength(" + visit(node.getChild(0)).getCode() + ")" + ollirBooleanType;
+        String computation = currentTemp + SPACE + ASSIGN + ollirBooleanType + " arraylength(" + visit(node.getChild(0)).getCode() + R_PAREN + ollirBooleanType;
 
         return new OllirExprResult(currentTemp, computation);
     }
@@ -107,7 +152,7 @@ d.io :=.io tmp0.io;*/
         var rhsCode =  rhsOllirExpr.getCode();
         String lhsOllirExpr = ".array" + ollirTypes.toOllirType(node.getChild(0));
         String code = ollirTypes.nextTemp() + lhsOllirExpr;
-        String computation = rhsOllirExpr.getComputation() + code + SPACE + ASSIGN + lhsOllirExpr + SPACE + "new(array, " + rhsCode  +")" + lhsOllirExpr;
+        String computation = rhsOllirExpr.getComputation() + code + SPACE + ASSIGN + lhsOllirExpr + SPACE + "new(array, " + rhsCode  + R_PAREN + lhsOllirExpr;
 
         return new OllirExprResult(code,computation);
     }
@@ -121,17 +166,13 @@ d.io :=.io tmp0.io;*/
             lhsCode = lhs.get("name");
         }else{
             var lhsOllirExpr = visit(node.getChild(0));
-            if(!lhsOllirExpr.getComputation().isEmpty()){
-                computation.append(lhsOllirExpr.getComputation()).append(END_STMT);
-            }
+            computation.append(printComputation(lhsOllirExpr.getComputation()));
             lhsCode =  lhsOllirExpr.getCode();
         }
         StringBuilder rhsCode = new StringBuilder() ;
         for (int i = 1; i < node.getChildren().size() ; i++){
             var rhsOllirExpr = visit(node.getChild(i));
-            if (!rhsOllirExpr.getComputation().isEmpty()){
-                computation.append(rhsOllirExpr.getComputation()).append(END_STMT);
-            }
+            computation.append(printComputation(rhsOllirExpr.getComputation()));
             rhsCode.append(", ").append(rhsOllirExpr.getCode());
         }
         String code = "";
@@ -141,7 +182,7 @@ d.io :=.io tmp0.io;*/
             code += ollirTypes.nextTemp() + resOllirType;
             computation.append(code + SPACE + ASSIGN + resOllirType + SPACE);
         }else{
-            computation.append("   ");
+            computation.append(TAB);
         }
 
         computation.append("invokestatic(" + lhsCode + ", \"" + node.get("name") + "\"" + rhsCode + ").V");
@@ -165,12 +206,8 @@ d.io :=.io tmp0.io;*/
         StringBuilder computation = new StringBuilder();
 
         // code to compute the children
-        if (!lhs.getComputation().isEmpty()){
-            computation.append(lhs.getComputation()).append(END_STMT).append("   ");
-        }
-        if (!rhs.getComputation().isEmpty()){
-            computation.append(rhs.getComputation()).append(END_STMT).append("   ");
-        }
+        computation.append(printComputationTab(lhs.getComputation()));
+        computation.append(printComputationTab(rhs.getComputation()));
 
         // code to compute self
         Type resType = types.getExprType(node,table,currentMethod);
@@ -214,6 +251,20 @@ d.io :=.io tmp0.io;*/
         }
 
         return OllirExprResult.EMPTY;
+    }
+
+    private String printComputation(String computation){
+        if (!computation.isEmpty()){
+            return computation + END_STMT;
+        }
+        return "";
+    }
+
+    private String printComputationTab(String computation){
+        if (!computation.isEmpty()){
+            return computation + END_STMT + TAB;
+        }
+        return "";
     }
 
 }

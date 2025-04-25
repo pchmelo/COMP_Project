@@ -23,6 +23,10 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private final String NL = "\n";
     private final String L_BRACKET = " {\n";
     private final String R_BRACKET = "}\n";
+    private final String COLON = ":";
+    private final String GOTO = "goto ";
+    private final String R_PAREN = ")";
+    private final String TAB = "   ";
 
     private String currentMethod;
     private String currentSpace;
@@ -72,7 +76,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         Type variableType = types.valueFromVarReturner(node.get("name"),table,currentMethod).getType();
         Type newVariableType = new Type(variableType.getName(),false);
         String ollirNewVariableType = ollirTypes.toOllirType(newVariableType);
-        code.append(currentSpace).append(node.get("name")).append("[").append(ollirIndexExpr.getCode()).append("]").append(ollirNewVariableType).append(" ").append(ASSIGN).append(ollirNewVariableType).append(" ").append(ollirRhsExpr.getCode()).append(END_STMT);
+        code.append(currentSpace).append(node.get("name")).append("[").append(ollirIndexExpr.getCode()).append("]").append(ollirNewVariableType).append(SPACE).append(ASSIGN).append(ollirNewVariableType).append(SPACE).append(ollirRhsExpr.getCode()).append(END_STMT);
 
         return code.toString();
     }
@@ -80,7 +84,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private String visitBracketStmt(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
         for (JmmNode child : node.getChildren()){
-            code.append("   ").append(visit(child));
+            code.append(TAB).append(visit(child));
         }
         return code.toString();
     }
@@ -95,9 +99,9 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         for (int i=0; i < size - 1 ; i += 2 ){
             tempNums = ollirTypes.nextThen();
             String thenNameInside = "then" + tempNums ;
-            String ifCondition = currentSpace + "if (" + exprVisitor.visit(node.getChild(i)).getCode() + ") goto " + thenNameInside + END_STMT;
+            String ifCondition = currentSpace + "if (" + exprVisitor.visit(node.getChild(i)).getCode() + R_PAREN + SPACE + GOTO + thenNameInside + END_STMT;
             code.append(ifCondition);
-            ifSpace.append("   ");
+            ifSpace.append(TAB);
             currentSpace = ifSpace.toString();
         }
         ifSpace.delete(0,3);
@@ -109,10 +113,10 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         for (int i= size / 2 * 2 - 1; i > 0; i -= 2){
             String thenNameInside = "then" + tempNums ;
             String endNameInside = "endif" + tempNums ;
-            code.append(currentSpace).append("goto ").append(endNameInside).append(END_STMT);
-            code.append(currentSpace).append(thenNameInside).append(":").append(NL);
+            code.append(currentSpace).append(GOTO).append(endNameInside).append(END_STMT);
+            code.append(currentSpace).append(thenNameInside).append(COLON).append(NL);
             code.append(visit(node.getChild(i)));
-            code.append(currentSpace).append(endNameInside).append(":").append(NL);
+            code.append(currentSpace).append(endNameInside).append(COLON).append(NL);
             ifSpace.delete(0,3);
             currentSpace = ifSpace.toString();
             tempNums = ollirTypes.previousThen();
@@ -130,7 +134,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             importName.append(wordList.get(i)).append(".");
         }
         importName.append(wordList.getLast());
-        return "import " + importName + ";" + NL;
+        return "import " + importName + END_STMT;
     }
 
     private String visitAssignStmtAsNewIntArrayExpr(JmmNode node, Void unused) {
@@ -182,6 +186,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append(expressionComputation);
             code.append(END_STMT);
             code.append(currentSpace);
+            code.append(TAB);
         }
 
         // code to compute self
@@ -193,13 +198,10 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         code.append(varCode);
         code.append(SPACE);
-
         code.append(ASSIGN);
         code.append(typeString);
         code.append(SPACE);
-
         code.append(rhs.getCode());
-
         code.append(END_STMT);
 
         return code.toString();
@@ -245,16 +247,14 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         var id = node.get("name");
 
-        String code = id + typeCode;
-
-        return code;
+        return id + typeCode;
     }
 
 
     private String visitMethodDecl(JmmNode node, Void unused) {
         currentMethod = node.get("name");
         exprVisitor.ChangeCurrentMethod(currentMethod);
-        currentSpace ="   ";
+        currentSpace = TAB;
 
         StringBuilder code = new StringBuilder(".method ");
 
@@ -275,12 +275,11 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         List<JmmNode> paramList = node.getChildren(PARAM);  //doesn't include varargs
         var paramsCode = paramList.stream()
                 .map(this::visit)
-                .collect(Collectors.joining(",", "(", ")"));
+                .collect(Collectors.joining(",", "(", R_PAREN));
 
         code.append(paramsCode);
 
         // type
-        // TODO: Hardcoded for int, needs to be expanded
         String retType = ollirTypes.toOllirType(node.getChild(0));
         code.append(retType);
         code.append(L_BRACKET);
@@ -411,29 +410,28 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(NL);
         int whileTempNums = ollirTypes.nextWhile();
         int ifLabelNum = ollirTypes.nextThen();
+        String whileSpace = currentSpace;
+        currentSpace += TAB;
+        String whileName = "while" + whileTempNums + COLON;
+        OllirExprResult ollirCondition = exprVisitor.visit(node.getChild(0));
+        String condition = ollirCondition.getCode();
+        String ifName = "if(!.bool " + condition + R_PAREN + SPACE + GOTO + "endif" + ifLabelNum + END_STMT;
 
+        String statementCode = visit(node.getChild(1));
+        currentSpace = whileSpace;
 
-        String whileName = "while" + whileTempNums + ":";
-        String condition = visit(node.getChild(0));
-        String ifName = "if(!.bool tmp" + ollirTypes.getTempCount() + ".bool) goto endif" + ifLabelNum + ";";
+        String goTo = GOTO + "while" + whileTempNums + END_STMT;
+        String endIf = "endif" + ifLabelNum + COLON;
 
-        String insideWhile = "";
-        String insideWhile_t = "";
-
-        for(int i = 0; i < node.getChild(1).getNumChildren(); i++){
-            insideWhile_t = visit(node.getChild(i));
-            insideWhile += insideWhile_t;
+        code.append(currentSpace).append(whileName).append(NL).append(currentSpace).append(TAB);
+        if (!ollirCondition.getComputation().isEmpty()){
+            code.append(ollirCondition.getComputation()).append(END_STMT).append(currentSpace).append(TAB);
         }
 
-        String goTo = "goto while" + whileTempNums + ";";
-        String endIf = "endif" + ifLabelNum + ":";
-
-        code.append(whileName).append(NL);
-        code.append(condition).append(NL);
-        code.append(ifName).append(NL);
-        code.append(insideWhile).append(NL);
-        code.append(goTo).append(NL);
-        code.append(endIf).append(NL);
+        code.append(ifName);
+        code.append(statementCode).append(NL);
+        code.append(currentSpace).append(goTo);
+        code.append(currentSpace).append(endIf).append(NL);
 
 
         return code.toString();
