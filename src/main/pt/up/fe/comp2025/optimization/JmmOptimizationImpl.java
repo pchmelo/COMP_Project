@@ -37,7 +37,7 @@ public class JmmOptimizationImpl implements JmmOptimization {
                 constFoldOpVisitor.hasChanged = false;
 
                 constPropOpVisitor.visit(semanticsResult.getRootNode());
-                //constFoldOpVisitor.visit(semanticsResult.getRootNode());
+                constFoldOpVisitor.visit(semanticsResult.getRootNode());
 
             }while(constFoldOpVisitor.hasChanged || constPropOpVisitor.hasChanged);
         }
