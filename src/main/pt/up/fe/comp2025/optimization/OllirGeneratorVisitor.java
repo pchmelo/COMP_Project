@@ -62,8 +62,39 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(BRACKET_STMT, this::visitBracketStmt);
         addVisit(ARRAY_ASSIGN_STMT, this::visitArrayAssignStmt);
         addVisit(WHILE_STMT, this::whileStmt);
+        addVisit(CONST_STMT, this::visitConstStmt);
+        addVisit(VAR_ASSIGN_STMT, this::visitConstStmt);
 
         setDefaultVisit(this::defaultVisit);
+    }
+
+    private String visitConstStmt(JmmNode node, Void unused) {
+        var rhs = exprVisitor.visit(node.getChild(1));
+
+        StringBuilder code = new StringBuilder();
+        code.append(currentSpace);
+        // code to compute the children
+        var expressionComputation = rhs.getComputation();
+        if (!expressionComputation.isEmpty()){
+            code.append(expressionComputation);
+            code.append(END_STMT);
+            code.append(currentSpace);
+            code.append(TAB);
+        }
+
+        Type lhsType = types.valueFromVarReturner(node.get("name"),table,currentMethod).getType();
+        String typeString = ollirTypes.toOllirType(lhsType);
+        var varCode = node.get("name") + typeString;
+
+        code.append(varCode);
+        code.append(SPACE);
+        code.append(ASSIGN);
+        code.append(typeString);
+        code.append(SPACE);
+        code.append(rhs.getCode());
+        code.append(END_STMT);
+
+        return code.toString();
     }
 
     private String visitArrayAssignStmt(JmmNode node, Void unused) {
@@ -186,7 +217,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append(expressionComputation);
             code.append(END_STMT);
             code.append(currentSpace);
-            code.append(TAB);
         }
 
         // code to compute self
@@ -196,12 +226,19 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         String typeString = ollirTypes.toOllirType(lhsType);
         var varCode = node.get("name") + typeString;
 
+        String temp = rhs.getCode();
+
+        if (!node.get("op").equals("=")){
+            temp = ollirTypes.nextTemp() + typeString;
+            String operation = node.get("op").substring(0,1);
+            code.append(temp).append(SPACE).append(ASSIGN).append(typeString).append(SPACE).append(varCode).append(SPACE).append(operation).append(typeString).append(SPACE).append(rhs.getCode()).append(END_STMT).append(TAB);
+        }
         code.append(varCode);
         code.append(SPACE);
         code.append(ASSIGN);
         code.append(typeString);
         code.append(SPACE);
-        code.append(rhs.getCode());
+        code.append(temp);
         code.append(END_STMT);
 
         return code.toString();
