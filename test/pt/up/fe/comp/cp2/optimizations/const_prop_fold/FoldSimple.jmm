@@ -5,6 +5,8 @@ class Folding {
     public static void main(String[] args) {
         int a;
         boolean b;
+        boolean c;
+        c = true;
 
         a = 10 + 20;
         b = 10 < 20;

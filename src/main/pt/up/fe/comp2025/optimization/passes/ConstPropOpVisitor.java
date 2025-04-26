@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ConstPropOpVisitor extends AJmmVisitor<Void, JmmNode> {
+public class ConstPropOpVisitor extends AJmmVisitor<Void, Void> {
     private final Map<String, JmmNode> varDecl = new HashMap<>();
     public boolean hasChanged = false;
 
@@ -20,29 +20,28 @@ public class ConstPropOpVisitor extends AJmmVisitor<Void, JmmNode> {
         addVisit("VarRefExpr", this::varRefExpr);
         addVisit("VarAssignStmt", this::varAssignStmt);
         addVisit("Postfix", this::postfix);
+        addVisit("WhileStmt", this::whileStmt);
 
         setDefaultVisit(this::visitDefault);
     }
 
 
-    private JmmNode visitDefault(JmmNode jmmNode, Void unused) {
+
+
+    private Void visitDefault(JmmNode jmmNode, Void unused) {
         List<JmmNode> children = List.copyOf(jmmNode.getChildren());
 
         for(int i = 0; i < children.size(); i++){
-            JmmNode new_child_visited = visit(children.get(i));
-            if (new_child_visited == jmmNode.getChild(i)){
-                continue;
-            }
-            jmmNode.setChild(new_child_visited, i);
-
+            visit(children.get(i));
         }
-        return jmmNode;
+        return unused;
     }
 
-    private JmmNode assignStmt(JmmNode jmmNode, Void unused) {
+    private Void assignStmt(JmmNode jmmNode, Void unused) {
         String varName = jmmNode.get("name");
         JmmNode right = jmmNode.getChild(0);
         String rightType = right.getKind();
+        visit(right);
 
         if(rightType.equals("IntegerExpr") || rightType.equals("TrueExpr") || rightType.equals("FalseExpr")){
             if(this.varDecl.containsKey(varName)){
@@ -69,21 +68,46 @@ public class ConstPropOpVisitor extends AJmmVisitor<Void, JmmNode> {
                 }
             }
 
-            varDecl.put(varName, right);
+            if(right.getKind().equals("IntegerExpr")){
+                varDecl.put(varName, createIntegerNode(Integer.parseInt(right.get("value"))));
+            } else if(right.getKind().equals("TrueExpr")){
+                varDecl.put(varName, createTrueNode());
+            } else if (right.getKind().equals("FalseExpr")) {
+                varDecl.put(varName, createFalseNode());
+            }
+
         }
 
-        return jmmNode;
+        return unused;
     }
 
-    private JmmNode varRefExpr(JmmNode jmmNode, Void unused) {
+    private Void varRefExpr(JmmNode jmmNode, Void unused) {
         String varName = jmmNode.get("name");
+        JmmNode parent = jmmNode.getParent();
+
+        /*
+        if (!jmmNode.getParent().getKind().equals("AssignStmt") && !jmmNode.getParent().getKind().equals("VarAssignStmt")) {
+            return unused;
+        }
+         */
+        JmmNode grandParent = parent.getParent();
+        while(grandParent != null){
+            if (grandParent.getKind().equals("BracketStmt")) {
+                if(grandParent.getParent().getKind().equals("WhileStmt") || grandParent.getParent().getKind().equals("IfStmt")){
+                    this.varDecl.remove(varName);
+                    return unused;
+                }
+            }
+            grandParent = grandParent.getParent();
+        }
 
         if(this.varDecl.containsKey(varName)){
             this.hasChanged = true;
-            return this.varDecl.get(varName);
+            int idx = jmmNode.getIndexOfSelf();
+            parent.setChild(this.varDecl.get(varName), idx);
         }
 
-        return jmmNode;
+        return unused;
     }
 
     private JmmNode createIntegerNode(int value){
@@ -92,34 +116,56 @@ public class ConstPropOpVisitor extends AJmmVisitor<Void, JmmNode> {
         return node;
     }
 
-    private JmmNode varAssignStmt(JmmNode jmmNode, Void unused) {
+    private Void varAssignStmt(JmmNode jmmNode, Void unused) {
         String varName = jmmNode.get("name");
         JmmNode right = jmmNode.getChild(0);
         String rightType = right.getKind();
         if(rightType.equals("IntegerExpr") || rightType.equals("TrueExpr") || rightType.equals("FalseExpr")){
             varDecl.put(varName, right);
         }
-        return jmmNode;
+        return unused;
     }
 
-    private JmmNode postfix(JmmNode jmmNode, Void unused) {
+    private Void postfix(JmmNode jmmNode, Void unused) {
         String varName = jmmNode.get("name");
         Integer val = null;
+        int idx = jmmNode.getIndexOfSelf();
 
         if(this.varDecl.containsKey(varName)){
             switch (jmmNode.get("op")){
                 case "++":
                     val = Integer.parseInt(this.varDecl.get(varName).get("value")) + 1;
                     this.hasChanged = true;
-                    return createIntegerNode(val);
+                    jmmNode.getParent().setChild(createIntegerNode(val), idx);
+
                 case "--":
                     val = Integer.parseInt(this.varDecl.get(varName).get("value")) - 1;
                     this.hasChanged = true;
-                    return createIntegerNode(val);
+                    jmmNode.getParent().removeChild(idx);
+                    jmmNode.getParent().setChild(createIntegerNode(val), idx);
+
                 default:
                     break;
             }
         }
-        return jmmNode;
+        return unused;
+    }
+
+    private Void whileStmt(JmmNode jmmNode, Void unused) {
+        visit(jmmNode.getChild(1));
+        visit(jmmNode.getChild(0));
+        return unused;
+    }
+
+    private JmmNode createTrueNode(){
+        JmmNode node = new JmmNodeImpl(List.of("TrueExpr"));
+        node.put("value", "true");
+        return node;
+    }
+
+    private JmmNode createFalseNode() {
+        JmmNode node = new JmmNodeImpl(List.of("FalseExpr"));
+        node.put("value", "false");
+        return node;
     }
 }
