@@ -43,7 +43,7 @@ returnType
 
 returnStatement
     : 'return' expression ';'
-    | 'return' ';'
+    //| 'return' ';'
     ;
 
 argument

@@ -246,7 +246,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
 
     private String visitReturn(JmmNode node, Void unused) {
-        // TODO: Hardcoded for int type, needs to be expanded
         Type retType = TypeUtils.newIntType();
 
         StringBuilder code = new StringBuilder(currentSpace);
@@ -331,7 +330,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         code.append(paramsCode);
 
-        if (!paramList.isEmpty()){
+        if (!paramList.isEmpty() && !varArgList.isEmpty()){
             code.append(",");
         }
         code.append(varArgString);

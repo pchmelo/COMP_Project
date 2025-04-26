@@ -57,8 +57,73 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         addVisit(POSTFIX, this::visitPostfix);
         addVisit(THIS_EXPR, this::visitThisExpr);
         addVisit(ARRAY_INIT, this::visitArrayInit);
+        addVisit(METHOD_CALL, this::visitMethodCall);
 
         setDefaultVisit(this::defaultVisit);
+    }
+
+    private OllirExprResult visitMethodCall(JmmNode node, Void unused) {
+//invokestatic(io, "println", 2.i32).V;
+        StringBuilder computation = new StringBuilder();
+
+        //To deal with Parameters and VarArgs
+        StringBuilder rhsCode = new StringBuilder() ;
+        String methodName = node.get("name");
+
+        List<Symbol> symbolParamList = table.getParameters(methodName); //includes all Param and varArgType present in table
+        int actualParamSize = symbolParamList.size();                   //size of Param and varArgType together
+        int currentParamSize = node.getChildren().size();               //includes all arguments the current node is passing to the method call
+
+        List<String> varargsListMethod = (List<String>) table.getObject("varargs");     //verify if method call has a vararg, so we don't consider it when printing normal params
+        boolean hasVarargs = varargsListMethod.contains(methodName);
+        String suposedVarArgType = "";
+        //Change the way to print normal parameters if method has varargs and get the type of the vararg for vararg computation
+        if (hasVarargs) {
+            Type varArgType = symbolParamList.getLast().getType();
+            Type newVarArgType = new Type(varArgType.getName(), false);
+            suposedVarArgType = ollirTypes.toOllirType(newVarArgType);
+            actualParamSize--;
+        }
+        //Print Normal Parameters
+        for (int i = 0; i < actualParamSize ; i++){
+            var rhsOllirExpr = visit(node.getChild(i));
+            computation.append(printComputation(rhsOllirExpr.getComputation()));
+            rhsCode.append(", ").append(rhsOllirExpr.getCode());
+        }
+        //Print VarArg
+        if (hasVarargs) {
+            var nextTemp = ollirTypes.nextTemp();
+            for (int i = actualParamSize; i < currentParamSize ; i++){
+                var rhsOllirExpr = visit(node.getChild(i));
+                //tmp0[0.i32].i32 :=.i32 10.i32;
+                computation.append(printComputation(rhsOllirExpr.getComputation()));
+                computation.append(nextTemp).append("[").append(i-actualParamSize).append(".i32]").append(suposedVarArgType).append(SPACE).append(ASSIGN).append(suposedVarArgType).append(SPACE).append(rhsOllirExpr.getCode()).append(END_STMT).append(TAB);
+            }
+            rhsCode.append(", ").append(nextTemp).append(".array").append(suposedVarArgType);
+        }
+
+        String code = "";
+        if (!node.getParent().getKind().equals("ExpressionStmt")){
+            if (node.getParent().getKind().equals("AssignStmt")){
+                Type resType = types.valueFromVarReturner(node.getParent().get("name"),table,currentMethod).getType();
+                String resOllirType = ollirTypes.toOllirType(resType);
+                code += ollirTypes.nextTemp() + resOllirType;
+                computation.append(code + SPACE + ASSIGN + resOllirType + SPACE);
+            }else{
+                Type resType = types.getExprType(node.getParent(),table,currentMethod);
+                String resOllirType = ollirTypes.toOllirType(resType);
+                code += ollirTypes.nextTemp() + resOllirType;
+                computation.append(code + SPACE + ASSIGN + resOllirType + SPACE);
+            }
+        }else{
+            computation.append(TAB);
+        }
+
+        String returnTypeMethodCall =  ollirTypes.toOllirType(table.getReturnType(methodName));
+        computation.append("invokevirtual(");
+
+        computation.append( "this." + table.getClassName() + ", \"" + methodName + "\"" + rhsCode + R_PAREN + returnTypeMethodCall );
+        return new OllirExprResult(code, computation.toString());
     }
 
     private OllirExprResult visitArrayInit(JmmNode node, Void unused) {
@@ -223,8 +288,8 @@ d.io :=.io tmp0.io;*/
             actualParamSize--;
         }
         //Print Normal Parameters
-        for (int i = 1; i < actualParamSize ; i++){
-            var rhsOllirExpr = visit(node.getChild(i));
+        for (int i = 0; i < actualParamSize ; i++){
+            var rhsOllirExpr = visit(node.getChild(i+1));
             computation.append(printComputation(rhsOllirExpr.getComputation()));
             rhsCode.append(", ").append(rhsOllirExpr.getCode());
         }
