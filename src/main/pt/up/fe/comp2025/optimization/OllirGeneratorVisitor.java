@@ -301,20 +301,42 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append("public ");
         }
 
+        List<JmmNode> varArgList = node.getChildren(VAR_ARG_TYPE); //its only one per method but function requires list
+        String varArgString = "";
+        if (!varArgList.isEmpty()){
+            String varArgName = varArgList.getFirst().get("name");
+            Type varArgType = types.valueFromVarReturner(varArgName,table,currentMethod).getType();
+            varArgString = varArgName + ollirTypes.toOllirType(varArgType);
+            code.append("varargs ");
+        }
+
         // name
         var name = node.get("name");
-        code.append(name);
+
+        if (name.equals("varargs")){
+            code.append("\"").append(name).append("\"");
+        }else{
+            code.append(name);
+        }
 
         // params
         // TODO: Hardcoded for a single parameter, needs to be expanded
         //var paramsCode = visit(node.getChild(1));
         //code.append("(" + paramsCode + ")");
+        code.append("(");
         List<JmmNode> paramList = node.getChildren(PARAM);  //doesn't include varargs
         var paramsCode = paramList.stream()
                 .map(this::visit)
-                .collect(Collectors.joining(",", "(", R_PAREN));
+                .collect(Collectors.joining(",", "", ""));
 
         code.append(paramsCode);
+
+        if (!paramList.isEmpty()){
+            code.append(",");
+        }
+        code.append(varArgString);
+
+        code.append(R_PAREN);
 
         // type
         String retType = ollirTypes.toOllirType(node.getChild(0));
@@ -374,13 +396,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         for (var child : node.getChildren(METHOD_DECL)) {
             var result = visit(child);
-            code.append(result);
-        }
-
-        List<JmmNode> mainMethodNodes = node.getChildren(MAIN_METHOD_DECL);
-        if (!mainMethodNodes.isEmpty()) {
-            JmmNode mainMethodNode = mainMethodNodes.getFirst();
-            var result = visit(mainMethodNode);
             code.append(result);
         }
 

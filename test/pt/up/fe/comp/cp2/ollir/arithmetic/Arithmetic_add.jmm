@@ -1,23 +1,18 @@
-class CompileArithmetic {
-
-    public static void main(String[] args) {
-
-    }
-
-    public int foo1(int u) {
-        return 1;
-    }
+class CompileArithmetic{
 
     public int foo() {
         int a;
-        int b;
+                int[] b;
 
-        a = 1;
-        b = 2;
-        a = a + 1;
-        const int d = 2 + a;
-        b += 2 + a;
+                b = [true, true, true];
+
+                a = this.varargs(b);
 
         return a + b;
+    }
+
+    public int varargs(boolean... a) {
+        this.foo();
+        return a[0];
     }
 }

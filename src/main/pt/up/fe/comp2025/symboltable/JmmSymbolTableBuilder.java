@@ -56,28 +56,25 @@ public class JmmSymbolTableBuilder {
         var locals = buildLocals(classDecl, isObjectInstantiatedMap);
         var varargs = buildVarArgs(classDecl);
 
-        JmmSymbolTable table = new JmmSymbolTable(imports,className, superName , fields, methods, returnTypes, params, locals, varargs);
+        JmmSymbolTable table = new JmmSymbolTable(imports,className, superName , fields, methods, returnTypes, params, locals);
         table.putObject("staticMethods", staticMethods);
         table.putObject("isObjectInstantiatedMap",isObjectInstantiatedMap);
         bomb.put(className,"");
         bomb.put(superName,"");
         table.putObject("bombs", bomb);
         table.putObject("methodCallType", methodCallType);
+        table.putObject("varargs", varargs);
 
         return table;
     }
 
-    private Map<String,String> buildVarArgs(JmmNode classDecl) {
-        Map<String,String> varargs = new HashMap<String, String>();
+    private List<String> buildVarArgs(JmmNode classDecl) {
+        List<String> varargs = new ArrayList<>();
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             var name = method.get("name");
-            List<JmmNode> listParam = method.getChildren(PARAM);
+            List<JmmNode> listParam = method.getChildren(VAR_ARG_TYPE);
             if (!listParam.isEmpty()) {
-                JmmNode lastParam = listParam.getLast();
-                JmmNode typeParam = lastParam.getChild(0);
-                if (typeParam.getKind().equals("VarArgType")) {
-                    varargs.put(name, lastParam.get("name"));
-                }
+                varargs.add(name);
             }
         }
         return varargs;
