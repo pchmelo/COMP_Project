@@ -130,7 +130,9 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         for (int i=0; i < size - 1 ; i += 2 ){
             tempNums = ollirTypes.nextThen();
             String thenNameInside = "then" + tempNums ;
-            String ifCondition = currentSpace + "if (" + exprVisitor.visit(node.getChild(i)).getCode() + R_PAREN + SPACE + GOTO + thenNameInside + END_STMT;
+            var condition = exprVisitor.visit(node.getChild(i));
+            code.append(currentSpace).append(condition.getComputation()).append(END_STMT);
+            String ifCondition = currentSpace + "if (" + condition.getCode() + R_PAREN + SPACE + GOTO + thenNameInside + END_STMT;
             code.append(ifCondition);
             ifSpace.append(TAB);
             currentSpace = ifSpace.toString();
