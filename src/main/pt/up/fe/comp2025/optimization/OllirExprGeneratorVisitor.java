@@ -273,36 +273,45 @@ d.io :=.io tmp0.io;*/
         StringBuilder rhsCode = new StringBuilder() ;
         String methodName = node.get("name");
 
-        List<Symbol> symbolParamList = table.getParameters(methodName); //includes all Param and varArgType present in table
-        int actualParamSize = symbolParamList.size();                   //size of Param and varArgType together
         int currentParamSize = node.getChildren().size();               //includes all arguments the current node is passing to the method call
 
-        List<String> varargsListMethod = (List<String>) table.getObject("varargs");     //verify if method call has a vararg, so we don't consider it when printing normal params
-        boolean hasVarargs = varargsListMethod.contains(methodName);
-        String suposedVarArgType = "";
-        //Change the way to print normal parameters if method has varargs and get the type of the vararg for vararg computation
-        if (hasVarargs) {
-            Type varArgType = symbolParamList.getLast().getType();
-            Type newVarArgType = new Type(varArgType.getName(), false);
-            suposedVarArgType = ollirTypes.toOllirType(newVarArgType);
-            actualParamSize--;
-        }
-        //Print Normal Parameters
-        for (int i = 0; i < actualParamSize ; i++){
-            var rhsOllirExpr = visit(node.getChild(i+1));
-            computation.append(printComputation(rhsOllirExpr.getComputation()));
-            rhsCode.append(", ").append(rhsOllirExpr.getCode());
-        }
-        //Print VarArg
-        if (hasVarargs) {
-            var nextTemp = ollirTypes.nextTemp();
-            for (int i = actualParamSize + 1; i < currentParamSize ; i++){
-                var rhsOllirExpr = visit(node.getChild(i));
-                //tmp0[0.i32].i32 :=.i32 10.i32;
-                computation.append(printComputation(rhsOllirExpr.getComputation()));
-                computation.append(nextTemp).append("[").append(i-actualParamSize-1).append(".i32]").append(suposedVarArgType).append(SPACE).append(ASSIGN).append(suposedVarArgType).append(SPACE).append(rhsOllirExpr.getCode()).append(END_STMT).append(TAB);
+        if (node.getChild(0).getKind().equals("ThisExpr")) {
+            List<Symbol> symbolParamList = table.getParameters(methodName); //includes all Param and varArgType present in table
+            int actualParamSize = symbolParamList.size();                   //size of Param and varArgType together
+
+            List<String> varargsListMethod = (List<String>) table.getObject("varargs");     //verify if method call has a vararg, so we don't consider it when printing normal params
+            boolean hasVarargs = varargsListMethod.contains(methodName);
+            String suposedVarArgType = "";
+            //Change the way to print normal parameters if method has varargs and get the type of the vararg for vararg computation
+            if (hasVarargs) {
+                Type varArgType = symbolParamList.getLast().getType();
+                Type newVarArgType = new Type(varArgType.getName(), false);
+                suposedVarArgType = ollirTypes.toOllirType(newVarArgType);
+                actualParamSize--;
             }
-            rhsCode.append(", ").append(nextTemp).append(".array").append(suposedVarArgType);
+            //Print Normal Parameters
+            for (int i = 0; i < actualParamSize; i++) {
+                var rhsOllirExpr = visit(node.getChild(i + 1));
+                computation.append(printComputation(rhsOllirExpr.getComputation()));
+                rhsCode.append(", ").append(rhsOllirExpr.getCode());
+            }
+            //Print VarArg
+            if (hasVarargs) {
+                var nextTemp = ollirTypes.nextTemp();
+                for (int i = actualParamSize + 1; i < currentParamSize; i++) {
+                    var rhsOllirExpr = visit(node.getChild(i));
+                    //tmp0[0.i32].i32 :=.i32 10.i32;
+                    computation.append(printComputation(rhsOllirExpr.getComputation()));
+                    computation.append(nextTemp).append("[").append(i - actualParamSize - 1).append(".i32]").append(suposedVarArgType).append(SPACE).append(ASSIGN).append(suposedVarArgType).append(SPACE).append(rhsOllirExpr.getCode()).append(END_STMT).append(TAB);
+                }
+                rhsCode.append(", ").append(nextTemp).append(".array").append(suposedVarArgType);
+            }
+        }else{
+            for (int i = 1; i < currentParamSize; i++) {
+                var rhsOllirExpr = visit(node.getChild(i));
+                computation.append(printComputation(rhsOllirExpr.getComputation()));
+                rhsCode.append(", ").append(rhsOllirExpr.getCode());
+            }
         }
 
         String code = "";

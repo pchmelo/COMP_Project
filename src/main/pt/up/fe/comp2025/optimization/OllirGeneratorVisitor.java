@@ -131,7 +131,9 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             tempNums = ollirTypes.nextThen();
             String thenNameInside = "then" + tempNums ;
             var condition = exprVisitor.visit(node.getChild(i));
-            code.append(currentSpace).append(condition.getComputation()).append(END_STMT);
+            if (!condition.getComputation().isEmpty()){
+                code.append(currentSpace).append(condition.getComputation()).append(END_STMT);
+            }
             String ifCondition = currentSpace + "if (" + condition.getCode() + R_PAREN + SPACE + GOTO + thenNameInside + END_STMT;
             code.append(ifCondition);
             ifSpace.append(TAB);

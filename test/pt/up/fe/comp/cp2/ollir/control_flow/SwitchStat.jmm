@@ -4,7 +4,7 @@ class SwitchStat {
 
     public int func(int a){
 		int result;
-	
+
         if(a < 1){
           result =1;
         } else {
@@ -30,7 +30,7 @@ class SwitchStat {
                 }
             }
         }
-		
+
         return result;
     }
 

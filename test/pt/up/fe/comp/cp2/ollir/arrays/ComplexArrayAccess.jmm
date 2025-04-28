@@ -1,10 +1,9 @@
+
 import ioPlus;
 class ComplexArrayAccess {
-
     public int func(int a) {
         return a;
     }
-
 	public static void main(String[] args) {
 	    int[] a;
         int i;
