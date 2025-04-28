@@ -5,6 +5,7 @@ import pt.up.fe.comp.jmm.ollir.JmmOptimization;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2025.optimization.passes.ConstFoldOpVisitor;
 import pt.up.fe.comp2025.optimization.passes.ConstPropOpVisitor;
+import pt.up.fe.comp2025.optimization.refalloc.RegisterLoc;
 
 import java.util.Collections;
 
@@ -48,7 +49,13 @@ public class JmmOptimizationImpl implements JmmOptimization {
     @Override
     public OllirResult optimize(OllirResult ollirResult) {
 
-        //TODO: Do your OLLIR-based optimizations here
+        if(ollirResult.getConfig().containsKey("registerAllocation")){
+            int n = Integer.parseInt(ollirResult.getConfig().get("registerAllocation"));
+            if(Integer.parseInt(ollirResult.getConfig().get("registerAllocation")) >= 0){
+                RegisterLoc registerLoc = new RegisterLoc(ollirResult, n);
+                registerLoc.optimize();
+            }
+        }
 
         return ollirResult;
     }

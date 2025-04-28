@@ -106,4 +106,26 @@ public class OptimizationsExtraTest {
         CpUtils.assertFindLiteral("false", method2, optimized);
     }
 
+    @Test
+    public void IfElseIfElse(){
+        String filename = "const_prop_fold_extra/IfElseIfElse.jmm";
+
+        var original = getOllirResult(filename);
+        var optimized = getOllirResultOpt(filename);
+
+        CpUtils.assertTrue("Expected code to change with -o flag\n\nOriginal code:\n" + original.getOllirCode(),
+                !original.getOllirCode().equals(optimized.getOllirCode()), optimized);
+
+        var method = CpUtils.getMethod(optimized, "foo");
+        CpUtils.assertLiteralCount("3", method, optimized, 3);
+
+        CpUtils.assertLiteralCount("9", method, optimized, 1);
+
+        CpUtils.assertLiteralCount("2", method, optimized, 1);
+
+        CpUtils.assertLiteralCount("4", method, optimized, 1);
+
+
+    }
+
 }

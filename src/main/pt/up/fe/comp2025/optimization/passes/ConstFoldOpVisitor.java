@@ -6,7 +6,7 @@ import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 
 import java.util.List;
 
-public class ConstFoldOpVisitor extends AJmmVisitor<Void, JmmNode> {
+public class ConstFoldOpVisitor extends AJmmVisitor<Void, Void> {
     public boolean hasChanged = false;
 
     @Override
@@ -18,29 +18,27 @@ public class ConstFoldOpVisitor extends AJmmVisitor<Void, JmmNode> {
         setDefaultVisit(this::visitDefault);
     }
 
-    private JmmNode visitDefault(JmmNode jmmNode, Void unused) {
+    private Void visitDefault(JmmNode jmmNode, Void unused) {
         List<JmmNode> children = List.copyOf(jmmNode.getChildren());
 
         for(int i = 0; i < children.size(); i++){
-            JmmNode new_child_visited = visit(children.get(i));
-            if (new_child_visited == jmmNode.getChild(i)){
-                continue;
-            }
-            jmmNode.setChild(new_child_visited, i);
-
+            visit(children.get(i));
         }
-        return jmmNode;
+        return unused;
     }
 
-    private JmmNode assignStmt(JmmNode jmmNode, Void unused) {
-        jmmNode.setChild(visit(jmmNode.getChild(0)), 0);
-        return jmmNode;
+    private Void assignStmt(JmmNode jmmNode, Void unused) {
+        visit(jmmNode.getChild(0));
+        return unused;
     }
 
-    private JmmNode binaryExpr(JmmNode jmmNode, Void unused) {
+    private Void binaryExpr(JmmNode jmmNode, Void unused) {
         String op = jmmNode.get("op");
         JmmNode left = jmmNode.getChild(0);
         JmmNode right = jmmNode.getChild(1);
+
+        visit(left);
+        visit(right);
 
         int leftValueInt;
         int rightValueInt;
@@ -188,27 +186,38 @@ public class ConstFoldOpVisitor extends AJmmVisitor<Void, JmmNode> {
 
         if(result != null){
             this.hasChanged = true;
-            return result;
+            JmmNode parent = jmmNode.getParent();
+            int idx = jmmNode.getIndexOfSelf();
+            parent.setChild(result, idx);
+
+            return unused;
         }
 
-        return jmmNode;
+        return unused;
     }
 
-    private JmmNode notExpr(JmmNode jmmNode, Void unused) {
+    private Void notExpr(JmmNode jmmNode, Void unused) {
         JmmNode child = jmmNode.getChild(0);
         if(child.getKind().equals("TrueExpr")){
             this.hasChanged = true;
-            return createFalseNode();
+            JmmNode parent = jmmNode.getParent();
+            int idx = jmmNode.getIndexOfSelf();
+            parent.setChild(createFalseNode(), idx);
+
+
         } else if(child.getKind().equals("FalseExpr")){
             this.hasChanged = true;
-            return createTrueNode();
+            JmmNode parent = jmmNode.getParent();
+            int idx = jmmNode.getIndexOfSelf();
+            parent.setChild(createTrueNode(), idx);
+
         }
-        return jmmNode;
+        return unused;
     }
 
-    private JmmNode varAssignStmt(JmmNode jmmNode, Void unused) {
-        jmmNode.setChild(visit(jmmNode.getChild(1)), 1);
-        return jmmNode;
+    private Void varAssignStmt(JmmNode jmmNode, Void unused) {
+        visit(jmmNode.getChild(1));
+        return unused;
     }
 
     private JmmNode createIntegerNode(int value){
