@@ -1,0 +1,16 @@
+import ioPlus;
+class SimpleIfElseStat {
+
+
+    public int func(int a, int b){
+        int result;
+        result = 5;
+
+        if(a < b){
+          result = a;
+        }
+
+        return result;
+    }
+
+}

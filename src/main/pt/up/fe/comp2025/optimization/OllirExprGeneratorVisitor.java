@@ -242,7 +242,13 @@ d.io :=.io tmp0.io;*/
     private OllirExprResult visitBooleanExpr(JmmNode node, Void unused) {
         var booleanType = TypeUtils.newBooleanType();
         String ollirBooleanType = ollirTypes.toOllirType(booleanType);
-        String code = node.get("value") + ollirBooleanType;
+        String code;
+        if (node.get("value").equals("true")){
+            code = "1";
+        }else{
+            code = "0";
+        }
+        code += ollirBooleanType;
         return new OllirExprResult(code);
     }
 

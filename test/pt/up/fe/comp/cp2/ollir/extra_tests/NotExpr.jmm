@@ -1,0 +1,13 @@
+class Parentheses {
+
+    public boolean func(){
+        boolean a;
+        boolean b;
+
+        a = true;
+        b = true;
+
+        return !a || b;
+    }
+
+}
