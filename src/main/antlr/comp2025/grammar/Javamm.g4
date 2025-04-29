@@ -29,7 +29,7 @@ varDeclaration
     ;
 
 methodDeclaration
-    : ('public')? (st='static')? returnType name=ID '(' ( varargDeclaration | argument (',' argument)* (',' varargDeclaration)?  )? ')' '{' (varDeclaration | statement)* '}'  #MethodDecl
+    : (pub='public')? (st='static')? returnType name=ID '(' ( varargDeclaration | argument (',' argument)* (',' varargDeclaration)?  )? ')' '{' (varDeclaration | statement)* '}'  #MethodDecl
     //| ('public')? st='static' 'void' name='main' '(' 'String' '['']' argName=ID ')' '{' (varDeclaration | statement)* '}' #MainMethodDecl
     ;
 
@@ -43,7 +43,7 @@ returnType
 
 returnStatement
     : 'return' expression ';'
-    | 'return' ';'
+    //| 'return' ';'
     ;
 
 argument

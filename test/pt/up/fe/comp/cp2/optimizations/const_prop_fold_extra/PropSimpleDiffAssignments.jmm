@@ -1,0 +1,29 @@
+class PropSimpleDiffAssignments {
+    public int foo1(){
+	    int a = 1;
+	    a += 1;
+	    return a;
+	}
+
+	public int foo2(){
+    	int a = 1;
+    	a -= 1;
+        return a;
+    }
+
+    public int foo3(){
+        int a = 1;
+        a *= 1;
+        return a;
+    }
+
+    public int foo4(){
+        int a = 10;
+        a /= 2;
+        return a;
+    }
+
+    public static void main(String[] args) {
+
+    }
+}

@@ -130,6 +130,9 @@ public class OptimizationsTest {
 
         var method = CpUtils.getMethod(optimized, "foo");
         CpUtils.assertLiteralCount("3", method, optimized, 3);
+        CpUtils.assertLiteralCount("0", method, optimized, 1);
+
+        System.out.println(optimized.getOllirCode());
     }
 
     @Test
@@ -146,6 +149,7 @@ public class OptimizationsTest {
 
         var method = CpUtils.getMethod(optimized, "main");
         CpUtils.assertFindLiteral("30", method, optimized);
+
     }
 
     @Test
@@ -179,5 +183,7 @@ public class OptimizationsTest {
         var method = CpUtils.getMethod(optimized, "main");
         CpUtils.assertFindLiteral("15", method, optimized);
     }
+
+
 
 }

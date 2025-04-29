@@ -263,7 +263,8 @@ public class WrongOperation extends AnalysisVisitor {
         Type val1 = types.getExprType(rightExpression, table, currentMethod);
 
         if(operator.equals("=")){
-            if ((boolean) val0.getObject("isConst")) {
+            boolean booleanHasIsConst =  (boolean) val0.hasAttribute("isConst");
+            if (booleanHasIsConst && (boolean) val0.getObject("isConst")) {
                 var message = "Cannot assign a value to a constant";
                 addReport(Report.newError(
                         Stage.SEMANTIC,

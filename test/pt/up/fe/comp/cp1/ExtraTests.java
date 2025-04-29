@@ -521,5 +521,40 @@ public class ExtraTests {
         TestUtils.noErrors(result);
     }
 
+    @Test
+    public void SwitchDeclarationAndInitializationTest(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/SwitchDeclarationAndInitialization.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void SwitchDeclarationAndInitializationTest2(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/SwitchDeclarationAndInitialization2.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void SwitchDeclarationAndInitializationTest3(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/SwitchDeclarationAndInitialization3.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void SwitchDeclarationAndInitializationTest4(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/SwitchDeclarationAndInitialization4.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void ThisAsArgument(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/ThisAsArgument.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void MethodCallOnClass(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MethodCallOnClass.jmm"));
+        TestUtils.noErrors(result);
+    }
 
 }

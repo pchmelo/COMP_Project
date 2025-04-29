@@ -42,9 +42,8 @@ public class JmmSymbolTableBuilder {
         Map<String, String> bomb = new HashMap<>();
         Map<String, Type> methodCallType = new HashMap<>();
 
-        // TODO: After your grammar supports more things inside the program (e.g., imports) you will have to change this
         var imports = buildImports(root.getChildren(IMPORT_DECL), bomb);
-        var classDecl = root.getChild(imports.size()); //Para saltar imediatamente para a ClassDeclaration
+        var classDecl = root.getChildren(CLASS_DECL).getFirst();
         SpecsCheck.checkArgument(CLASS_DECL.check(classDecl), () -> "Expected a class declaration: " + classDecl);
         String className = classDecl.get("name");
         var superName = buildSuperName(classDecl);
@@ -56,28 +55,25 @@ public class JmmSymbolTableBuilder {
         var locals = buildLocals(classDecl, isObjectInstantiatedMap);
         var varargs = buildVarArgs(classDecl);
 
-        JmmSymbolTable table = new JmmSymbolTable(imports,className, superName , fields, methods, returnTypes, params, locals, varargs);
+        JmmSymbolTable table = new JmmSymbolTable(imports,className, superName , fields, methods, returnTypes, params, locals);
         table.putObject("staticMethods", staticMethods);
         table.putObject("isObjectInstantiatedMap",isObjectInstantiatedMap);
         bomb.put(className,"");
         bomb.put(superName,"");
         table.putObject("bombs", bomb);
         table.putObject("methodCallType", methodCallType);
+        table.putObject("varargs", varargs);
 
         return table;
     }
 
-    private Map<String,String> buildVarArgs(JmmNode classDecl) {
-        Map<String,String> varargs = new HashMap<String, String>();
+    private List<String> buildVarArgs(JmmNode classDecl) {
+        List<String> varargs = new ArrayList<>();
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             var name = method.get("name");
-            List<JmmNode> listParam = method.getChildren(PARAM);
+            List<JmmNode> listParam = method.getChildren(VAR_ARG_TYPE);
             if (!listParam.isEmpty()) {
-                JmmNode lastParam = listParam.getLast();
-                JmmNode typeParam = lastParam.getChild(0);
-                if (typeParam.getKind().equals("VarArgType")) {
-                    varargs.put(name, lastParam.get("name"));
-                }
+                varargs.add(name);
             }
         }
         return varargs;
@@ -326,11 +322,14 @@ public class JmmSymbolTableBuilder {
                 staticMethods.put(child.get("name"), false);
             }
 
-        }
-        // TODO: O que é praticamente fazer direto porque só há um main... ó será que não ?? é que a forma que está a gramatica escrita pode esxitir mais que um
-        children = classDecl.getChildren(MAIN_METHOD_DECL);
-        for (JmmNode child : children){
-            methods.add("main");
+            try{
+                child.get("pub");
+                child.put("isPublic","true");
+            }
+            catch(Exception e){
+                child.put("isPublic","false");
+            }
+
         }
 
         return methods;

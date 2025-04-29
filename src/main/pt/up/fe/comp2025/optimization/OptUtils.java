@@ -6,6 +6,8 @@ import pt.up.fe.comp2025.ast.TypeUtils;
 import pt.up.fe.specs.util.collections.AccumulatorMap;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 
+import java.util.Optional;
+
 import static pt.up.fe.comp2025.ast.Kind.TYPE;
 
 /**
@@ -18,12 +20,15 @@ public class OptUtils {
 
     private int thens;
 
+    private int whiles;
+
     private final TypeUtils types;
 
     public OptUtils(TypeUtils types) {
         this.types = types;
         this.temporaries = new AccumulatorMap<>();
         this.thens = -1;
+        this.whiles = -1;
     }
 
     public int nextThen() {
@@ -32,13 +37,18 @@ public class OptUtils {
         return thens;
     }
 
-    public Void resetThen() {
-        thens = -1;
-        return null ;
+    public int nextWhile() {
+        // Subtract 1 because the base is 1
+        whiles++;
+        return whiles;
     }
 
     public int previousThen() {
         thens--;
+        return thens;
+    }
+
+    public int currentThen() {
         return thens;
     }
 
@@ -63,6 +73,8 @@ public class OptUtils {
             return toOllirType("void");
         }else if (typeNode.getKind().equals("TypeTagNotUsed")){
             return toOllirType(types.convertType(typeNode.getChild(0)));
+        } else if (typeNode.getHierarchy().getLast().equals("DefaultType")) {
+            return toOllirType(typeNode.get("name"));
         }
 
         return toOllirType(types.convertType(typeNode));
@@ -81,12 +93,11 @@ public class OptUtils {
             case "int" -> "i32";
             case "boolean" -> "bool";
             case "String" -> "String";
+            case "void" -> "V";
             default -> typeName;
             //default -> throw new NotImplementedException(typeName);
         };
 
         return type;
     }
-
-
 }

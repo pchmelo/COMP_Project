@@ -1,0 +1,15 @@
+class Parentheses {
+
+    public int func(){
+        int[] a;
+        a = new int [ 6 ];
+        a = [ 4 , 5 , 6 , 3 , 2 ];
+        int b;
+        b = a.length;
+        b = a[2];
+        a[3] = b;
+
+        return b;
+    }
+
+}

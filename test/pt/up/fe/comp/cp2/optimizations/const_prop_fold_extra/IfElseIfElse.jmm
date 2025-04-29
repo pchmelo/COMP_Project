@@ -1,0 +1,22 @@
+class IfElseIfElse {
+    public int foo(int b){
+      int a;
+      int i;
+      int res;
+      a = 3;
+      i = 0;
+      if(a < b){
+        i = 9;
+      }
+      else if (a == b){
+        a = 2;
+      }
+      else{
+          i = 4;
+      }
+      res = i*a;
+      return res;
+    }
+    public static void main(String[] args) {
+    }
+}

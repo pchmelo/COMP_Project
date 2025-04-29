@@ -50,6 +50,8 @@ public enum Kind {
     METHOD_CALL,
     INTEGER_EXPR,
     BRACKET_STMT,
+    TRUE_EXPR,
+    FALSE_EXPR,
     ;
 
 

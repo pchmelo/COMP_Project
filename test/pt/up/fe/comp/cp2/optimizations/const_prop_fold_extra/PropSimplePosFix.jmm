@@ -1,0 +1,18 @@
+class PropSimplePosFix {
+    public int foo1(){
+	    int a = 1;
+	    a++;
+	    return a;
+	}
+
+	public int foo2(){
+        int a = 1;
+        a--;
+        return a;
+    }
+
+
+    public static void main(String[] args) {
+
+    }
+}
