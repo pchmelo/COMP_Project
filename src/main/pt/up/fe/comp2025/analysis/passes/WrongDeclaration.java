@@ -25,15 +25,8 @@ public class WrongDeclaration extends AnalysisVisitor {
     @Override
     public void buildVisitor() {
         addVisit(Kind.METHOD_DECL, this::visitMethodDecl);
-        addVisit(Kind.VAR_DECL, this::visitVarInitial);
-        addVisit(Kind.CONST_STMT, this::visitVarInitial);
-        addVisit(Kind.VAR_ASSIGN_STMT, this::visitVarInitial);  //JUST TO CHECK IF ITS ACTUALLY BEING STORE ON LOCALS
     }
 
-    private Void visitVarInitial(JmmNode jmmNode, SymbolTable table) {
-
-        return null;
-    }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
         currentMethod = method.get("name");
@@ -43,12 +36,14 @@ public class WrongDeclaration extends AnalysisVisitor {
         for (int i = 1 + table.getParameters(methodName).size(); i < method.getChildren().size(); i++ ){
             JmmNode child = method.getChild(i);
             String kind = child.getKind();
-            String name = child.get("name");
             if (kind.equals("VarDecl") || kind.equals("VarAssignStmt")  || kind.equals("ConstStmt") ){
+                String name = child.get("name");
                 declaredVariables.add(name);
+                continue;
             }
 
             if (kind.equals("AssignStmt") || kind.equals("ArrayAssignStmt")){  //Postfix
+                String name = child.get("name");
                 if(!declaredVariables.contains(name) ){
                     boolean isDeclaredAsField = false;
                     for (Symbol field : table.getFields()){
@@ -78,10 +73,6 @@ public class WrongDeclaration extends AnalysisVisitor {
                     }
                 }
             }
-
-
-            System.out.println(kind);
-            System.out.println(child.get("name"));
         }
 
 

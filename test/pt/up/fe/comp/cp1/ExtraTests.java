@@ -539,5 +539,22 @@ public class ExtraTests {
         TestUtils.noErrors(result);
     }
 
+    @Test
+    public void SwitchDeclarationAndInitializationTest4(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/SwitchDeclarationAndInitialization4.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void ThisAsArgument(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/ThisAsArgument.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void MethodCallOnClass(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MethodCallOnClass.jmm"));
+        TestUtils.noErrors(result);
+    }
 
 }
