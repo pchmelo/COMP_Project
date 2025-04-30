@@ -182,4 +182,10 @@ public class OllirExtraTest {
         var result = getOllirResult("/FieldVarArrayAssignStmt.jmm");
     }
 
+    @Test
+    public void FieldVarAssignStmtMinus() {
+        var result = getOllirResult("/FieldVarAssignStmtMinus.jmm");
+    }
+
+
 }

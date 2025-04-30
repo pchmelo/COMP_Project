@@ -1,0 +1,16 @@
+class Field {
+    int result;
+    int a;
+
+    public int func(){
+        result++;
+
+        a = a+ 1 + 2;
+
+        a++;
+
+
+        return 3;
+    }
+
+}

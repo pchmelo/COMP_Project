@@ -416,15 +416,10 @@ d.io :=.io tmp0.io;*/
         computation = "";
 
         if (isField) {
-            for (Symbol field : table.getFields()) {
-                if (field.getName().equals(id)) {
-                    //tmp0.i32 :=.i32 getfield(this, intField.i32).i32;
-                    var nextTemp = ollirTypes.nextTemp();
-                    code = nextTemp + ollirType;
-                    computation = nextTemp + ollirType + SPACE + ASSIGN + ollirType + SPACE + "getfield(this, " + id + ollirType + R_PAREN + ollirType;
-                    break;
-                }
-            }
+            //tmp0.i32 :=.i32 getfield(this, intField.i32).i32;
+            var nextTemp = ollirTypes.nextTemp();
+            code = nextTemp + ollirType;
+            computation = nextTemp + ollirType + SPACE + ASSIGN + ollirType + SPACE + "getfield(this, " + id + ollirType + R_PAREN + ollirType;
         }
 
         return new OllirExprResult(code, computation);
