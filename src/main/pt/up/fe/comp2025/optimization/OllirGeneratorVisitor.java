@@ -1,5 +1,6 @@
 package pt.up.fe.comp2025.optimization;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
@@ -107,7 +108,18 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         Type variableType = types.valueFromVarReturner(node.get("name"),table,currentMethod).getType();
         Type newVariableType = new Type(variableType.getName(),false);
         String ollirNewVariableType = ollirTypes.toOllirType(newVariableType);
-        code.append(currentSpace).append(node.get("name")).append("[").append(ollirIndexExpr.getCode()).append("]").append(ollirNewVariableType).append(SPACE).append(ASSIGN).append(ollirNewVariableType).append(SPACE).append(ollirRhsExpr.getCode()).append(END_STMT);
+        if (types.isVarField(node.get("name"),table,currentMethod)){
+            //tmp0.array.i32 :=.array.i32 getfield(this, intField.array.i32).array.i32;
+            //tmp0.array.i32[2.i32].i32 :=.i32 value.i32;
+            // putfield(this, intField.array.i32, tmp0.array.i32).V;
+            String nextTemp = ollirTypes.nextTemp();
+            String arrayType = ".array" + ollirNewVariableType;
+            code.append(currentSpace).append(nextTemp).append(arrayType).append(SPACE).append(ASSIGN).append(arrayType).append(SPACE).append("getfield(this, ").append(node.get("name")).append(arrayType).append(R_PAREN).append(arrayType).append(END_STMT);
+            code.append(currentSpace).append(nextTemp).append(arrayType).append("[").append(ollirIndexExpr.getCode()).append("]").append(ollirNewVariableType).append(SPACE).append(ASSIGN).append(ollirNewVariableType).append(SPACE).append(ollirRhsExpr.getCode()).append(END_STMT);
+            code.append(currentSpace).append("putfield(this, ").append(node.get("name")).append(arrayType).append(",").append(SPACE).append(nextTemp).append(arrayType).append(R_PAREN).append(".V").append(END_STMT);
+        }else {
+            code.append(currentSpace).append(node.get("name")).append("[").append(ollirIndexExpr.getCode()).append("]").append(ollirNewVariableType).append(SPACE).append(ASSIGN).append(ollirNewVariableType).append(SPACE).append(ollirRhsExpr.getCode()).append(END_STMT);
+        }
 
         return code.toString();
     }
@@ -211,6 +223,12 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             return visitAssignStmtAsNewIntArrayExpr(node,unused);
         }
 
+        //for fields, bc he feels like the special kid of the family
+        String nodeName = node.get("name");
+        if (types.isVarField(nodeName,table,currentMethod)){
+            return visitAssignStmtAsField(node,unused);
+        }
+
         var rhs = exprVisitor.visit(node.getChild(0));
 
         StringBuilder code = new StringBuilder();
@@ -248,6 +266,35 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
+    private String visitAssignStmtAsField(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+
+        String nodeName = node.get("name");
+        Type lhsType = types.valueFromVarReturner(nodeName,table,currentMethod).getType();
+        String typeString = ollirTypes.toOllirType(lhsType);
+        String varCode = node.get("name") + typeString;
+
+        var rhs = exprVisitor.visit(node.getChild(0));
+
+        code.append(currentSpace);
+        // code to compute the children
+        var expressionComputation = rhs.getComputation();
+        if (!expressionComputation.isEmpty()){
+            code.append(expressionComputation);
+            code.append(END_STMT);
+            code.append(currentSpace);
+        }
+
+        for (Symbol field : table.getFields()) {
+            if (field.getName().equals(nodeName)) {
+                // putfield(this, intField.i32, value.i32).V;
+                code.append("putfield(this, ").append(varCode).append(",").append(SPACE).append(rhs.getCode()).append(R_PAREN).append(".V").append(END_STMT);
+
+            }
+        }
+
+        return code.toString();
+    }
 
     private String visitReturn(JmmNode node, Void unused) {
         Type retType = TypeUtils.newIntType();
@@ -394,6 +441,15 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(NL);
         code.append(NL);
 
+        for (Symbol field : table.getFields()) {
+            //.field public intField.i32;
+            Type fieldType = field.getType();
+            String ollirField = ollirTypes.toOllirType(fieldType);
+            String fieldCode = ".field public " + field.getName() + ollirField + END_STMT;
+            code.append(fieldCode);
+        }
+
+        code.append(NL);
         code.append(buildConstructor());
         code.append(NL);
 

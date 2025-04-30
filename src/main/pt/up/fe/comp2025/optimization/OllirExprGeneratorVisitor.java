@@ -161,9 +161,18 @@ tmp0[2.i32].i32 :=.i32 30.i32;*/
 
         Type intType = TypeUtils.newIntType();
         String resOllirType = ollirTypes.toOllirType(intType);
-        String code = ollirTypes.nextTemp() + resOllirType;
 
         var id = node.get("name");
+
+        boolean isField = types.isVarField(id,table,currentMethod);
+
+        String temporaryField = "";
+        if (isField){
+            temporaryField = ollirTypes.nextTemp() + resOllirType;
+        }
+
+        String code = ollirTypes.nextTemp() + resOllirType;
+
         String variable = id + resOllirType;
 
         String operation;
@@ -173,8 +182,14 @@ tmp0[2.i32].i32 :=.i32 30.i32;*/
             operation = "-";
         }
 
-        computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(variable).append(SPACE).append(operation).append(resOllirType).append(SPACE).append("1.i32").append(END_STMT).append(TAB);
-        computation.append(variable).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(code);
+        if (isField){
+            computation.append(temporaryField).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append("getfield(this, ").append(variable).append(R_PAREN).append(resOllirType).append(END_STMT).append(TAB);
+            computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(temporaryField).append(SPACE).append(operation).append(resOllirType).append(SPACE).append("1.i32").append(END_STMT).append(TAB);
+            computation.append("putfield(this, ").append(variable).append(",").append(SPACE).append(code).append(R_PAREN).append(".V");
+        }else{
+            computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(variable).append(SPACE).append(operation).append(resOllirType).append(SPACE).append("1.i32").append(END_STMT).append(TAB);
+            computation.append(variable).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(code);
+        }
 
         return new OllirExprResult("", computation);
     }
@@ -391,10 +406,28 @@ d.io :=.io tmp0.io;*/
         var id = node.get("name");
         Type type = types.getExprType(node,table,currentMethod);
         String ollirType = ollirTypes.toOllirType(type);
+        boolean isField = types.isVarField(id,table,currentMethod);
 
-        String code = id + ollirType;
+        String code;
+        String computation;
 
-        return new OllirExprResult(code);
+        //For general case when the variable called its not a field
+        code = id + ollirType;
+        computation = "";
+
+        if (isField) {
+            for (Symbol field : table.getFields()) {
+                if (field.getName().equals(id)) {
+                    //tmp0.i32 :=.i32 getfield(this, intField.i32).i32;
+                    var nextTemp = ollirTypes.nextTemp();
+                    code = nextTemp + ollirType;
+                    computation = nextTemp + ollirType + SPACE + ASSIGN + ollirType + SPACE + "getfield(this, " + id + ollirType + R_PAREN + ollirType;
+                    break;
+                }
+            }
+        }
+
+        return new OllirExprResult(code, computation);
     }
 
     /**
