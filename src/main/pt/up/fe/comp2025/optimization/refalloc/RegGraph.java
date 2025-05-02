@@ -1,170 +1,311 @@
 package pt.up.fe.comp2025.optimization.refalloc;
 
 import org.specs.comp.ollir.*;
+import org.specs.comp.ollir.inst.Instruction;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.Stage;
 
 import java.util.*;
 
 public class RegGraph {
-    public List<Report> reports = new ArrayList<>();
-    private final Map<Integer, Set<Integer>> connections = new HashMap<>();
-    private final Map<Integer, List<Integer>> colors = new HashMap<>();
-    private final Stack<Integer> stack = new Stack<>();
+    private final List<Report> reports = new ArrayList<>();
+    private final Map<String, Set<String>> interferenceGraph = new HashMap<>();
+    private final Map<String, Integer> colorMapping = new HashMap<>();
+    private final Stack<String> stack = new Stack<>();
+
+    private final Set<String> variables = new HashSet<>();
 
     private final Method method;
-    private Integer minNumRegs;
-    private Integer numRegs;
+    private int minRegs;
+    private int numRegs;
 
 
     public RegGraph(Method method) {
         this.method = method;
-        this.init();
+        this.minRegs = calculateMinRegs();
     }
 
-    private void init(){
-        int res = 0;
-        for(Descriptor descriptor : method.getVarTable().values()){
-            VarScope scope = descriptor.getScope();
-            if(scope == VarScope.PARAMETER || scope == VarScope.LOCAL){
-                res++;
-            }
-            else{
-                this.connections.put(descriptor.getVirtualReg(), new HashSet<>());
-            }
-        }
-        if(!this.method.isStaticMethod()){
-            res++;
-        }
-        this.minNumRegs = res;
+
+    private int calculateMinRegs() {
+        // Registradores reservados para this e parâmetros
+        int reserved = method.isStaticMethod() ? 0 : 1; // this register if not static
+        reserved += method.getParams().size();
+
+        return reserved;
     }
 
-    public void calculate(Map<Node, List<Operand>> meth_op){
-        for(Node node : meth_op.keySet()){
-            for(Operand op1 : meth_op.get(node)){
-                for(Operand op2 : meth_op.get(node)){
-                    if(!op1.equals(op2)){
-                        Descriptor descriptor = this.method.getVarTable().get(op1.getName());
-                        if(connections.get(descriptor.getVirtualReg()) != null){
-                            var inx = this.method.getVarTable().get(op1.getName()).getVirtualReg();
-                            var add = this.method.getVarTable().get(op2.getName()).getVirtualReg();
-                            this.connections.get(inx).add(add);
-                        }
-                    }
+
+    private void initGraph() {
+        interferenceGraph.clear();
+
+        // Adicionar nós para cada variável local (excluindo this e parâmetros)
+        for (Map.Entry<String, Descriptor> entry : method.getVarTable().entrySet()) {
+            String varName = entry.getKey();
+            Descriptor descriptor = entry.getValue();
+
+            if (isEligibleForAllocation(varName, descriptor)) {
+                interferenceGraph.put(varName, new HashSet<>());
+                variables.add(varName);
+            }
+        }
+    }
+
+
+    private boolean isEligibleForAllocation(String varName, Descriptor descriptor) {
+        // Excluir this e variáveis de campo
+        if (varName.equals("this") || descriptor.getScope() == VarScope.FIELD ||
+                descriptor.getScope() == VarScope.PARAMETER) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Constrói o grafo de interferência a partir da análise de vivacidade
+     * @param livenessInfo Mapa com informações de vivacidade
+     */
+    public void buildInterferenceGraph(Map<Instruction, Set<String>> livenessInfo) {
+        initGraph();
+
+        // Para cada instrução, as variáveis vivas ao mesmo tempo interferem umas com as outras
+        for (Set<String> liveVars : livenessInfo.values()) {
+            List<String> allocatableVars = new ArrayList<>();
+
+            // Filtrar apenas variáveis elegíveis para alocação
+            for (String var : liveVars) {
+                Descriptor descriptor = method.getVarTable().get(var);
+                if (descriptor != null && isEligibleForAllocation(var, descriptor)) {
+                    allocatableVars.add(var);
+                }
+            }
+
+            // Adicionar arestas entre todas as variáveis vivas ao mesmo tempo
+            for (int i = 0; i < allocatableVars.size(); i++) {
+                String var1 = allocatableVars.get(i);
+
+                for (int j = i + 1; j < allocatableVars.size(); j++) {
+                    String var2 = allocatableVars.get(j);
+
+                    // Adicionar interferência em ambas as direções
+                    interferenceGraph.get(var1).add(var2);
+                    interferenceGraph.get(var2).add(var1);
                 }
             }
         }
     }
 
-    public Map<String, Descriptor> getTable(int reg){
-        if(!this.canAllocateMoreReg(reg)){
+    /**
+     * Colore o grafo usando o algoritmo de coloração por heurística de grau
+     * @param requestedRegs Número solicitado de registradores
+     * @return Tabela atualizada de variáveis com registradores atribuídos
+     */
+    public Map<String, Descriptor> colorGraph(int requestedRegs) {
+        // Verificar se o número de registradores é válido
+        if (!validateRegisterCount(requestedRegs)) {
             return null;
         }
 
-        for(Integer i = this.minNumRegs; i < this.numRegs; i++){
-            this.colors.put(i, new ArrayList<>());
+        // Limpar mapeamento de cores anterior
+        colorMapping.clear();
+        stack.clear();
+
+        // Construir a pilha de variáveis removendo-as do grafo em ordem de menor grau
+        buildStack();
+
+        // Colorir o grafo
+        boolean success = assignColors();
+
+        // Se não conseguir colorir com o número atual de registradores, tentar com mais
+        if (!success) {
+            numRegs++;
+            return colorGraph(numRegs);
         }
 
-        this.fill_var_stack();
-
-        while(!this.stack.isEmpty()){
-            if(this.updateColors()){
-                stack.clear();
-                return this.getTable(this.numRegs + 1);
-            }
-
-        }
-
-        return this.updateTable();
+        // Atualizar a tabela de variáveis com os registradores atribuídos
+        return updateVarTable();
     }
 
-    private Boolean canAllocateMoreReg(int reg){
-
-        //if reg == 0 -> reg vai ser o mínimo possivel
-        if(reg == 0){
-            this.numRegs = this.minNumRegs;
+    /**
+     * Valida o número de registradores solicitado
+     */
+    private boolean validateRegisterCount(int requestedRegs) {
+        if (requestedRegs == 0) {
+            // Usar o número mínimo de registradores
+            numRegs = minRegs;
             return true;
         }
 
-        //se o numero pedido é impossivel é um erro
-        if(reg < this.minNumRegs){
-            var message = "Impossible to allocate " + reg + " registers, minimum is " + this.minNumRegs;
-            this.reports.add(Report.newError(
-                    Stage.SEMANTIC,0, 0,
-                    message,
-                    null)
-            );
+        if (requestedRegs < minRegs) {
+            String message = "Impossible to allocate " + requestedRegs +
+                    " registers, minimum is " + minRegs;
+            reports.add(Report.newError(Stage.OPTIMIZATION, 0, 0, message, null));
             return false;
         }
-        this.numRegs = reg;
+
+        numRegs = requestedRegs;
         return true;
     }
 
-    private Boolean updateColors(){
-        Integer reg_idx = this.stack.pop();
+    /**
+     * Constrói a pilha de variáveis para coloração
+     */
+    private void buildStack() {
+        // Cópia do grafo para trabalhar
+        Map<String, Set<String>> workGraph = new HashMap<>();
+        for (Map.Entry<String, Set<String>> entry : interferenceGraph.entrySet()) {
+            workGraph.put(entry.getKey(), new HashSet<>(entry.getValue()));
+        }
 
-        for(Integer color : this.colors.keySet()){
-            boolean can_be_colored = true;
-            for(Integer var : this.connections.get(reg_idx)){
-                //var is already colored
-                if(this.colors.get(color).contains(var)){
-                    can_be_colored = false;
+        // Continuar enquanto o grafo não estiver vazio
+        while (!workGraph.isEmpty()) {
+            boolean removed = false;
+
+            // Encontrar variável com menos que k arestas
+            for (Iterator<Map.Entry<String, Set<String>>> it = workGraph.entrySet().iterator(); it.hasNext();) {
+                Map.Entry<String, Set<String>> entry = it.next();
+                String var = entry.getKey();
+                Set<String> neighbors = entry.getValue();
+
+                if (neighbors.size() < numRegs) {
+                    // Guardar na pilha
+                    stack.push(var);
+
+                    // Remover do grafo de trabalho
+                    it.remove();
+
+                    // Remover das listas de adjacência
+                    for (Set<String> adjList : workGraph.values()) {
+                        adjList.remove(var);
+                    }
+
+                    removed = true;
                     break;
                 }
             }
-            if(can_be_colored){
-                this.colors.get(color).add(reg_idx);
+
+            // Se não conseguiu remover nenhuma variável, é um spill
+            if (!removed && !workGraph.isEmpty()) {
+                // Opção 1: Spill (escolher uma variável para remover)
+                String spillVar = selectSpillCandidate(workGraph);
+                stack.push(spillVar);
+
+                // Remover do grafo de trabalho
+                workGraph.remove(spillVar);
+
+                // Remover das listas de adjacência
+                for (Set<String> adjList : workGraph.values()) {
+                    adjList.remove(spillVar);
+                }
+            }
+        }
+    }
+
+    /**
+     * Seleciona uma variável para spill (quando não há nenhuma com menos que k arestas)
+     */
+    private String selectSpillCandidate(Map<String, Set<String>> workGraph) {
+        // Estratégia simples: escolher a variável com mais interferências
+        String spillVar = null;
+        int maxDegree = -1;
+
+        for (Map.Entry<String, Set<String>> entry : workGraph.entrySet()) {
+            if (entry.getValue().size() > maxDegree) {
+                maxDegree = entry.getValue().size();
+                spillVar = entry.getKey();
+            }
+        }
+
+        return spillVar;
+    }
+
+    /**
+     * Atribui cores (registradores) às variáveis
+     * @return true se conseguiu colorir, false caso contrário
+     */
+    private boolean assignColors() {
+        // Registradores disponíveis (cores)
+        List<Integer> availableColors = new ArrayList<>();
+        for (int i = minRegs; i < numRegs; i++) {
+            availableColors.add(i);
+        }
+
+        // Processar variáveis na ordem da pilha (reversa da remoção)
+        while (!stack.isEmpty()) {
+            String var = stack.pop();
+            Set<String> neighbors = interferenceGraph.get(var);
+
+            // Marcar cores já usadas pelos vizinhos
+            boolean[] usedColors = new boolean[numRegs];
+
+            for (String neighbor : neighbors) {
+                Integer neighborColor = colorMapping.get(neighbor);
+                if (neighborColor != null && neighborColor >= minRegs) {
+                    usedColors[neighborColor] = true;
+                }
+            }
+
+            // Encontrar a menor cor disponível
+            int selectedColor = -1;
+            for (int i = minRegs; i < numRegs; i++) {
+                if (!usedColors[i]) {
+                    selectedColor = i;
+                    break;
+                }
+            }
+
+            // Se não encontrou cor disponível, falhar
+            if (selectedColor == -1) {
                 return false;
             }
 
+            // Atribuir a cor
+            colorMapping.put(var, selectedColor);
         }
+
         return true;
     }
 
-    private void fill_var_stack(){
-        Map<Integer, Set<Integer>> res = new HashMap<>(this.connections);
+    /**
+     * Atualiza a tabela de variáveis com os registradores atribuídos
+     */
+    private Map<String, Descriptor> updateVarTable() {
+        Map<String, Descriptor> updatedTable = new HashMap<>();
 
-        this.stack.clear();
-        while(!res.isEmpty()){
-            for(var entry : res.entrySet()){
-                if(entry.getValue().size() < this.numRegs){
-                    this.stack.push(entry.getKey());
-                    res.remove(entry.getKey());
-                    break;
-                }
-            }
-        }
-    }
+        for (Map.Entry<String, Descriptor> entry : method.getVarTable().entrySet()) {
+            String varName = entry.getKey();
+            Descriptor descriptor = entry.getValue();
 
-    private Map<String, Descriptor> updateTable(){
-        Map<String, Descriptor> res = new HashMap<>(this.method.getVarTable());
-
-        for (Map.Entry<Integer, List<Integer>> entry : this.colors.entrySet()){
-            Integer color = entry.getKey();
-            List<Integer> vars = entry.getValue();
-
-            for (Integer var : vars) {
-                for (Map.Entry<String, Descriptor> entry2 : res.entrySet()) {
-                    Descriptor descriptor_1 = entry2.getValue();
-                    Descriptor descriptor_2 = null;
-
-                    for(Descriptor descri : this.method.getVarTable().values()){
-                        if(var == descri.getVirtualReg()){
-                            descriptor_2 = descri;
-                            break;
-                        }
-                    }
-
-                    if(descriptor_1 == descriptor_2){
-                        String key = entry2.getKey();
-                        res.put(key, new Descriptor(descriptor_1.getScope(), color, descriptor_1.getVarType()));
-                    }
-                    
-                }
+            // Se a variável foi colorida, atualizar o registrador
+            if (colorMapping.containsKey(varName)) {
+                int reg = colorMapping.get(varName);
+                updatedTable.put(varName, new Descriptor(descriptor.getScope(), reg, descriptor.getVarType()));
+            } else {
+                // Manter o descritor original
+                updatedTable.put(varName, descriptor);
             }
         }
 
-        return res;
+        return updatedTable;
     }
 
+    /**
+     * @return Mapa de interferência (grafo)
+     */
+    public Map<String, Set<String>> getInterferenceGraph() {
+        return interferenceGraph;
+    }
+
+    /**
+     * @return Mapa de cores atribuídas (variável -> registrador)
+     */
+    public Map<String, Integer> getColorMapping() {
+        return colorMapping;
+    }
+
+    /**
+     * @return Lista de relatórios de erros
+     */
+    public List<Report> getReports() {
+        return reports;
+    }
 }
