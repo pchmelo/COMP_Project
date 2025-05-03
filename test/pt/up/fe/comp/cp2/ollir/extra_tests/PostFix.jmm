@@ -1,0 +1,12 @@
+import ioPlus;
+class PostFix {
+
+
+    public int func(int a, int b){
+        int result = 5;
+        result++;
+
+        return result;
+    }
+
+}

@@ -1,0 +1,9 @@
+class A {
+    public void bar () {
+        const boolean a = true;
+        int b;
+        int c = 3;
+        b = 3;
+    }
+
+}

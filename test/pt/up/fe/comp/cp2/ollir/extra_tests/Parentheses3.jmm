@@ -1,0 +1,14 @@
+class Parentheses {
+
+    public int func(){
+        boolean a;
+        a = true;
+        boolean b;
+        b = false;
+        boolean c = ( a && b);
+        c = (true);
+
+        return 7;
+    }
+
+}

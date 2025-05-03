@@ -3,21 +3,14 @@ import io;
 class Arithmetic_and {
 	public static void main(String[] args) {
 		boolean a;
-		            int c;
-                    int d;
-                    int e;
 
 		a = true && false;
-		
+
 		if(a) {
-            c = 1;
-            d = 2;
-            e = c + d;
+               io.print(3);
 		} else if (a) {
 			io.print(1);
-		} else if (a) {
-          	io.print(4);
-        } else {
+		} else {
 			io.print(2);
 		}
 

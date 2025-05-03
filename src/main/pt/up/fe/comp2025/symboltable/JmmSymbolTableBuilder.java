@@ -42,9 +42,8 @@ public class JmmSymbolTableBuilder {
         Map<String, String> bomb = new HashMap<>();
         Map<String, Type> methodCallType = new HashMap<>();
 
-        // TODO: After your grammar supports more things inside the program (e.g., imports) you will have to change this
         var imports = buildImports(root.getChildren(IMPORT_DECL), bomb);
-        var classDecl = root.getChild(imports.size()); //Para saltar imediatamente para a ClassDeclaration
+        var classDecl = root.getChildren(CLASS_DECL).getFirst();
         SpecsCheck.checkArgument(CLASS_DECL.check(classDecl), () -> "Expected a class declaration: " + classDecl);
         String className = classDecl.get("name");
         var superName = buildSuperName(classDecl);
@@ -323,11 +322,14 @@ public class JmmSymbolTableBuilder {
                 staticMethods.put(child.get("name"), false);
             }
 
-        }
-        // TODO: O que é praticamente fazer direto porque só há um main... ó será que não ?? é que a forma que está a gramatica escrita pode esxitir mais que um
-        children = classDecl.getChildren(MAIN_METHOD_DECL);
-        for (JmmNode child : children){
-            methods.add("main");
+            try{
+                child.get("pub");
+                child.put("isPublic","true");
+            }
+            catch(Exception e){
+                child.put("isPublic","false");
+            }
+
         }
 
         return methods;

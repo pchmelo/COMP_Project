@@ -3,12 +3,11 @@ class SimpleIfElseStat {
 
 
     public int func(int a, int b){
-		int result;
+        int result;
+        result = 5;
 
         if(a < b){
           result = a;
-        } else {
-			result = b;
         }
 
         return result;
