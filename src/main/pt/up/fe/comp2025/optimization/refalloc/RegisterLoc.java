@@ -21,7 +21,6 @@ public class RegisterLoc {
     }
 
     public void optimize() {
-        List<Report> rep = new ArrayList<>();
         this.ollirClassUnit.buildVarTables();
         this.ollirClassUnit.buildCFGs();
         RegAnalysis regAnalysis = new RegAnalysis();
@@ -59,7 +58,6 @@ public class RegisterLoc {
                 Instruction inst = (Instruction) entry.getKey();
                 Set<String> varNames = new HashSet<>();
 
-                // Converter cada Operand para seu nome
                 for (Operand op : entry.getValue()) {
                     if (op != null) {
                         varNames.add(op.getName());

@@ -28,7 +28,7 @@ public class RegGraph {
 
     private int calculateMinRegs() {
         // Registradores reservados para this e parâmetros
-        int reserved = method.isStaticMethod() ? 0 : 1; // this register if not static
+        int reserved = method.isStaticMethod() ? 0 : 1;
         reserved += method.getParams().size();
 
         return reserved;
@@ -60,10 +60,7 @@ public class RegGraph {
         return true;
     }
 
-    /**
-     * Constrói o grafo de interferência a partir da análise de vivacidade
-     * @param livenessInfo Mapa com informações de vivacidade
-     */
+
     public void buildInterferenceGraph(Map<Instruction, Set<String>> livenessInfo) {
         initGraph();
 
@@ -85,8 +82,6 @@ public class RegGraph {
 
                 for (int j = i + 1; j < allocatableVars.size(); j++) {
                     String var2 = allocatableVars.get(j);
-
-                    // Adicionar interferência em ambas as direções
                     interferenceGraph.get(var1).add(var2);
                     interferenceGraph.get(var2).add(var1);
                 }
@@ -94,11 +89,7 @@ public class RegGraph {
         }
     }
 
-    /**
-     * Colore o grafo usando o algoritmo de coloração por heurística de grau
-     * @param requestedRegs Número solicitado de registradores
-     * @return Tabela atualizada de variáveis com registradores atribuídos
-     */
+
     public Map<String, Descriptor> colorGraph(int requestedRegs) {
         // Verificar se o número de registradores é válido
         if (!validateRegisterCount(requestedRegs)) {
@@ -125,9 +116,7 @@ public class RegGraph {
         return updateVarTable();
     }
 
-    /**
-     * Valida o número de registradores solicitado
-     */
+
     private boolean validateRegisterCount(int requestedRegs) {
         if (requestedRegs == 0) {
             // Usar o número mínimo de registradores
@@ -146,11 +135,8 @@ public class RegGraph {
         return true;
     }
 
-    /**
-     * Constrói a pilha de variáveis para coloração
-     */
+
     private void buildStack() {
-        // Cópia do grafo para trabalhar
         Map<String, Set<String>> workGraph = new HashMap<>();
         for (Map.Entry<String, Set<String>> entry : interferenceGraph.entrySet()) {
             workGraph.put(entry.getKey(), new HashSet<>(entry.getValue()));
@@ -200,9 +186,7 @@ public class RegGraph {
         }
     }
 
-    /**
-     * Seleciona uma variável para spill (quando não há nenhuma com menos que k arestas)
-     */
+
     private String selectSpillCandidate(Map<String, Set<String>> workGraph) {
         // Estratégia simples: escolher a variável com mais interferências
         String spillVar = null;
@@ -218,10 +202,6 @@ public class RegGraph {
         return spillVar;
     }
 
-    /**
-     * Atribui cores (registradores) às variáveis
-     * @return true se conseguiu colorir, false caso contrário
-     */
     private boolean assignColors() {
         // Registradores disponíveis (cores)
         List<Integer> availableColors = new ArrayList<>();
@@ -265,9 +245,7 @@ public class RegGraph {
         return true;
     }
 
-    /**
-     * Atualiza a tabela de variáveis com os registradores atribuídos
-     */
+
     private Map<String, Descriptor> updateVarTable() {
         Map<String, Descriptor> updatedTable = new HashMap<>();
 
@@ -288,23 +266,17 @@ public class RegGraph {
         return updatedTable;
     }
 
-    /**
-     * @return Mapa de interferência (grafo)
-     */
+
     public Map<String, Set<String>> getInterferenceGraph() {
         return interferenceGraph;
     }
 
-    /**
-     * @return Mapa de cores atribuídas (variável -> registrador)
-     */
+
     public Map<String, Integer> getColorMapping() {
         return colorMapping;
     }
 
-    /**
-     * @return Lista de relatórios de erros
-     */
+
     public List<Report> getReports() {
         return reports;
     }
