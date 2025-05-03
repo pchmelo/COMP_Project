@@ -1,0 +1,9 @@
+class RegAllocReusedVars {
+    public int reusedVars() {
+        int x;
+        int y;
+        x = 3;
+        y = x + 2;
+        return y;
+    }
+}

@@ -92,9 +92,12 @@ public class RegGraph {
 
     public Map<String, Descriptor> colorGraph(int requestedRegs) {
         // Verificar se o número de registradores é válido
+
+        /*
         if (!validateRegisterCount(requestedRegs)) {
             return null;
         }
+        */
 
         // Limpar mapeamento de cores anterior
         colorMapping.clear();

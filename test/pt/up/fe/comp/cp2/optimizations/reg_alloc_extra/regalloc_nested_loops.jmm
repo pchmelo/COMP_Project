@@ -1,0 +1,18 @@
+class RegAllocNestedLoops {
+    public int nestedLoops() {
+        int i;
+        int j;
+        int sum;
+        sum = 0;
+        i = 0;
+        while (i < 5) {
+            j = 0;
+            while (j < 3) {
+                sum = sum + i * j;
+                j = j + 1;
+            }
+            i = i + 1;
+        }
+        return sum;
+    }
+}
