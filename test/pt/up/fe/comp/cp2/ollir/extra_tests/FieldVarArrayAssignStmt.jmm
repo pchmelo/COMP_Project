@@ -1,0 +1,15 @@
+class Field {
+
+    int[] intField;
+
+    public int method3(int value) {
+        int[] a;
+    
+        intField[2] = value;
+        
+        a[2] = value;
+
+        return 2;
+    }
+
+}

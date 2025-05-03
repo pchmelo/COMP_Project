@@ -162,11 +162,6 @@ public class TypeUtils {
     }
 
     public Symbol valueFromVarReturner(String name, SymbolTable table, String currentMethod) {
-        for (Symbol field : table.getFields()){
-            if (field.getName().equals(name)){
-                return field;
-            }
-        }
         for (Symbol local : table.getLocalVariables(currentMethod)){
             if (local.getName().equals(name)){
                 return local;
@@ -175,6 +170,11 @@ public class TypeUtils {
         for (Symbol param : table.getParameters(currentMethod)){
             if (param.getName().equals(name)){
                 return param;
+            }
+        }
+        for (Symbol field : table.getFields()){
+            if (field.getName().equals(name)){
+                return field;
             }
         }
         if(table.getImports().contains(name)){
@@ -188,6 +188,22 @@ public class TypeUtils {
         return new Symbol(new Type("errado",false),"errado");  //se temos undeclaredvariables muito improvavel de chegar aqui
     }
 
+    /**
+     * Finds out if a variable belongs to the locals and params of a method. If it doesn't, then it must be a field, considering that the variable exists.
+     * **/
+    public boolean isVarField(String varName, SymbolTable table, String currentMethod) {
+        for (Symbol local : table.getLocalVariables(currentMethod)){
+            if (local.getName().equals(varName)){
+                return false;
+            }
+        }
+        for (Symbol param : table.getParameters(currentMethod)) {
+            if (param.getName().equals(varName)) {
+                return false;
+            }
+        }
 
+        return true;
+    }
 
 }
