@@ -56,7 +56,6 @@ public class OptimizationsTest {
 
         int actualNumReg = CpUtils.countRegisters(CpUtils.getMethod(optimized, "soManyRegisters"));
 
-        // Number of registers might change depending on what temporaries are generated, no use comparing with original
 
         CpUtils.assertTrue("Expected number of locals in 'soManyRegisters' to be equal to " + expectedTotalReg + ", is " + actualNumReg,
                 actualNumReg == expectedTotalReg,

@@ -18,20 +18,26 @@ public class RegGraph {
     private final Method method;
     private int minRegs;
     private int numRegs;
+    private int start_color = 0;
 
 
     public RegGraph(Method method) {
         this.method = method;
-        this.minRegs = calculateMinRegs();
     }
 
 
-    private int calculateMinRegs() {
-        // Registradores reservados para this e parâmetros
+    private int calculateMinimumRegistersNeeded() {
+        int maxDegree = 0;
+        for (Set<String> neighbors : interferenceGraph.values()) {
+            maxDegree = Math.max(maxDegree, neighbors.size());
+        }
+
         int reserved = method.isStaticMethod() ? 0 : 1;
         reserved += method.getParams().size();
 
-        return reserved;
+        this.start_color = reserved;
+
+        return Math.max(minRegs, maxDegree + 1);
     }
 
 
@@ -48,6 +54,8 @@ public class RegGraph {
                 variables.add(varName);
             }
         }
+
+        this.minRegs = calculateMinimumRegistersNeeded();
     }
 
 
@@ -93,11 +101,9 @@ public class RegGraph {
     public Map<String, Descriptor> colorGraph(int requestedRegs) {
         // Verificar se o número de registradores é válido
 
-        /*
         if (!validateRegisterCount(requestedRegs)) {
             return null;
         }
-        */
 
         // Limpar mapeamento de cores anterior
         colorMapping.clear();
@@ -208,7 +214,7 @@ public class RegGraph {
     private boolean assignColors() {
         // Registradores disponíveis (cores)
         List<Integer> availableColors = new ArrayList<>();
-        for (int i = minRegs; i < numRegs; i++) {
+        for (int i = start_color; i < numRegs; i++) {
             availableColors.add(i);
         }
 
@@ -222,14 +228,14 @@ public class RegGraph {
 
             for (String neighbor : neighbors) {
                 Integer neighborColor = colorMapping.get(neighbor);
-                if (neighborColor != null && neighborColor >= minRegs) {
+                if (neighborColor != null && neighborColor >= start_color) {
                     usedColors[neighborColor] = true;
                 }
             }
 
             // Encontrar a menor cor disponível
             int selectedColor = -1;
-            for (int i = minRegs; i < numRegs; i++) {
+            for (int i = start_color; i < numRegs; i++) {
                 if (!usedColors[i]) {
                     selectedColor = i;
                     break;
