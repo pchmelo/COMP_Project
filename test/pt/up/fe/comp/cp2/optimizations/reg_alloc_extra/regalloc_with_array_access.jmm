@@ -1,0 +1,12 @@
+class RegAllocWithArrayAccess {
+    public int arrayAccess() {
+        int[] arr;
+        int index;
+        int value;
+        arr = new int[10];
+        index = 5;
+        arr[index] = 42;
+        value = arr[index];
+        return value;
+    }
+}

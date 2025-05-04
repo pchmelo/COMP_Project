@@ -2,7 +2,7 @@ class Varargs{
 
     public int foo() {
         int a;
-        boolean[] b;
+        int[] b;
 
         b = [10, 20, 30];
 
@@ -11,7 +11,7 @@ class Varargs{
         return a;
     }
 
-    public int varargs(boolean... a) {
+    public int varargs(int... a) {
         return a[0];
     }
 }

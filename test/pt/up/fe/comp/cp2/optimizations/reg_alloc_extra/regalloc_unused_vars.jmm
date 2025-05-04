@@ -1,0 +1,8 @@
+class RegAllocUnusedVars {
+    public int unusedVars() {
+        int a;
+        int temp;
+        a = 5;
+        return a;
+    }
+}

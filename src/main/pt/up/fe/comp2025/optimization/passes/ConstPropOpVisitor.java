@@ -42,6 +42,8 @@ public class ConstPropOpVisitor extends AJmmVisitor<Void, Void> {
         JmmNode right = jmmNode.getChild(0);
         String rightType = right.getKind();
         visit(right);
+        JmmNode new_node;
+        int idx = jmmNode.getIndexOfSelf();
 
         if(rightType.equals("IntegerExpr") || rightType.equals("TrueExpr") || rightType.equals("FalseExpr")){
             if(this.varDecl.containsKey(varName)){
@@ -65,6 +67,10 @@ public class ConstPropOpVisitor extends AJmmVisitor<Void, Void> {
                 if(val != null){
                     this.hasChanged = true;
                     right = createIntegerNode(val);
+                    new_node = createAssignNode(varName, createIntegerNode(val));
+                    right.setParent(new_node);
+                    jmmNode.getParent().setChild(new_node, idx);
+
                 }
             }
 
@@ -117,12 +123,24 @@ public class ConstPropOpVisitor extends AJmmVisitor<Void, Void> {
     }
 
     private Void varAssignStmt(JmmNode jmmNode, Void unused) {
+        JmmNode right;
+
         String varName = jmmNode.get("name");
-        JmmNode right = jmmNode.getChild(0);
-        String rightType = right.getKind();
+        visit(jmmNode.getChild(1));
+        String rightType = jmmNode.getChild(1).getKind();
         if(rightType.equals("IntegerExpr") || rightType.equals("TrueExpr") || rightType.equals("FalseExpr")){
+            var val = jmmNode.getChild(1).get("value");
+            if(rightType.equals("TrueExpr")){
+                right = createTrueNode();
+            } else if (rightType.equals("FalseExpr")) {
+                right = createFalseNode();
+            }
+            else {
+                right = createIntegerNode(Integer.parseInt(val));
+            }
             varDecl.put(varName, right);
         }
+
         return unused;
     }
 
@@ -130,19 +148,25 @@ public class ConstPropOpVisitor extends AJmmVisitor<Void, Void> {
         String varName = jmmNode.get("name");
         Integer val = null;
         int idx = jmmNode.getIndexOfSelf();
+        JmmNode parent = jmmNode.getParent();
+        JmmNode new_node;
 
         if(this.varDecl.containsKey(varName)){
             switch (jmmNode.get("op")){
                 case "++":
                     val = Integer.parseInt(this.varDecl.get(varName).get("value")) + 1;
                     this.hasChanged = true;
-                    jmmNode.getParent().setChild(createIntegerNode(val), idx);
+                    new_node = createIntegerNode(val);
+                    parent.setChild(new_node, idx);
+                    varDecl.put(varName, new_node);
+                    break;
 
                 case "--":
                     val = Integer.parseInt(this.varDecl.get(varName).get("value")) - 1;
                     this.hasChanged = true;
-                    jmmNode.getParent().removeChild(idx);
-                    jmmNode.getParent().setChild(createIntegerNode(val), idx);
+                    new_node = createIntegerNode(val);
+                    parent.setChild(new_node, idx);
+                    varDecl.put(varName, new_node);
 
                 default:
                     break;
@@ -168,4 +192,15 @@ public class ConstPropOpVisitor extends AJmmVisitor<Void, Void> {
         node.put("value", "false");
         return node;
     }
+
+
+    private JmmNode createAssignNode(String name, JmmNode right){
+        JmmNode node = new JmmNodeImpl(List.of("AssignStmt"));
+        node.put("name", name);
+        node.put("op", "=");
+        node.add(right);
+        right.setParent(node);
+        return node;
+    }
+
 }

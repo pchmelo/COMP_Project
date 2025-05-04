@@ -113,6 +113,11 @@ public class OllirExtraTest {
     }
 
     @Test
+    public void PostFixField() {
+        var result = getOllirResult("/PostFixField.jmm");
+    }
+
+    @Test
     public void PostFixMinus() {
         var result = getOllirResult("/PostFixMinus.jmm");
     }
@@ -164,5 +169,23 @@ public class OllirExtraTest {
     public void VarArgsArrayParam() {
         var result = getOllirResult("/VarArgsArrayParam.jmm");
     }
+
+    //TODO: Fields TESTS
+
+    @Test
+    public void FieldVarAssignStmt() {
+        var result = getOllirResult("/FieldVarAssignStmt.jmm");
+    }
+
+    @Test
+    public void FieldVarArrayAssignStmt() {
+        var result = getOllirResult("/FieldVarArrayAssignStmt.jmm");
+    }
+
+    @Test
+    public void FieldVarAssignStmtMinus() {
+        var result = getOllirResult("/FieldVarAssignStmtMinus.jmm");
+    }
+
 
 }

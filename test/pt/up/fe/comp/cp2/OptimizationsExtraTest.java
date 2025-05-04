@@ -91,7 +91,7 @@ public class OptimizationsExtraTest {
 
     @Test
     public void FoldSimpleForward() {
-        String filename = "const_prop_fold/FoldSimpleForward.jmm";
+        String filename = "const_prop_fold_extra/FoldSimpleForward.jmm";
 
         var original = getOllirResult(filename);
         var optimized = getOllirResultOpt(filename);
@@ -103,7 +103,7 @@ public class OptimizationsExtraTest {
         CpUtils.assertFindLiteral("30", method1, optimized);
 
         var method2 = CpUtils.getMethod(optimized, "foo2");
-        CpUtils.assertFindLiteral("false", method2, optimized);
+        CpUtils.assertFindLiteral("0", method2, optimized);
     }
 
     @Test
@@ -127,5 +127,10 @@ public class OptimizationsExtraTest {
 
 
     }
+
+
+
+
+
 
 }
