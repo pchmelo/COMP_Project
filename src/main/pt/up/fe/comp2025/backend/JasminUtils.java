@@ -24,4 +24,52 @@ public class JasminUtils {
                 accessModifier.name().toLowerCase() + " " :
                 "";
     }
+
+    public String getArrayType(Type type) {
+        if (type instanceof BuiltinType builtinType) {
+            return switch (builtinType.getKind()) {
+                case INT32 -> "int";
+                default -> throw new RuntimeException("Unknown type: " + builtinType);
+            };
+        }
+
+        throw new NotImplementedException("Type not implemented: " + type);
+    }
+
+    public String getPrefix(Type type) {
+        if (type instanceof ArrayType arrayType) {
+            return "a";
+        }
+
+        if (type instanceof BuiltinType builtinType) {
+            return switch (builtinType.getKind()) {
+                case INT32 -> "i";
+                default -> throw new RuntimeException("Unknown type: " + builtinType);
+            };
+        }
+
+        throw new NotImplementedException("Type not implemented: " + type);
+    }
+
+    public String getDescriptor(Type type) {
+        if (type instanceof ArrayType arrayType) {
+            return "[" + getDescriptor(arrayType.getElementType());
+        }
+
+        if (type instanceof BuiltinType builtinType) {
+            return switch (builtinType.getKind()) {
+                case INT32 -> "I";
+                case BOOLEAN -> "Z";
+                default -> throw new RuntimeException("Unknown type: " + builtinType);
+            };
+        }
+
+        if (type instanceof ClassType classType) {
+            return "L" + classType.getName().replace(".", "/") + ";";
+        }
+
+        throw new NotImplementedException("Type not implemented: " + type);
+    }
+
+
 }

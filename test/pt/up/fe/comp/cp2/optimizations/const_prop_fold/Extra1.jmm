@@ -1,0 +1,10 @@
+class A{
+    int f(int factor){
+        int a;
+        int b;
+        a = 10;
+        b = a;
+        a = b * factor;
+        return a;
+    }
+}

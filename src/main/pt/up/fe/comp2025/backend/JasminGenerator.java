@@ -1,23 +1,31 @@
 package pt.up.fe.comp2025.backend;
 
-import org.specs.comp.ollir.ClassUnit;
-import org.specs.comp.ollir.LiteralElement;
-import org.specs.comp.ollir.Method;
-import org.specs.comp.ollir.Operand;
-import org.specs.comp.ollir.inst.AssignInstruction;
-import org.specs.comp.ollir.inst.BinaryOpInstruction;
-import org.specs.comp.ollir.inst.ReturnInstruction;
-import org.specs.comp.ollir.inst.SingleOpInstruction;
+import org.specs.comp.ollir.*;
+import org.specs.comp.ollir.inst.*;
 import org.specs.comp.ollir.tree.TreeNode;
+import org.specs.comp.ollir.type.ArrayType;
+import org.specs.comp.ollir.type.ClassType;
+import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
+import pt.up.fe.specs.util.SpecsCheck;
 import pt.up.fe.specs.util.classmap.FunctionClassMap;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 import pt.up.fe.specs.util.utilities.StringLines;
 
+import java.lang.annotation.ElementType;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.specs.comp.ollir.OperandType.ARRAYREF;
+import static org.specs.comp.ollir.OperandType.INT32;
+import static org.specs.comp.ollir.OperandType.BOOLEAN;
+import static org.specs.comp.ollir.OperandType.STRING;
+import static org.specs.comp.ollir.OperandType.VOID;
+import static org.specs.comp.ollir.OperandType.OBJECTREF;
+
 
 /**
  * Generates Jasmin code from an OllirResult.
@@ -41,6 +49,12 @@ public class JasminGenerator {
 
     private final FunctionClassMap<TreeNode, String> generators;
 
+    private final HashMap<String, String> imports = new HashMap<>();
+
+    private int stack = 0;
+    private int maxStack = 0;
+    private int maxLocals = 0;
+
     public JasminGenerator(OllirResult ollirResult) {
         this.ollirResult = ollirResult;
 
@@ -59,6 +73,10 @@ public class JasminGenerator {
         generators.put(Operand.class, this::generateOperand);
         generators.put(BinaryOpInstruction.class, this::generateBinaryOp);
         generators.put(ReturnInstruction.class, this::generateReturn);
+
+        //new generators
+        generators.put(NewInstruction.class, this::generateNewInstruction);
+        generators.put(InvokeSpecialInstruction.class, this::generateInvokeSpecial);
     }
 
     private String apply(TreeNode node) {
@@ -70,6 +88,17 @@ public class JasminGenerator {
         code.append(generators.apply(node));
 
         return code.toString();
+    }
+
+    private void addStack(int stack) {
+        this.stack += stack;
+        if (this.stack > maxStack) {
+            maxStack = this.stack;
+        }
+    }
+
+    private void addLocals(int locals) {
+        maxLocals = Math.max(maxLocals, locals + 1);
     }
 
 
@@ -89,6 +118,11 @@ public class JasminGenerator {
 
 
     private String generateClassUnit(ClassUnit classUnit) {
+        for(String imp : classUnit.getImports()){
+            String importNonQualified = imp.substring(imp.lastIndexOf(".") + 1);
+            imp = imp.replace(".", "/");
+            imports.put(importNonQualified, imp);
+        }
 
         var code = new StringBuilder();
 
@@ -142,7 +176,9 @@ public class JasminGenerator {
         var methodName = method.getMethodName();
 
         // TODO: Hardcoded param types and return type, needs to be expanded
-        var params = "I";
+        var params = method.getParams().stream()
+                .map(param -> types.getDescriptor(param.getType()))
+                .collect(Collectors.joining());
         var returnType = "I";
 
         code.append("\n.method ").append(modifier)
@@ -167,6 +203,63 @@ public class JasminGenerator {
         //System.out.println("ENDING METHOD " + method.getMethodName());
         return code.toString();
     }
+
+    private String getMethodStart(Method method){
+        StringBuilder code = new StringBuilder();
+
+        String modifier;
+
+        if(method.getMethodAccessModifier() != AccessModifier.DEFAULT){
+            modifier = method.getMethodAccessModifier().name().toLowerCase() + " ";
+        }
+        else{
+            modifier = "public ";
+        }
+
+        if (method.isStaticMethod()) {
+            modifier += "static ";
+        }
+
+        if (method.isFinalMethod()) {
+            modifier += "final ";
+        }
+
+        code.append(".method ").append(modifier).append(method.getMethodName());
+
+        StringBuilder params = new StringBuilder("(");
+
+        for(Element param : method.getParams()){
+            params.append(generateType(param.getType()));
+        }
+        code.append(params);
+        code.append(")");
+
+        String returnType = generateType(method.getReturnType());
+        code.append(returnType).append(NL);
+
+        return code.toString();
+    }
+
+    private String generateType(org.specs.comp.ollir.type.Type type) {
+        return switch (type.toString()) {
+            case "INT32" -> "I";
+            case "STRING[]" -> "Ljava/lang/String;";
+            case "BOOLEAN" -> "Z";
+            case "ARRAYREF" -> {
+                ArrayType arrayType = (ArrayType) type;
+                yield "[" + generateType(arrayType.getElementType());
+            }
+            case "VOID" -> "V";
+            case "OBJECTREF" -> {
+                ClassType classType = (ClassType) type;
+                String name = classType.getName();
+                yield "L" + imports.getOrDefault(name, name) + ";";
+            }
+            default -> throw new NotImplementedException(type);
+        };
+    }
+
+
 
     private String generateAssign(AssignInstruction assign) {
         var code = new StringBuilder();
@@ -203,6 +296,7 @@ public class JasminGenerator {
 
     private String generateOperand(Operand operand) {
         // get register
+
         var reg = currentMethod.getVarTable().get(operand.getName());
 
         // TODO: Hardcoded for int type, needs to be expanded
@@ -232,11 +326,61 @@ public class JasminGenerator {
     }
 
     private String generateReturn(ReturnInstruction returnInst) {
-        var code = new StringBuilder();
+        StringBuilder code = new StringBuilder();
 
-        // TODO: Hardcoded for int type, needs to be expanded
-        code.append("ireturn").append(NL);
+        if (returnInst.getOperand().isEmpty()) {
+            throw new NotImplementedException("Return without operand");
+        }
+
+        var loadOperand = apply(returnInst.getOperand().get());
+        code.append(loadOperand);
+        code.append(types.getPrefix(returnInst.getReturnType()) + "return\n");
 
         return code.toString();
     }
+
+
+    //                             New function to generate new instruction
+
+    private String generateNewInstruction(NewInstruction newInst) {
+        StringBuilder code = new StringBuilder();
+        var callerType = newInst.getCaller().getType();
+        if (callerType instanceof ArrayType arrayType) {
+            SpecsCheck.checkArgument(
+                    newInst.getArguments().size() == 1,
+                    () -> "Expected number of arguments to be 1 for new array, but got " + newInst.getArguments().size()
+            );
+
+            code.append(apply(newInst.getArguments().getFirst()));
+            var typeCode = types.getArrayType(arrayType.getElementType());
+            code.append("newarray " + typeCode + "\n");
+            return code.toString();
+        }
+
+        return code.toString();
+    }
+
+    private String generateInvokeSpecial(InvokeSpecialInstruction invokeSpecial) {
+        var className = invokeSpecial.toString();
+        className = className.substring(className.lastIndexOf("(") + 1, className.length() - 1);
+        className = imports.getOrDefault(className, className);
+
+        return "invokespecial " + className + "/<init>";
+    }
+
+    private String storeAux(Operand operand) {
+        var reg = currentMethod.getVarTable().get(operand.getName());
+
+        var prefix = types.getPrefix(operand.getType());
+        return prefix + "store " + reg.getVirtualReg() + "\n";
+    }
+
+    private String loadAux(Operand operand){
+        var reg = currentMethod.getVarTable().get(operand.getName());
+
+        var prefix = types.getPrefix(operand.getType());
+        return prefix + "load " + reg.getVirtualReg() + "\n";
+    }
+
+
 }

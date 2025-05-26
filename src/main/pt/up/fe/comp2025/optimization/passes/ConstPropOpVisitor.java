@@ -83,6 +83,11 @@ public class ConstPropOpVisitor extends AJmmVisitor<Void, Void> {
             }
 
         }
+        else{
+            if(varDecl.containsKey(varName)){
+                varDecl.remove(varName);
+            }
+        }
 
         return unused;
     }
