@@ -9,8 +9,22 @@ class Field {
 
         a++;
 
+        int b;
+        int c;
+
+        b = this.a();
+        c = Field.b();
 
         return 3;
+    }
+
+    public int a(){
+
+        return 1;
+    }
+
+    public static int b(){
+        return 2;
     }
 
 }

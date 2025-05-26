@@ -285,6 +285,10 @@ d.io :=.io tmp0.io;*/
         String lhsCode;
         if (lhs.getKind().equals("VarRefExpr")){
             lhsCode = lhs.get("name");
+            // if the variable calling function is of class type
+            if (types.getExprType(lhs, table, currentMethod).getName().equals(table.getClassName())){
+                lhsCode += "." + table.getClassName();
+            }
         }else{
             var lhsOllirExpr = visit(node.getChild(0));
             computation.append(printComputation(lhsOllirExpr.getComputation()));
@@ -353,7 +357,7 @@ d.io :=.io tmp0.io;*/
         }
 
         String returnTypeMethodCall = ".V";
-        if (node.getChild(0).getKind().equals("ThisExpr")){
+        if (node.getChild(0).getKind().equals("ThisExpr") || types.getExprType(node.getChild(0), table, currentMethod).getName().equals(table.getClassName()) ){
             computation.append("invokevirtual(");
             returnTypeMethodCall =  ollirTypes.toOllirType(table.getReturnType(methodName));
         }else{
