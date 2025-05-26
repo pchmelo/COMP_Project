@@ -130,10 +130,11 @@ public class JasminGenerator {
         var className = ollirResult.getOllirClass().getClassName();
         code.append(".class ").append(className).append(NL).append(NL);
 
-        // TODO: When you support 'extends', this must be updated
-        var fullSuperClass = "java/lang/Object";
-
-        code.append(".super ").append(fullSuperClass).append(NL);
+        // DONE: When you support 'extends', this must be updated
+        var fullSuperClass = ollirResult.getOllirClass().getSuperClass();
+        if (fullSuperClass != null){
+            code.append(".super ").append(fullSuperClass).append(NL);
+        }
 
         // generate a single constructor method
         var defaultConstructor = """
