@@ -187,5 +187,12 @@ public class OllirExtraTest {
         var result = getOllirResult("/FieldVarAssignStmtMinus.jmm");
     }
 
+    //TODO: Error TESTS
+
+    @Test
+    public void InvokeError() {
+        var result = getOllirResult("/InvokeError.jmm");
+    }
+
 
 }

@@ -1,0 +1,12 @@
+class ArrayAsArg {
+        int f(int[] a)
+        {
+            ArrayAsArg  c;
+            c = new ArrayAsArg ();
+            int[] arr;
+            arr = new int[2];
+            int x;
+            x = c.f(arr);
+            return x;
+        }
+    }

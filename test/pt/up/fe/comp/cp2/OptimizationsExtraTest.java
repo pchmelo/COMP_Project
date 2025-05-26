@@ -128,9 +128,21 @@ public class OptimizationsExtraTest {
 
     }
 
+    @Test
+    public void Extra1(){
+        String filename = "const_prop_fold/Extra1.jmm";
 
+        OllirResult original = getOllirResult(filename);
+        OllirResult optimized = getOllirResultOpt(filename);
 
+        CpUtils.assertNotEquals("Expected code to change with -o flag\n\nOriginal code:\n" + original.getOllirCode(),
+                original.getOllirCode(), optimized.getOllirCode(),
+                optimized);
 
+        var method = CpUtils.getMethod(optimized, "f");
+        CpUtils.assertLiteralCount("10", method, optimized, 3);
 
+        System.out.println(optimized.getOllirCode());
 
+    }
 }

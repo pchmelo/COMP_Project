@@ -1,7 +1,7 @@
 import io;
 import Quicksort;
 
-SymbolTable extends Quicksort {
+SymbolTable {
 
 	.field public intField.i32;
 	.field public boolField.bool;
