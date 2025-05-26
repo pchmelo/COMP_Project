@@ -124,8 +124,6 @@ public class OptimizationsExtraTest {
         CpUtils.assertLiteralCount("2", method, optimized, 1);
 
         CpUtils.assertLiteralCount("4", method, optimized, 1);
-
-
     }
 
     @Test
@@ -145,4 +143,5 @@ public class OptimizationsExtraTest {
         System.out.println(optimized.getOllirCode());
 
     }
+
 }
