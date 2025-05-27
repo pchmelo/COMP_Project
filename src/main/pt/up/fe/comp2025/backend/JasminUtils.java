@@ -43,7 +43,8 @@ public class JasminUtils {
 
         if (type instanceof BuiltinType builtinType) {
             return switch (builtinType.getKind()) {
-                case INT32 -> "i";
+                case INT32, BOOLEAN -> "i";
+                case STRING -> "Ljava/lang/String;";
                 default -> throw new RuntimeException("Unknown type: " + builtinType);
             };
         }
@@ -60,6 +61,7 @@ public class JasminUtils {
             return switch (builtinType.getKind()) {
                 case INT32 -> "I";
                 case BOOLEAN -> "Z";
+                case STRING -> "Ljava/lang/String;";
                 default -> throw new RuntimeException("Unknown type: " + builtinType);
             };
         }

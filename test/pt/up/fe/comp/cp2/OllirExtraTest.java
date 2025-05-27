@@ -194,5 +194,10 @@ public class OllirExtraTest {
         var result = getOllirResult("/InvokeError.jmm");
     }
 
+    @Test
+    public void InvokeMultiConstantsError() {
+        var result = getOllirResult("/InvokeMultiConstantsError.jmm");
+    }
+
 
 }

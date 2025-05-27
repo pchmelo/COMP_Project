@@ -1,0 +1,15 @@
+class ArrayAsArg {
+        int f(int a,int b,int c)
+        {
+            ArrayAsArg  c;
+            c = new ArrayAsArg ();
+
+            const int e = 1;
+            const int f = 2;
+            const int g = 3;
+
+            int x;
+            x = c.f(e,f,g);
+            return x;
+        }
+    }

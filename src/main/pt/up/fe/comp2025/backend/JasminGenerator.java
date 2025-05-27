@@ -163,6 +163,18 @@ public class JasminGenerator {
         return code.toString();
     }
 
+    private String generateLimitLocals(String methodName){
+        StringBuilder limitlocals = new StringBuilder(".limit locals ");
+        for (Method method : ollirResult.getOllirClass().getMethods()){
+            if (method.getMethodName().equals(methodName)){
+                limitlocals.append(method.getParams().size() + method.getVarTable().size() - 1 ); //-1 because we are not counting the this local variable that is included in each instance method
+                break;
+            }
+        }
+
+        return limitlocals.toString();
+    }
+
 
     private String generateMethod(Method method) {
         //System.out.println("STARTING METHOD " + method.getMethodName());
@@ -186,9 +198,11 @@ public class JasminGenerator {
                 .append(methodName)
                 .append("(" + params + ")" + returnType).append(NL);
 
+        String limitLocals = generateLimitLocals(methodName);
+
         // Add limits
         code.append(TAB).append(".limit stack 99").append(NL);
-        code.append(TAB).append(".limit locals 99").append(NL);
+        code.append(TAB).append(limitLocals).append(NL);
 
         for (var inst : method.getInstructions()) {
             var instCode = StringLines.getLines(apply(inst)).stream()
@@ -330,6 +344,11 @@ public class JasminGenerator {
         StringBuilder code = new StringBuilder();
 
         if (returnInst.getOperand().isEmpty()) {
+            if (generateType(returnInst.getReturnType()).equals("V")){
+                code.append("return\n");
+                return code.toString();
+            }
+
             throw new NotImplementedException("Return without operand");
         }
 
