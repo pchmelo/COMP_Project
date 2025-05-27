@@ -44,6 +44,7 @@ public class JasminUtils {
         if (type instanceof BuiltinType builtinType) {
             return switch (builtinType.getKind()) {
                 case INT32 -> "i";
+                case BOOLEAN -> "z";
                 default -> throw new RuntimeException("Unknown type: " + builtinType);
             };
         }
@@ -60,6 +61,8 @@ public class JasminUtils {
             return switch (builtinType.getKind()) {
                 case INT32 -> "I";
                 case BOOLEAN -> "Z";
+                case STRING -> "Ljava/lang/String;";
+                case VOID -> "V";
                 default -> throw new RuntimeException("Unknown type: " + builtinType);
             };
         }
@@ -70,6 +73,37 @@ public class JasminUtils {
 
         throw new NotImplementedException("Type not implemented: " + type);
     }
+
+    public String getStoreInstruction(Type type, Integer reg) {
+        StringBuilder code = new StringBuilder();
+        code.append(getPrefixStoreLoad(type));
+        code.append("store");
+        if(reg <= 3 && reg >= 0){
+            code.append("_");
+        }
+        else{
+            code.append(" ");
+        }
+        code.append(reg);
+        return code.toString();
+    }
+
+    public String getPrefixStoreLoad(Type type){
+        StringBuilder prefix = new StringBuilder();
+        if (type instanceof BuiltinType builtinType) {
+            switch (builtinType.getKind()) {
+                case INT32, BOOLEAN -> {
+                    prefix.append("i");
+                }
+                case STRING -> {
+                    prefix.append("a");
+                }
+                default -> throw new NotImplementedException("Type not implemented: " + type);
+            };
+        }
+        return prefix.toString();
+    }
+
 
 
 }
