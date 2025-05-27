@@ -4,8 +4,6 @@ import org.specs.comp.ollir.*;
 import org.specs.comp.ollir.inst.*;
 import org.specs.comp.ollir.tree.TreeNode;
 import org.specs.comp.ollir.type.ArrayType;
-import org.specs.comp.ollir.type.ClassType;
-import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.specs.util.SpecsCheck;
@@ -13,18 +11,10 @@ import pt.up.fe.specs.util.classmap.FunctionClassMap;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 import pt.up.fe.specs.util.utilities.StringLines;
 
-import java.lang.annotation.ElementType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static org.specs.comp.ollir.OperandType.ARRAYREF;
-import static org.specs.comp.ollir.OperandType.INT32;
-import static org.specs.comp.ollir.OperandType.BOOLEAN;
-import static org.specs.comp.ollir.OperandType.STRING;
-import static org.specs.comp.ollir.OperandType.VOID;
-import static org.specs.comp.ollir.OperandType.OBJECTREF;
 
 
 /**
@@ -77,6 +67,8 @@ public class JasminGenerator {
         //new generators
         generators.put(NewInstruction.class, this::generateNewInstruction);
         generators.put(InvokeSpecialInstruction.class, this::generateInvokeSpecial);
+        generators.put(PutFieldInstruction.class, this::generatePutFieldInstruction);
+        generators.put(GetFieldInstruction.class, this::generateGetFieldInstruction);
     }
 
     private String apply(TreeNode node) {
@@ -127,37 +119,33 @@ public class JasminGenerator {
         var code = new StringBuilder();
 
         // generate class name
-        var className = ollirResult.getOllirClass().getClassName();
-        code.append(".class ").append(className).append(NL).append(NL);
+        var className = classUnit.getClassName();
+        code.append(".class ").append(className).append(NL);
 
         // DONE: When you support 'extends', this must be updated
-        var fullSuperClass = ollirResult.getOllirClass().getSuperClass();
-        if (fullSuperClass != null){
-            code.append(".super ").append(fullSuperClass).append(NL);
+        var superClass = getSuperClassName();
+        code.append(".super ").append(superClass).append(NL).append(NL);
+
+        for (var field : classUnit.getFields()) {
+            code.append(getField(field)).append(NL);
         }
 
-        // generate a single constructor method
-        var defaultConstructor = """
+
+        // generate code for all other methods
+        for (var method : ollirResult.getOllirClass().getMethods()) {
+            if (method.isConstructMethod()) {
+                var defaultConstructor = """
                 ;default constructor
                 .method public <init>()V
                     aload_0
                     invokespecial %s/<init>()V
                     return
                 .end method
-                """.formatted(fullSuperClass);
-        code.append(defaultConstructor);
-
-        // generate code for all other methods
-        for (var method : ollirResult.getOllirClass().getMethods()) {
-
-            // Ignore constructor, since there is always one constructor
-            // that receives no arguments, and has been already added
-            // previously
-            if (method.isConstructMethod()) {
-                continue;
+                """.formatted(superClass);
+                code.append(defaultConstructor);
+            }else{
+                code.append(apply(method));
             }
-
-            code.append(apply(method));
         }
 
         return code.toString();
@@ -170,52 +158,34 @@ public class JasminGenerator {
         currentMethod = method;
 
         var code = new StringBuilder();
+        code.append(this.getMethodHeader(method));
 
-        // calculate modifier
-        var modifier = types.getModifier(method.getMethodAccessModifier());
-
-        var methodName = method.getMethodName();
-
-        // TODO: Hardcoded param types and return type, needs to be expanded
-        var params = method.getParams().stream()
-                .map(param -> types.getDescriptor(param.getType()))
-                .collect(Collectors.joining());
-        var returnType = "I";
-
-        code.append("\n.method ").append(modifier)
-                .append(methodName)
-                .append("(" + params + ")" + returnType).append(NL);
-
-        // Add limits
-        code.append(TAB).append(".limit stack 99").append(NL);
-        code.append(TAB).append(".limit locals 99").append(NL);
-
+        StringBuilder instructions = new StringBuilder();
         for (var inst : method.getInstructions()) {
             var instCode = StringLines.getLines(apply(inst)).stream()
                     .collect(Collectors.joining(NL + TAB, TAB, NL));
 
-            code.append(instCode);
+            instructions.append(instCode);
         }
 
+        code.append(".limit stack ").append(maxStack).append(NL);
+        code.append(".limit locals ").append(maxLocals).append(NL);
+        code.append(instructions);
         code.append(".end method\n");
 
         // unset method
         currentMethod = null;
+        this.maxStack = 0;
+        this.maxLocals = 0;
         //System.out.println("ENDING METHOD " + method.getMethodName());
         return code.toString();
     }
 
-    private String getMethodStart(Method method){
-        StringBuilder code = new StringBuilder();
+    private String getMethodHeader(Method method){
+        var header = new StringBuilder();
 
-        String modifier;
-
-        if(method.getMethodAccessModifier() != AccessModifier.DEFAULT){
-            modifier = method.getMethodAccessModifier().name().toLowerCase() + " ";
-        }
-        else{
-            modifier = "public ";
-        }
+        var modifier = method.getMethodAccessModifier() != AccessModifier.DEFAULT ?
+                method.getMethodAccessModifier().name().toLowerCase() + " " : "public ";
 
         if (method.isStaticMethod()) {
             modifier += "static ";
@@ -225,40 +195,57 @@ public class JasminGenerator {
             modifier += "final ";
         }
 
-        code.append(".method ").append(modifier).append(method.getMethodName());
+        header.append(".method ").append(modifier).append(method.getMethodName());
 
-        StringBuilder params = new StringBuilder("(");
-
-        for(Element param : method.getParams()){
-            params.append(generateType(param.getType()));
+        // Add parameters
+        var params = new ArrayList<String>();
+        for (Element param : method.getParams()){
+            params.add(types.getDescriptor(param.getType()));
         }
-        code.append(params);
-        code.append(")");
 
-        String returnType = generateType(method.getReturnType());
-        code.append(returnType).append(NL);
+        header.append("(").append(String.join("", params)).append(")");
+
+        // Add return type
+        var returnType = types.getDescriptor(method.getReturnType());
+        header.append(returnType).append(NL);
+
+        return header.toString();
+    }
+
+    private String getSuperClassName() {
+        var superClass = ollirResult.getOllirClass().getSuperClass();
+
+        if (superClass == null || superClass.equals("Object")) {
+            superClass = "java/lang/Object";
+        }
+
+        superClass = imports.getOrDefault(superClass, superClass);
+        return superClass;
+    }
+
+    private String getField(Field field) {
+        var code = new StringBuilder();
+
+        var modifier = field.getFieldAccessModifier() != AccessModifier.DEFAULT ?
+                field.getFieldAccessModifier().name().toLowerCase() + " " : "private ";
+
+        if (field.isStaticField()) {
+            modifier += "static ";
+        }
+
+        if (field.isFinalField()) {
+            modifier += "final ";
+        }
+
+        code.append(".field ").append(modifier).append("'").append(field.getFieldName()).append("' ");
+
+        // Add type
+        var type = types.getDescriptor(field.getFieldType());
+        code.append(type).append(NL);
 
         return code.toString();
     }
 
-    private String generateType(org.specs.comp.ollir.type.Type type) {
-        return switch (type.toString()) {
-            case "INT32" -> "I";
-            case "STRING[]" -> "Ljava/lang/String;";
-            case "BOOLEAN" -> "Z";
-            case "ARRAYREF" -> {
-                ArrayType arrayType = (ArrayType) type;
-                yield "[" + generateType(arrayType.getElementType());
-            }
-            case "VOID" -> "V";
-            case "OBJECTREF" -> {
-                ClassType classType = (ClassType) type;
-                String name = classType.getName();
-                yield "L" + imports.getOrDefault(name, name) + ";";
-            }
-            default -> throw new NotImplementedException(type);
-        };
-    }
 
 
 
@@ -277,14 +264,16 @@ public class JasminGenerator {
 
         var operand = (Operand) lhs;
 
-        // get register
-        var reg = currentMethod.getVarTable().get(operand.getName());
-
-
-        // TODO: Hardcoded for int type, needs to be expanded
-        code.append("istore ").append(reg.getVirtualReg()).append(NL);
-
+        code.append(this.generateStoreAssign(operand)).append(NL);
         return code.toString();
+    }
+
+    private String generateStoreAssign(Operand operand) {
+        Descriptor reg = currentMethod.getVarTable().get(operand.getName());
+        this.addLocals(reg.getVirtualReg());
+        this.addStack(-1);
+
+        return types.getStoreInstruction(operand.getType(), reg.getVirtualReg());
     }
 
     private String generateSingleOp(SingleOpInstruction singleOp) {
@@ -292,16 +281,33 @@ public class JasminGenerator {
     }
 
     private String generateLiteral(LiteralElement literal) {
+        Integer lit = Integer.parseInt(literal.getLiteral());
+
+        if(lit.equals(-1)){
+            return "iconst_m1" + NL;
+        } else if(lit >= 0 && lit <= 5) {
+            return "iconst_" + lit + NL;
+        } else if (lit >= Byte.MIN_VALUE && lit <= Byte.MAX_VALUE) {
+            return "bipush " + lit + NL;
+        } else if (lit >= Short.MIN_VALUE && lit <= Short.MAX_VALUE) {
+            return "sipush " + lit + NL;
+        }
+
         return "ldc " + literal.getLiteral() + NL;
     }
 
     private String generateOperand(Operand operand) {
-        // get register
-
         var reg = currentMethod.getVarTable().get(operand.getName());
+        addLocals(reg.getVirtualReg());
+        addStack(1);
 
-        // TODO: Hardcoded for int type, needs to be expanded
-        return "iload " + reg.getVirtualReg() + NL;
+        String prefix = types.getPrefixStoreLoad(operand.getType());
+        String suffix = " ";
+
+        if((reg.getVirtualReg() == 0 || reg.getVirtualReg() == 1 || reg.getVirtualReg() == 2 || reg.getVirtualReg() == 3)  && prefix.equals("i")){
+            suffix = "_";
+        }
+        return prefix + "load" + suffix + reg.getVirtualReg() + "\n";
     }
 
     private String generateBinaryOp(BinaryOpInstruction binaryOp) {
@@ -330,18 +336,19 @@ public class JasminGenerator {
         StringBuilder code = new StringBuilder();
 
         if (returnInst.getOperand().isEmpty()) {
-            throw new NotImplementedException("Return without operand");
+            return code.append("return\n").toString();
         }
 
         var loadOperand = apply(returnInst.getOperand().get());
         code.append(loadOperand);
-        code.append(types.getPrefix(returnInst.getReturnType()) + "return\n");
+        code.append(types.getPrefixStoreLoad(returnInst.getReturnType()) + "return\n");
+        addStack(-1);
 
         return code.toString();
     }
 
 
-    //                             New function to generate new instruction
+    //New function to generate new instruction
 
     private String generateNewInstruction(NewInstruction newInst) {
         StringBuilder code = new StringBuilder();
@@ -352,7 +359,9 @@ public class JasminGenerator {
                     () -> "Expected number of arguments to be 1 for new array, but got " + newInst.getArguments().size()
             );
 
-            code.append(apply(newInst.getArguments().getFirst()));
+            addStack(1);
+            addStack(-1);
+
             var typeCode = types.getArrayType(arrayType.getElementType());
             code.append("newarray " + typeCode + "\n");
             return code.toString();
@@ -383,5 +392,64 @@ public class JasminGenerator {
         return prefix + "load " + reg.getVirtualReg() + "\n";
     }
 
+    private String generatePutFieldInstruction(PutFieldInstruction method){
+        StringBuilder code = new StringBuilder();
+        Descriptor reg = currentMethod.getVarTable().get(method.getField().getName());
+
+        addLocals(reg.getVirtualReg());
+        addStack(1);
+
+        code.append("along");
+        if(reg.getVirtualReg() <= 3 && reg.getVirtualReg() >= 0){
+            code.append("_");
+        }
+        else{
+            code.append(" ");
+        }
+
+        code.append(reg.getVirtualReg()).append(NL);
+        code.append(generators.apply(method.getValue()));
+        code.append("putfield ");
+
+        code.append(ClassFieldName(method.getObject(), method.getField())).append(" ");
+
+        String type = types.getDescriptor(method.getValue().getType());
+        code.append(type).append(NL);
+        addStack(-2);
+
+        return code.toString();
+    }
+
+    private String generateGetFieldInstruction(GetFieldInstruction method){
+        StringBuilder code = new StringBuilder();
+        Descriptor reg = currentMethod.getVarTable().get(method.getField().getName());
+
+        addLocals(reg.getVirtualReg());
+        addStack(1);
+
+        code.append("along");
+        if(reg.getVirtualReg() <= 3 && reg.getVirtualReg() >= 0){
+            code.append("_");
+        }
+        else{
+            code.append(" ");
+        }
+
+        code.append(reg.getVirtualReg()).append(NL);
+        code.append("getfield ");
+
+        code.append(ClassFieldName(method.getObject(), method.getField())).append(" ");
+
+        String type = types.getDescriptor(method.getField().getType());
+        code.append(type).append(NL);
+
+        return code.toString();
+    }
+
+    private String ClassFieldName(Operand classe, Operand field){
+        String name = classe.toElement().getType().toString();
+        name = name.substring(name.lastIndexOf("(") + 1, name.length() - 1);
+        return name + "/" + field.getName();
+    }
 
 }
