@@ -45,6 +45,8 @@ public class JasminGenerator {
     private int maxStack = 0;
     private int maxLocals = 0;
 
+    private List<Integer> usedLocals = new ArrayList<>();
+
     public JasminGenerator(OllirResult ollirResult) {
         this.ollirResult = ollirResult;
 
@@ -151,16 +153,20 @@ public class JasminGenerator {
         return code.toString();
     }
 
-    private String generateLimitLocals(String methodName){
-        StringBuilder limitlocals = new StringBuilder(".limit locals ");
+    private int generateLimitLocals(String methodName){
+        int limitLocals = 0;
         for (Method method : ollirResult.getOllirClass().getMethods()){
             if (method.getMethodName().equals(methodName)){
-                limitlocals.append(method.getParams().size() + method.getVarTable().size() - 1 ); //-1 because we are not counting the this local variable that is included in each instance method
+                limitLocals = method.getVarTable().size(); //-1 because we are not counting the this local variable that is included in each instance method
+                usedLocals.add(0);
+                for (int i = 1; i < method.getVarTable().size(); i++){
+                    usedLocals.add(-1);
+                }
                 break;
             }
         }
 
-        return limitlocals.toString();
+        return limitLocals;
     }
 
 
@@ -173,6 +179,7 @@ public class JasminGenerator {
         code.append(this.getMethodHeader(method));
 
         var methodName = method.getMethodName();
+        int limitLocals = generateLimitLocals(methodName); //obrigatorio antes das instruções
 
         StringBuilder instructions = new StringBuilder();
         for (var inst : method.getInstructions()) {
@@ -182,18 +189,23 @@ public class JasminGenerator {
             instructions.append(instCode);
         }
 
-        String limitLocals = generateLimitLocals(methodName);
+        for (int i = 0; i < usedLocals.size() ; i++){
+            limitLocals += usedLocals.get(i);
+        }
 
         code.append(".limit stack ").append(maxStack).append(NL);
-        code.append(".limit locals ").append(maxLocals).append(NL);
+        code.append(".limit locals ").append(limitLocals).append(NL);
         code.append(instructions);
-        code.append(".end method\n");
+        code.append(".end method\n\n");
+
+        System.out.println("METHOD LOCALS " + limitLocals);
 
         // unset method
         currentMethod = null;
         this.maxStack = 0;
         this.maxLocals = 0;
-        //System.out.println("ENDING METHOD " + method.getMethodName());
+        usedLocals.clear();
+        System.out.println("ENDING METHOD " + method.getMethodName());
         return code.toString();
     }
 
@@ -289,6 +301,10 @@ public class JasminGenerator {
         this.addLocals(reg.getVirtualReg());
         this.addStack(-1);
 
+        if (reg.getVirtualReg() < usedLocals.size() ){
+            usedLocals.set(reg.getVirtualReg(), 0);
+        }
+
         return types.getStoreInstruction(operand.getType(), reg.getVirtualReg());
     }
 
@@ -298,6 +314,7 @@ public class JasminGenerator {
 
     private String generateLiteral(LiteralElement literal) {
         Integer lit = Integer.parseInt(literal.getLiteral());
+        addStack(1);
 
         if(lit.equals(-1)){
             return "iconst_m1" + NL;
@@ -317,6 +334,10 @@ public class JasminGenerator {
         addLocals(reg.getVirtualReg());
         addStack(1);
 
+        if (reg.getVirtualReg() < usedLocals.size() ){
+            usedLocals.set(reg.getVirtualReg(), 0);
+        }
+
         String prefix = types.getPrefixStoreLoad(operand.getType());
         String suffix = " ";
 
@@ -332,6 +353,9 @@ public class JasminGenerator {
         // load values on the left and on the right
         code.append(apply(binaryOp.getLeftOperand()));
         code.append(apply(binaryOp.getRightOperand()));
+
+        addStack(-2);
+        addStack(1);
 
         // TODO: Hardcoded for int type, needs to be expanded
         var typePrefix = "i";
@@ -352,7 +376,7 @@ public class JasminGenerator {
         StringBuilder code = new StringBuilder();
 
         if (returnInst.getOperand().isEmpty()) {
-            if (types.getPrefixStoreLoad(returnInst.getReturnType()).equals("V")){
+            if (types.getDescriptor(returnInst.getReturnType()).equals("V")){
                 code.append("return\n");
                 return code.toString();
             }
@@ -420,6 +444,10 @@ public class JasminGenerator {
         addLocals(reg.getVirtualReg());
         addStack(1);
 
+        if (reg.getVirtualReg() < usedLocals.size() ){
+            usedLocals.set(reg.getVirtualReg(), 0);
+        }
+
         code.append("along");
         if(reg.getVirtualReg() <= 3 && reg.getVirtualReg() >= 0){
             code.append("_");
@@ -447,6 +475,10 @@ public class JasminGenerator {
 
         addLocals(reg.getVirtualReg());
         addStack(1);
+
+        if (reg.getVirtualReg() < usedLocals.size() ){
+            usedLocals.set(reg.getVirtualReg(), 0);
+        }
 
         code.append("along");
         if(reg.getVirtualReg() <= 3 && reg.getVirtualReg() >= 0){
