@@ -98,12 +98,17 @@ public class JasminUtils {
                 case STRING -> {
                     prefix.append("a");
                 }
+                case VOID -> {
+                    prefix.append("v");
+                }
                 default -> throw new NotImplementedException("Type not implemented: " + type);
             };
         }
+        if(type instanceof ClassType){
+            prefix.append("a");
+        }
         return prefix.toString();
     }
-
 
 
 }
