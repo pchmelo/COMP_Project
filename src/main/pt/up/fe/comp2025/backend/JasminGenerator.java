@@ -67,10 +67,9 @@ public class JasminGenerator {
         generators.put(ReturnInstruction.class, this::generateReturn);
 
         //new generators
-        generators.put(NewInstruction.class, this::generateNewInstruction);
-        generators.put(InvokeSpecialInstruction.class, this::generateInvokeSpecial);
         generators.put(PutFieldInstruction.class, this::generatePutFieldInstruction);
         generators.put(GetFieldInstruction.class, this::generateGetFieldInstruction);
+        generators.put(CallInstruction.class, this::generateCallInstruction);
     }
 
     private String apply(TreeNode node) {
@@ -255,7 +254,7 @@ public class JasminGenerator {
         var code = new StringBuilder();
 
         var modifier = field.getFieldAccessModifier() != AccessModifier.DEFAULT ?
-                field.getFieldAccessModifier().name().toLowerCase() + " " : "private ";
+                field.getFieldAccessModifier().name().toLowerCase() + " " : "public ";
 
         if (field.isStaticField()) {
             modifier += "static ";
@@ -397,6 +396,7 @@ public class JasminGenerator {
 
     private String generateNewInstruction(NewInstruction newInst) {
         StringBuilder code = new StringBuilder();
+
         var callerType = newInst.getCaller().getType();
         if (callerType instanceof ArrayType arrayType) {
             SpecsCheck.checkArgument(
@@ -411,30 +411,66 @@ public class JasminGenerator {
             code.append("newarray " + typeCode + "\n");
             return code.toString();
         }
+        else{
+            String name = this.addImportPath(callerType.toString());
+            code.append("new ").append(name).append(NL);
+
+            addStack(1);
+        }
 
         return code.toString();
     }
 
-    private String generateInvokeSpecial(InvokeSpecialInstruction invokeSpecial) {
-        var className = invokeSpecial.toString();
-        className = className.substring(className.lastIndexOf("(") + 1, className.length() - 1);
-        className = imports.getOrDefault(className, className);
+    private String generateInvokes(CallInstruction callInstruction) {
+        StringBuilder code = new StringBuilder();
+        String className = callInstruction.getCaller().getType().toString();
+        className = this.addImportPath(className);
 
-        return "invokespecial " + className + "/<init>";
-    }
+        String methodName = ((LiteralElement) callInstruction.getMethodName()).getLiteral();
+        methodName = methodName.substring(1, methodName.length() - 1);
 
-    private String storeAux(Operand operand) {
-        var reg = currentMethod.getVarTable().get(operand.getName());
+        Operand caller = (Operand) callInstruction.getCaller();
+        code.append(generateOperand(caller));
 
-        var prefix = types.getPrefix(operand.getType());
-        return prefix + "store " + reg.getVirtualReg() + "\n";
-    }
+        int numArgs = callInstruction.getArguments().size();
+        for(var arg : callInstruction.getArguments()){
+            code.append(generateOperand((Operand) arg));
+        }
 
-    private String loadAux(Operand operand){
-        var reg = currentMethod.getVarTable().get(operand.getName());
+        addStack(-numArgs);
+        if(callInstruction instanceof InvokeSpecialInstruction){
+            code.append("invokespecial ");
+            addStack(-1);
+            code.append(className).append("/<init>");
+        }
+        else if(callInstruction instanceof InvokeStaticInstruction || callInstruction instanceof InvokeVirtualInstruction){
+            if(callInstruction instanceof InvokeStaticInstruction){
+                code.append("invokestatic ");
+            }
+            else{
+                code.append("invokevirtual ");
+                addStack(-1);
+            }
+            code.append(className).append("/").append(methodName);
+        }
+        else{
+            throw new NotImplementedException("Type not implemented: " + callInstruction);
+        }
 
-        var prefix = types.getPrefix(operand.getType());
-        return prefix + "load " + reg.getVirtualReg() + "\n";
+        code.append("(");
+
+        for (var arg : callInstruction.getArguments()) {
+            code.append(types.getDescriptor(arg.getType()));
+        }
+
+        String return_type = types.getDescriptor(callInstruction.getReturnType());
+        code.append(")").append(return_type).append(NL);
+
+        if (!return_type.equals("V")) {
+            addStack(1);
+        }
+
+        return code.toString();
     }
 
     private String generatePutFieldInstruction(PutFieldInstruction method){
@@ -448,7 +484,8 @@ public class JasminGenerator {
             usedLocals.set(reg.getVirtualReg(), 0);
         }
 
-        code.append("along");
+        code.append("aload");
+
         if(reg.getVirtualReg() <= 3 && reg.getVirtualReg() >= 0){
             code.append("_");
         }
@@ -480,7 +517,8 @@ public class JasminGenerator {
             usedLocals.set(reg.getVirtualReg(), 0);
         }
 
-        code.append("along");
+        code.append("aload");
+
         if(reg.getVirtualReg() <= 3 && reg.getVirtualReg() >= 0){
             code.append("_");
         }
@@ -504,5 +542,24 @@ public class JasminGenerator {
         name = name.substring(name.lastIndexOf("(") + 1, name.length() - 1);
         return name + "/" + field.getName();
     }
+
+    private String generateCallInstruction(CallInstruction call) {
+
+        if(call instanceof NewInstruction){
+            return generateNewInstruction((NewInstruction) call);
+        }
+        else if(call instanceof InvokeSpecialInstruction || call instanceof InvokeStaticInstruction || call instanceof InvokeVirtualInstruction){
+            return generateInvokes(call);
+        }
+
+        throw new NotImplementedException("Type not implemented: " + call);
+    }
+
+    private String addImportPath(String className){
+        className = className.substring(className.lastIndexOf("(") + 1, className.length() - 1);
+        className = imports.getOrDefault(className, className);
+        return className;
+    }
+
 
 }
