@@ -213,14 +213,11 @@ public class JasminGenerator {
         code.append(instructions);
         code.append(".end method\n\n");
 
-        System.out.println("METHOD LOCALS " + limitLocals);
-
         // unset method
         currentMethod = null;
         this.maxStack = 0;
         this.maxLocals = 0;
         usedLocals.clear();
-        System.out.println("ENDING METHOD " + method.getMethodName());
         return code.toString();
     }
 
@@ -509,13 +506,6 @@ public class JasminGenerator {
                 code.append(className).append("/").append(methodName);
                 addStack(-1);
             }
-            //To create the ArrayInit/method or ioPlus/method
-            if (caller.getName().equals("this")){
-                code.append(className);
-            }else{
-                code.append(caller.getName());
-            }
-            code.append("/").append(methodName);
         }
         else{
             throw new NotImplementedException("Type not implemented: " + callInstruction);
@@ -560,23 +550,23 @@ public class JasminGenerator {
         StringBuilder code = new StringBuilder();
         Descriptor reg = currentMethod.getVarTable().get(method.getField().getName());
 
-        addLocals(reg.getVirtualReg());
         addStack(1);
-
-        if (reg.getVirtualReg() < usedLocals.size() ){
-            usedLocals.set(reg.getVirtualReg(), 0);
-        }
 
         code.append("aload");
 
-        if(reg.getVirtualReg() <= 3 && reg.getVirtualReg() >= 0){
+        if(reg.getVirtualReg() <= 3){  //  && reg.getVirtualReg() >= 0 because if register is negative it means its a field belonging to this which makes it aload_0
             code.append("_");
         }
         else{
             code.append(" ");
         }
 
-        code.append(reg.getVirtualReg()).append(NL);
+        if (reg.getVirtualReg() < 0){ //for negative registers like fields , must be _0
+            code.append("0").append(NL);
+        }else{
+            code.append(reg.getVirtualReg()).append(NL);
+        }
+
         code.append(generators.apply(method.getValue()));
         code.append("putfield ");
 
@@ -593,23 +583,23 @@ public class JasminGenerator {
         StringBuilder code = new StringBuilder();
         Descriptor reg = currentMethod.getVarTable().get(method.getField().getName());
 
-        addLocals(reg.getVirtualReg());
         addStack(1);
-
-        if (reg.getVirtualReg() < usedLocals.size() ){
-            usedLocals.set(reg.getVirtualReg(), 0);
-        }
 
         code.append("aload");
 
-        if(reg.getVirtualReg() <= 3 && reg.getVirtualReg() >= 0){
+        if(reg.getVirtualReg() <= 3){  //  && reg.getVirtualReg() >= 0 because if register is negative it means its a field belonging to this which makes it aload_0
             code.append("_");
         }
         else{
             code.append(" ");
         }
 
-        code.append(reg.getVirtualReg()).append(NL);
+        if (reg.getVirtualReg() < 0){ //for negative registers like fields , must be _0
+            code.append("0").append(NL);
+        }else{
+            code.append(reg.getVirtualReg()).append(NL);
+        }
+
         code.append("getfield ");
 
         code.append(ClassFieldName(method.getObject(), method.getField())).append(" ");
