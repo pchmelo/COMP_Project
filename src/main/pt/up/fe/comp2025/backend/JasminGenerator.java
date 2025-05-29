@@ -4,6 +4,8 @@ import org.specs.comp.ollir.*;
 import org.specs.comp.ollir.inst.*;
 import org.specs.comp.ollir.tree.TreeNode;
 import org.specs.comp.ollir.type.ArrayType;
+import org.specs.comp.ollir.type.BuiltinType;
+import org.specs.comp.ollir.type.Type;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp2025.optimization.OptUtils;
@@ -12,6 +14,7 @@ import pt.up.fe.specs.util.classmap.FunctionClassMap;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 import pt.up.fe.specs.util.utilities.StringLines;
 
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -150,9 +153,9 @@ public class JasminGenerator {
                     return
                 .end method
                 """.formatted(superClass);
-                code.append(defaultConstructor);
+                code.append(defaultConstructor).append("\n");
             }else{
-                code.append(apply(method));
+                code.append(apply(method)).append("\n");
             }
         }
 
@@ -292,9 +295,6 @@ public class JasminGenerator {
     private String generateAssign(AssignInstruction assign) {
         var code = new StringBuilder();
 
-        // generate code for loading what's on the right
-        code.append(apply(assign.getRhs()));
-
         // store value in the stack in destination
         var lhs = assign.getDest();
 
@@ -303,6 +303,14 @@ public class JasminGenerator {
         }
 
         var operand = (Operand) lhs;
+
+        if (operand.toString().contains("ArrayOperand")){
+            code.append(this.generateStoreAssignArray(operand, assign));
+            return code.toString();
+        }
+
+        // generate code for loading what's on the right
+        code.append(apply(assign.getRhs()));
 
         code.append(this.generateStoreAssign(operand)).append(NL);
         return code.toString();
@@ -317,7 +325,29 @@ public class JasminGenerator {
             usedLocals.set(reg.getVirtualReg(), 0);
         }
 
-        return types.getStoreInstruction(operand.getType(), reg.getVirtualReg());
+        Type operandType = operand.getType();
+
+        return types.getStoreInstruction(operandType, reg.getVirtualReg());
+    }
+
+    private String generateStoreAssignArray(Operand operand , AssignInstruction assign) {
+        StringBuilder code = new StringBuilder();
+
+        operand.getName();
+        //dar load do array antes de tudo
+        currentMethod.getVarTable().get(operand.getName());
+        code.append(generateOperand(operand));
+
+        //dar load do temp1
+        var indexOperand = (Operand) operand.getChildren().getFirst();
+        code.append(generateOperand(indexOperand));
+
+        //generate code for loading what's on the right
+        code.append(apply(assign.getRhs()));
+
+        Type operandType = operand.getType();
+        code.append(types.getStoreInstructionForArray(operandType));
+        return code.toString();
     }
 
     private String generateSingleOp(SingleOpInstruction singleOp) {
@@ -353,7 +383,11 @@ public class JasminGenerator {
         String prefix = types.getPrefixStoreLoad(operand.getType());
         String suffix = " ";
 
-        if((reg.getVirtualReg() == 0 || reg.getVirtualReg() == 1 || reg.getVirtualReg() == 2 || reg.getVirtualReg() == 3)  && prefix.equals("i")){
+        if (operand.toString().contains("ArrayOperand")){
+            prefix = "a";
+        }
+
+        if((reg.getVirtualReg() == 0 || reg.getVirtualReg() == 1 || reg.getVirtualReg() == 2 || reg.getVirtualReg() == 3)){  //  && prefix.equals("i")
             suffix = "_";
         }
         return prefix + "load" + suffix + reg.getVirtualReg() + "\n";
@@ -425,6 +459,10 @@ public class JasminGenerator {
             addStack(1);
             addStack(-1);
 
+            //if ollir is storing the params as a temp , and then it stores the temp, we must load it again
+            Operand argumentOperand = (Operand) newInst.getArguments().getFirst();
+            code.append(generateOperand(argumentOperand));
+
             var typeCode = types.getArrayType(arrayType.getElementType());
             code.append("newarray " + typeCode + "\n");
             return code.toString();
@@ -471,6 +509,13 @@ public class JasminGenerator {
                 code.append(className).append("/").append(methodName);
                 addStack(-1);
             }
+            //To create the ArrayInit/method or ioPlus/method
+            if (caller.getName().equals("this")){
+                code.append(className);
+            }else{
+                code.append(caller.getName());
+            }
+            code.append("/").append(methodName);
         }
         else{
             throw new NotImplementedException("Type not implemented: " + callInstruction);
@@ -489,6 +534,25 @@ public class JasminGenerator {
             addStack(1);
         }
 
+        return code.toString();
+    }
+
+    private String generateLengthInstruction (CallInstruction callInstruction){
+        StringBuilder code = new StringBuilder();
+
+        Operand caller = (Operand) callInstruction.getCaller();
+        code.append(generateOperand(caller));
+
+        code.append("arraylength\n");
+
+        //TODO: ns  se é necessário ter o name da operation - AFINAL ISTO NAO É NECESSÁRIO FOR SOME REASON :(
+       /* ArrayType tipo = (ArrayType) caller.getType();
+        Type tipo_elem = tipo.getElementType();
+        Operand storeOperand = new Operand("temp1",tipo_elem);
+        code.append(generateStoreAssign(storeOperand));
+       // for (a : currentMethod.getVarTable().){
+
+        //}*/
         return code.toString();
     }
 
@@ -569,6 +633,9 @@ public class JasminGenerator {
         }
         else if(call instanceof InvokeSpecialInstruction || call instanceof InvokeStaticInstruction || call instanceof InvokeVirtualInstruction){
             return generateInvokes(call);
+        }
+        else if(call instanceof ArrayLengthInstruction){
+            return generateLengthInstruction(call);
         }
 
         throw new NotImplementedException("Type not implemented: " + call);
