@@ -75,6 +75,13 @@ public class JasminUtils {
         throw new NotImplementedException("Type not implemented: " + type);
     }
 
+    public String getStoreInstructionForArray(Type type) {
+        StringBuilder code = new StringBuilder();
+        code.append(getPrefixStoreLoad(type));
+        code.append("astore");
+        return code.toString();
+    }
+
     public String getStoreInstruction(Type type, Integer reg) {
         StringBuilder code = new StringBuilder();
         code.append(getPrefixStoreLoad(type));
@@ -106,6 +113,9 @@ public class JasminUtils {
             };
         }
         if(type instanceof ClassType){
+            prefix.append("a");
+        }
+        if (type instanceof ArrayType){
             prefix.append("a");
         }
         return prefix.toString();
