@@ -112,4 +112,56 @@ public class JasminUtils {
     }
 
 
+    public String BinaryOperationType(OperationType type){
+        switch (type){
+            case ADD-> {
+                return "iadd";
+            }
+            case MUL -> {
+                return "imul";
+            }
+            case DIV -> {
+                return "idiv";
+            }
+            case SUB, LTE, LTH, GTH, GTE, EQ, NEQ -> {
+                return "isub";
+            }
+            case AND -> {
+                return "iand";
+            }
+            case OR -> {
+                return "ior";
+            }
+            default -> throw new NotImplementedException("Binary operation type not implemented: " + type);
+        }
+    }
+
+    public String ComparatorGet(OperationType type){
+
+        switch (type){
+            case LTE ->{
+                return "ifle ";
+            }
+            case LTH ->{
+                return "iflt ";
+            }
+            case GTE ->{
+                return "ifge ";
+            }
+            case GTH ->{
+                return "ifgt ";
+            }
+            case EQ ->{
+                return "ifeq ";
+            }
+            case NEQ ->{
+                return "ifne ";
+            }
+            default -> {
+                return "";
+            }
+        }
+    }
+
+
 }

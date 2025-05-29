@@ -6,6 +6,7 @@ import org.specs.comp.ollir.tree.TreeNode;
 import org.specs.comp.ollir.type.ArrayType;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
+import pt.up.fe.comp2025.optimization.OptUtils;
 import pt.up.fe.specs.util.SpecsCheck;
 import pt.up.fe.specs.util.classmap.FunctionClassMap;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
@@ -14,8 +15,8 @@ import pt.up.fe.specs.util.utilities.StringLines;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-
 
 /**
  * Generates Jasmin code from an OllirResult.
@@ -23,27 +24,23 @@ import java.util.stream.Collectors;
  * One JasminGenerator instance per OllirResult.
  */
 public class JasminGenerator {
-
     private static final String NL = "\n";
     private static final String TAB = "   ";
-
     private final OllirResult ollirResult;
 
     List<Report> reports;
-
     String code;
-
     Method currentMethod;
 
     private final JasminUtils types;
-
     private final FunctionClassMap<TreeNode, String> generators;
-
     private final HashMap<String, String> imports = new HashMap<>();
 
     private int stack = 0;
     private int maxStack = 0;
     private int maxLocals = 0;
+
+    private int label_number = 0;
 
     private List<Integer> usedLocals = new ArrayList<>();
 
@@ -66,10 +63,20 @@ public class JasminGenerator {
         generators.put(BinaryOpInstruction.class, this::generateBinaryOp);
         generators.put(ReturnInstruction.class, this::generateReturn);
 
+        generators.put(ArrayOperand.class, this::generateOperandArray);
+
         //new generators
         generators.put(PutFieldInstruction.class, this::generatePutFieldInstruction);
         generators.put(GetFieldInstruction.class, this::generateGetFieldInstruction);
         generators.put(CallInstruction.class, this::generateCallInstruction);
+
+        //aritmétrica
+
+        //conditions
+        generators.put(OpCondInstruction.class, this::generateOpConditional);
+        generators.put(SingleOpCondInstruction.class, this::generateSingleOpConditional);
+        generators.put(GotoInstruction.class, this::generateGoTo);
+
     }
 
     private String apply(TreeNode node) {
@@ -182,6 +189,12 @@ public class JasminGenerator {
 
         StringBuilder instructions = new StringBuilder();
         for (var inst : method.getInstructions()) {
+            for (Map.Entry<String, Instruction> label : method.getLabels().entrySet()){
+                if (label.getValue().equals(inst)){
+                    instructions.append(TAB).append(label.getKey()).append(":").append(NL);
+                }
+            }
+
             var instCode = StringLines.getLines(apply(inst)).stream()
                     .collect(Collectors.joining(NL + TAB, TAB, NL));
 
@@ -328,7 +341,7 @@ public class JasminGenerator {
         return "ldc " + literal.getLiteral() + NL;
     }
 
-    private String generateOperand(Operand operand) {
+    private String generateOperandArray(Operand operand) {
         var reg = currentMethod.getVarTable().get(operand.getName());
         addLocals(reg.getVirtualReg());
         addStack(1);
@@ -353,21 +366,26 @@ public class JasminGenerator {
         code.append(apply(binaryOp.getLeftOperand()));
         code.append(apply(binaryOp.getRightOperand()));
 
-        addStack(-2);
-        addStack(1);
-
-        // TODO: Hardcoded for int type, needs to be expanded
-        var typePrefix = "i";
+        OperationType type = binaryOp.getOperation().getOpType();
 
         // apply operation
-        var op = switch (binaryOp.getOperation().getOpType()) {
-            case ADD -> "add";
-            case MUL -> "mul";
-            default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
-        };
+        String op = types.BinaryOperationType(type);
+        code.append(op).append(NL);
 
-        code.append(typePrefix + op).append(NL);
+        String comp = types.ComparatorGet(type);
+        if(!comp.isEmpty()){
+            code.append(comp);
 
+            String trueLabel = "L_fact" + label_number++;
+            String endLabel = "L_end" + label_number++;
+
+            code.append(trueLabel).append(NL);
+            code.append("iconst_0\ngoto ").append(endLabel).append("\n");
+            code.append(trueLabel).append(":\niconst_1\n");
+            code.append(endLabel).append(":\n");
+        }
+
+        addStack(-1);
         return code.toString();
     }
 
@@ -427,14 +445,13 @@ public class JasminGenerator {
         className = this.addImportPath(className);
 
         String methodName = ((LiteralElement) callInstruction.getMethodName()).getLiteral();
-        methodName = methodName.substring(1, methodName.length() - 1);
 
         Operand caller = (Operand) callInstruction.getCaller();
-        code.append(generateOperand(caller));
+        code.append(generators.apply(caller));
 
         int numArgs = callInstruction.getArguments().size();
-        for(var arg : callInstruction.getArguments()){
-            code.append(generateOperand((Operand) arg));
+        for(Element arg : callInstruction.getArguments()){
+            code.append(generators.apply(arg));
         }
 
         addStack(-numArgs);
@@ -446,12 +463,14 @@ public class JasminGenerator {
         else if(callInstruction instanceof InvokeStaticInstruction || callInstruction instanceof InvokeVirtualInstruction){
             if(callInstruction instanceof InvokeStaticInstruction){
                 code.append("invokestatic ");
+                String path = imports.getOrDefault(caller.getName(), caller.getName());
+                code.append(path).append("/").append(methodName);
             }
             else{
                 code.append("invokevirtual ");
+                code.append(className).append("/").append(methodName);
                 addStack(-1);
             }
-            code.append(className).append("/").append(methodName);
         }
         else{
             throw new NotImplementedException("Type not implemented: " + callInstruction);
@@ -559,6 +578,71 @@ public class JasminGenerator {
         className = className.substring(className.lastIndexOf("(") + 1, className.length() - 1);
         className = imports.getOrDefault(className, className);
         return className;
+    }
+
+    private String generateSingleOpConditional(SingleOpCondInstruction singleOpCondInstruction){
+        StringBuilder code = new StringBuilder();
+
+        code.append(generators.apply(singleOpCondInstruction.getCondition()));
+        addStack(-1);
+        code.append("ifne ");
+        code.append(singleOpCondInstruction.getLabel());
+
+        return code.toString();
+    }
+
+    private String generateGoTo(GotoInstruction gotoInstruction) {
+        StringBuilder code = new StringBuilder();
+
+        code.append("goto ");
+        code.append(gotoInstruction.getLabel());
+
+        return code.toString();
+    }
+
+    private String generateOperand(Operand operand) {
+        if (operand instanceof ArrayOperand op) {
+            return generateOperandArray(op);
+        }
+
+        Descriptor variable = currentMethod.getVarTable().get(operand.getName());
+
+        if (variable == null) {
+            return "";
+        }
+
+        addLocals(variable.getVirtualReg());
+        addStack(1);
+
+        String prefix = types.getPrefixStoreLoad(operand.getType());
+        String suffix = " ";
+
+        if((variable.getVirtualReg() == 0 || variable.getVirtualReg() == 1 || variable.getVirtualReg() == 2 || variable.getVirtualReg() == 3)  && prefix.equals("i")){
+            suffix = "_";
+        }
+        return prefix + "load" + suffix + variable.getVirtualReg() + "\n";
+    }
+
+    private String generateOpConditional(OpCondInstruction opCondInstruction) {
+        StringBuilder code = new StringBuilder();
+        Instruction condition = opCondInstruction.getCondition();
+
+        if(condition instanceof BinaryOpInstruction binaryOpInstruction){
+            code.append(generators.apply(condition));
+            code.append("ifne ");
+        }
+        else if(condition instanceof UnaryOpInstruction unaryOpInstruction){
+            code.append(generators.apply(unaryOpInstruction.getOperand()));
+            code.append("ifeq");
+        }
+        else{
+            throw new NotImplementedException("Type not implemented: " + condition);
+        }
+
+        addStack(-1);
+        code.append(opCondInstruction.getLabel());
+
+        return code.toString();
     }
 
 
