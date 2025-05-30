@@ -74,6 +74,7 @@ public class JasminGenerator {
         generators.put(CallInstruction.class, this::generateCallInstruction);
 
         //aritmétrica
+        generators.put(UnaryOpInstruction.class, this::generateUnaryOp);
 
         //conditions
         generators.put(OpCondInstruction.class, this::generateOpConditional);
@@ -287,8 +288,6 @@ public class JasminGenerator {
     }
 
 
-
-
     private String generateAssign(AssignInstruction assign) {
         var code = new StringBuilder();
 
@@ -401,6 +400,21 @@ public class JasminGenerator {
 
         // apply operation
         String op = types.BinaryOperationType(type);
+        if(op.equals("iadd")){
+            if(binaryOp.getLeftOperand() instanceof LiteralElement leftLiteral && !(binaryOp.getRightOperand() instanceof LiteralElement rightOperand)){
+                op = "iinc";
+                Integer lit = Integer.parseInt(leftLiteral.getLiteral());
+                String rightOperandName = ((Operand) binaryOp.getRightOperand()).getName();
+                op += " " + rightOperandName + " " + lit + NL;
+            }
+            else if(binaryOp.getRightOperand() instanceof LiteralElement rightLiteral && !(binaryOp.getLeftOperand() instanceof LiteralElement)){
+                op = "iinc";
+                Integer lit = Integer.parseInt(rightLiteral.getLiteral());
+                String leftOperandName = ((Operand) binaryOp.getLeftOperand()).getName();
+                op += " " + leftOperandName + " " + lit + NL;
+            }
+
+        }
         code.append(op).append(NL);
 
         String comp = types.ComparatorGet(type);
@@ -700,6 +714,15 @@ public class JasminGenerator {
         code.append(opCondInstruction.getLabel());
 
         return code.toString();
+    }
+
+    private String generateUnaryOp(UnaryOpInstruction unaryOpInstruction) {
+        StringBuilder code = new StringBuilder();
+        code.append(generators.apply(unaryOpInstruction.getOperand()));
+        addStack(1);
+        addStack(-1);
+
+        return code.append("iconst_1").append(NL).append("ixor").append(NL).toString();
     }
 
 
