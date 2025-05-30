@@ -23,6 +23,8 @@ public class OptUtils {
 
     private int whiles;
 
+    private int ands;
+
     private final TypeUtils types;
 
     public OptUtils(TypeUtils types) {
@@ -30,6 +32,7 @@ public class OptUtils {
         this.temporaries = new AccumulatorMap<>();
         this.thens = -1;
         this.whiles = -1;
+        this.ands = -1;
     }
 
     public int nextThen() {
@@ -42,6 +45,12 @@ public class OptUtils {
         // Subtract 1 because the base is 1
         whiles++;
         return whiles;
+    }
+
+    public int nextAnd() {
+        // Subtract 1 because the base is 1
+        ands++;
+        return ands;
     }
 
     public int previousThen() {

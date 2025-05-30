@@ -1,0 +1,8 @@
+import Dummy;
+class A {
+    public int bar(Dummy c) {
+          int a;
+          a = c.foo();
+          return a;
+    }
+}

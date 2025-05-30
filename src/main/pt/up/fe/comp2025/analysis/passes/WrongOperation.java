@@ -437,6 +437,12 @@ public class WrongOperation extends AnalysisVisitor {
                     return null;
                 }
 
+                //when class A extends B  and int c; A a; c = a.add(10); (A doesn't have method add)  must pass
+                String typeOfVariableCallingMethod = types.getExprType(rightExpression.getChild(0), table, currentMethod).getName();
+                if (typeOfVariableCallingMethod.equals(table.getClassName()) && !table.getSuper().isEmpty()){
+                    return null;
+                }
+
                 if((!table.getImports().contains(val0.getName())) && (!table.getSuper().equals(val0.getName()))){
                     var message = "Type error: cannot assign " + val0.getName() + " type with " + val1.getName() + " type";
                     addReport(Report.newError(

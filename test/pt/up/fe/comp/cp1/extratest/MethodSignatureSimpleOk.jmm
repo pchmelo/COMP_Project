@@ -1,0 +1,9 @@
+class A {
+    void f1(int a, boolean b) {
+    }
+
+    void f2() {
+        f1(1, true);
+    }
+
+}

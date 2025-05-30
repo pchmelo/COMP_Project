@@ -8,6 +8,8 @@ import pt.up.fe.comp2025.analysis.AnalysisVisitor;
 import pt.up.fe.comp2025.ast.Kind;
 import pt.up.fe.specs.util.SpecsCheck;
 
+import java.util.Map;
+
 /**
  * Checks if the type of the expression in a return statement is compatible with the method return type.
  *
@@ -84,8 +86,25 @@ public class UndeclaredVariable extends AnalysisVisitor {
             return null;
         }
 
+        // Var is a field variable, return if method is not static
         if (table.getFields().stream()
                 .anyMatch(field -> field.getName().equals(varRefName))) {
+
+            Map<String, Boolean> staticMethods = (Map<String, Boolean>) table.getObject("staticMethods");
+            boolean isMethodStatic = staticMethods.get(currentMethod);
+
+            if (isMethodStatic){
+                // Create error report
+                var message = String.format("Field '%s' can't be used by static methods", varRefName);
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        varRefExpr.getLine(),
+                        varRefExpr.getColumn(),
+                        message,
+                        null)
+                );
+            }
+
             return null;
         }
 

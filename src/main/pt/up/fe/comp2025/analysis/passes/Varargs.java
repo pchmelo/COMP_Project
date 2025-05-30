@@ -226,7 +226,7 @@ public class Varargs extends AnalysisVisitor {
 
                 if(!table.getParameters(methodName).get(i).getType().getAttributes().isEmpty()){
                     isVarArg = true;
-                    varagType = table.getParameters(methodName).get(i).getType().getName();
+                    varagType = table.getParameters(methodName).getLast().getType().getName();
                 }
                 currentParamType = parameters.get(i).getType();
                 if(!currentParamType.getName().equals(sendedParamType.getName())){
@@ -246,7 +246,7 @@ public class Varargs extends AnalysisVisitor {
                         );
 
                 }
-
+                continue;
             }
             else if(!isVarArg){
                 var message = String.format("Method call has more arguments than the method declared");

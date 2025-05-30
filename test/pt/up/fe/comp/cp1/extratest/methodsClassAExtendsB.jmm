@@ -1,0 +1,14 @@
+import B;
+
+class A extends B {
+    static void main(String[] args) {
+        int k;
+        A mc;
+        mc = new A();
+        k = mc.add(10);
+        mc.foo();
+    }
+    int foo(){
+        return this.add(20);
+    }
+}

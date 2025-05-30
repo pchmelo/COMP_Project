@@ -8,6 +8,7 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2025.ast.TypeUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private final SymbolTable table;
 
     private final TypeUtils types;
-    private final OptUtils ollirTypes;
+    private OptUtils ollirTypes;
 
 
     private final OllirExprGeneratorVisitor exprVisitor;
@@ -133,6 +134,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
     private String visitIfStmt(JmmNode node, Void unused) {
+        this.ollirTypes = exprVisitor.getOllirTypes();
+
         int size = node.getChildren().size();
         int tempNums = ollirTypes.currentThen();
         String ifCurrentSpace = currentSpace;
@@ -314,7 +317,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         JmmNode typeChild = node.getChild(0);
         String typeCode;
         if (typeChild.getKind().equals("ClassType")){
-            typeCode = "classe_of_Type";
+            typeCode = "." + typeChild.getObject("name");
         }else{
             typeCode = ollirTypes.toOllirType(typeChild);
         }

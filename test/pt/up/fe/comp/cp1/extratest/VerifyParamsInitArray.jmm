@@ -1,0 +1,7 @@
+class A {
+
+    void f1(boolean a, int[] b) {}
+
+    void f2() { this.f1(false, [1,2]); }
+
+}

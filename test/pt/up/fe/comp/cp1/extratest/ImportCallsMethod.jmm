@@ -1,0 +1,6 @@
+import B;
+class A {
+  static void main(String[] args) {
+    B.println(1);
+  }
+}

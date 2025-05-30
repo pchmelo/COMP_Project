@@ -1,0 +1,10 @@
+class A {
+
+    boolean f() {
+        boolean a;
+        a = false && true;
+
+        return a;
+    }
+
+}

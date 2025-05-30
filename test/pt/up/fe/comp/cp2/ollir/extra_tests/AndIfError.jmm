@@ -1,0 +1,13 @@
+class A {
+
+    void f() {
+        boolean a;
+        a = true && false;
+        if (a) {
+
+        } else {
+
+        }
+
+    }
+}
