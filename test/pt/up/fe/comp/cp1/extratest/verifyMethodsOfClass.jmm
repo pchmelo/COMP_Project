@@ -1,0 +1,9 @@
+import B;
+
+class A {
+  void f() {
+      B b;
+      b = new B();
+      b.f();
+  }
+}

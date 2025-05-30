@@ -199,5 +199,59 @@ public class OllirExtraTest {
         var result = getOllirResult("/InvokeMultiConstantsError.jmm");
     }
 
+    @Test
+    public void AndLessThanError() { //must check if LTH or "<" operations are only 2
+        var result = getOllirResult("/AndLessThanError.jmm");
 
+        var method = CpUtils.getMethod(result, "f");
+
+        var branches = CpUtils.assertInstExists(CondBranchInstruction.class, method, result);
+        CpUtils.assertTrue("Number of branches", branches.size() >= 2, result);
+
+        var biOperations = CpUtils.assertInstExists(BinaryOpInstruction.class, method, result);
+        CpUtils.assertTrue("Has at least 1 goto", biOperations.size() >= 2, result);
+    }
+
+    @Test
+    public void AndError() {
+        var result = getOllirResult("/AndError.jmm");
+
+        var method = CpUtils.getMethod(result, "f");
+
+        var branches = CpUtils.assertInstExists(CondBranchInstruction.class, method, result);
+        CpUtils.assertTrue("Number of branches equals 1", branches.size() == 1, result);
+
+        var gotos = CpUtils.assertInstExists(GotoInstruction.class, method, result);
+        CpUtils.assertTrue("Has 1 goto", gotos.size() == 1, result);
+    }
+
+    @Test
+    public void AndIfError() {
+        var result = getOllirResult("/AndIfError.jmm");
+
+        var method = CpUtils.getMethod(result, "f");
+
+        var branches = CpUtils.assertInstExists(CondBranchInstruction.class, method, result);
+        CpUtils.assertTrue("Number of branches", branches.size() >= 2, result);
+
+        var gotos = CpUtils.assertInstExists(GotoInstruction.class, method, result);
+        CpUtils.assertTrue("Has at least 2 goto", gotos.size() >= 2, result);
+    }
+
+    @Test
+    public void AssignMethodNoParamsError() {
+        var result = getOllirResult("/AssignMethodNoParamsError.jmm");
+
+        var method = CpUtils.getMethod(result, "bar");
+
+        var branches = CpUtils.assertInstExists(CallInstruction.class, method, result);
+        CpUtils.assertTrue("Number of calls", branches.size() == 1, result);
+
+        var callInst = CpUtils.assertInstExists(CallInstruction.class, method, result);
+        CpUtils.assertTrue("Call instruction in method bar must be 1", callInst.size() == 1, result);
+
+        var invInst = CpUtils.assertInstExists(InvokeVirtualInstruction.class, method, result);
+        CpUtils.assertTrue("Call instruction in method bar must be 1", invInst.size() == 1, result);
+
+    }
 }

@@ -557,4 +557,58 @@ public class ExtraTests {
         TestUtils.noErrors(result);
     }
 
+    @Test
+    public void  methodSignatureSimpleOk(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MethodSignatureSimpleOk.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void MethodSignatureWrongNumberOk(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/MethodSignatureWrongNumberOk.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void methodSignatureWrongTypesOk(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/methodSignatureWrongTypesOk.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void StaticMethodCantAcessField(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/StaticMethodCantAcessField.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void verifyMethodsOfClass(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/verifyMethodsOfClass.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void VerifyParamsInitArray(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/VerifyParamsInitArray.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void methodsClassAExtendsB(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/methodsClassAExtendsB.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void ImportCallsMethod(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/ImportCallsMethod.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void AssignImportCallsMethod(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/AssignImportCallsMethod.jmm"));
+        TestUtils.noErrors(result);
+    }
+
 }
