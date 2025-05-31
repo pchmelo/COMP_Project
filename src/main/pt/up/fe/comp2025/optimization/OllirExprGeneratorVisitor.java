@@ -349,12 +349,12 @@ d.io :=.io tmp0.io;*/
                 Type resType = types.valueFromVarReturner(node.getParent().get("name"),table,currentMethod).getType();
                 resOllirType = ollirTypes.toOllirType(resType);
                 code += ollirTypes.nextTemp() + resOllirType;
-                computation.append(code + SPACE + ASSIGN + resOllirType + SPACE);
+                computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE);
             }else{
                 Type resType = types.getExprType(node.getParent(),table,currentMethod);
                 resOllirType = ollirTypes.toOllirType(resType);
                 code += ollirTypes.nextTemp() + resOllirType;
-                computation.append(code + SPACE + ASSIGN + resOllirType + SPACE);
+                computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE);
             }
         }else{
             computation.append(TAB);
@@ -374,7 +374,7 @@ d.io :=.io tmp0.io;*/
             computation.append("invokestatic(");
         }
 
-        computation.append( lhsCode + ", \"" + methodName + "\"" + rhsCode + R_PAREN + returnTypeMethodCall );
+        computation.append(lhsCode).append(", \"").append(methodName).append("\"").append(rhsCode).append(R_PAREN).append(returnTypeMethodCall);
         return new OllirExprResult(code, computation.toString());
     }
 

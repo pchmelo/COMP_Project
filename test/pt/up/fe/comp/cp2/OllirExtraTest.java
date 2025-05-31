@@ -1,23 +1,13 @@
 package pt.up.fe.comp.cp2;
 
 import org.junit.Test;
-import org.specs.comp.ollir.ArrayOperand;
-import org.specs.comp.ollir.ClassUnit;
-import org.specs.comp.ollir.Method;
-import org.specs.comp.ollir.OperationType;
 import org.specs.comp.ollir.inst.*;
-import org.specs.comp.ollir.type.BuiltinKind;
 import pt.up.fe.comp.CpUtils;
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.specs.util.SpecsIo;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.stream.Collectors;
-
 import static org.hamcrest.CoreMatchers.hasItem;
-import static org.junit.Assert.*;
 
 public class OllirExtraTest {
 
@@ -103,6 +93,29 @@ public class OllirExtraTest {
 
         var gotos = CpUtils.assertInstExists(GotoInstruction.class, method, result);
         CpUtils.assertTrue("Has at least 1 goto", gotos.size() >= 1, result);
+    }
+
+    @Test
+    public void IfWhileError() {
+        var result = getOllirResult("/IfWhileError.jmm");
+
+        var method = CpUtils.getMethod(result, "main");
+
+        var branches = CpUtils.assertInstExists(CondBranchInstruction.class, method, result);
+        CpUtils.assertTrue("Number of branches", branches.size() >= 6, result);
+
+        var gotos = CpUtils.assertInstExists(GotoInstruction.class, method, result);
+        CpUtils.assertTrue("Has at least 1 goto", gotos.size() >= 3, result);
+    }
+
+    @Test
+    public void WhileSimple() {
+        var result = getOllirResult("/WhileSimple.jmm");
+    }
+
+    @Test
+    public void WhileSimple2() {
+        var result = getOllirResult("/WhileSimple2.jmm");
     }
 
     //TODO: Postfix TESTS
@@ -253,5 +266,90 @@ public class OllirExtraTest {
         var invInst = CpUtils.assertInstExists(InvokeVirtualInstruction.class, method, result);
         CpUtils.assertTrue("Call instruction in method bar must be 1", invInst.size() == 1, result);
 
+    }
+
+    @Test
+    public void AddError() {
+        var result = getOllirResult("/AddError.jmm");
+
+        var method = CpUtils.getMethod(result, "foo");
+
+        var ops = CpUtils.assertInstExists(BinaryOpInstruction.class, method, result);
+        CpUtils.assertTrue("Number of ops", ops.size() == 3, result);
+    }
+
+    @Test
+    public void DivError() {
+        var result = getOllirResult("/DivError.jmm");
+
+        var method = CpUtils.getMethod(result, "foo");
+
+        var ops = CpUtils.assertInstExists(BinaryOpInstruction.class, method, result);
+        CpUtils.assertTrue("Number of ops", ops.size() == 15, result);
+    }
+
+    @Test
+    public void BinaryError() {
+        var result = getOllirResult("/BinaryError.jmm");
+
+        var method = CpUtils.getMethod(result, "foo");
+
+        var ops = CpUtils.assertInstExists(BinaryOpInstruction.class, method, result);
+        CpUtils.assertTrue("Number of ops", ops.size() == 4, result);
+    }
+
+    @Test
+    public void ParamsError() {
+        var result = getOllirResult("/ParamsError.jmm");
+
+        var method = CpUtils.getMethod(result, "main");
+
+        var calls = CpUtils.assertInstExists(CallInstruction.class, method, result);
+        CpUtils.assertTrue("Number of calls", calls.size() == 9, result);
+
+        var invInst = CpUtils.assertInstExists(InvokeVirtualInstruction.class, method, result);
+        CpUtils.assertTrue("Invoke instruction in method main must be 3", invInst.size() == 3, result);
+    }
+
+    @Test
+    public void ParamsError2() {
+        var result = getOllirResult("/ParamsError2.jmm");
+
+        var method = CpUtils.getMethod(result, "main");
+
+        var calls = CpUtils.assertInstExists(CallInstruction.class, method, result);
+        CpUtils.assertTrue("Number of calls", calls.size() == 3, result);
+
+        var newInst = CpUtils.assertInstExists(NewInstruction.class, method, result);
+        CpUtils.assertTrue("New instruction in method main must be 1", newInst.size() == 1, result);
+
+        var invInst = CpUtils.assertInstExists(InvokeVirtualInstruction.class, method, result);
+        CpUtils.assertTrue("Invoke instruction in method main must be 1", invInst.size() == 1, result);
+
+        var spcInst = CpUtils.assertInstExists(InvokeSpecialInstruction.class, method, result);
+        CpUtils.assertTrue("Special instruction in method main must be 1", spcInst.size() == 1, result);
+
+        var ops = CpUtils.assertInstExists(BinaryOpInstruction.class, method, result);
+        CpUtils.assertTrue("Number of ops", ops.size() == 2, result);
+
+        var uniOps = CpUtils.assertInstExists(UnaryOpInstruction.class, method, result);
+        CpUtils.assertTrue("Number of uniOps", uniOps.size() == 1, result);
+
+        var branches = CpUtils.assertInstExists(CondBranchInstruction.class, method, result);
+        CpUtils.assertTrue("Number of branches", branches.size() >= 2, result);
+    }
+
+    @Test
+    public void CallingImportError() {
+        var result = getOllirResult("/CallingImportError.jmm");
+
+        var method = CpUtils.getMethod(result, "main");
+
+        var calls = CpUtils.assertInstExists(CallInstruction.class, method, result);
+        CpUtils.assertTrue("Number of calls", calls.size() > 3, result);
+        CpUtils.assertTrue("Number of calls", calls.size() < 6, result);
+
+        var invInst = CpUtils.assertInstExists(InvokeVirtualInstruction.class, method, result);
+        CpUtils.assertTrue("Invoke instruction in method main must be 2", invInst.size() == 2, result);
     }
 }

@@ -134,7 +134,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
     private String visitIfStmt(JmmNode node, Void unused) {
-        this.ollirTypes = exprVisitor.getOllirTypes();
+        //this.ollirTypes = exprVisitor.getOllirTypes();
 
         int size = node.getChildren().size();
         int tempNums = ollirTypes.currentThen();
@@ -169,7 +169,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append(currentSpace).append(endNameInside).append(COLON).append(NL);
             ifSpace.delete(0,3);
             currentSpace = ifSpace.toString();
-            tempNums = ollirTypes.previousThen();
+            tempNums -= 1;  //ollirTypes.previousThen();
         }
 
         currentSpace = ifCurrentSpace;

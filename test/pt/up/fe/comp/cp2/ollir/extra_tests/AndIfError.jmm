@@ -1,13 +1,14 @@
 class A {
 
-    void f() {
+    int f() {
+        int result;
         boolean a;
         a = true && false;
         if (a) {
-
+            result = 2;
         } else {
-
+            result = 4;
         }
-
+        return result;
     }
 }

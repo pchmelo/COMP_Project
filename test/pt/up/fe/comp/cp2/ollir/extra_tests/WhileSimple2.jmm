@@ -1,0 +1,11 @@
+class A {
+    static void main(String[] args) {
+        int i;
+        i = 0;
+        while (i < 3) {
+            if(i > 2){
+                i += 1;
+            }
+        }
+    }
+}

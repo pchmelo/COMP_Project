@@ -1,0 +1,11 @@
+import B;
+
+class A {
+    static void main(String[] args){
+        int c;
+        B b;
+        b = new B();
+        c = b.bar();
+        c = b.foo(5);
+    }
+}
