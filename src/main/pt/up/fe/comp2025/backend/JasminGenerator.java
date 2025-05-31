@@ -46,6 +46,7 @@ public class JasminGenerator {
     private int label_number = 0;
 
     private List<Integer> usedLocals = new ArrayList<>();
+    private String current_assign;
 
     public JasminGenerator(OllirResult ollirResult) {
         this.ollirResult = ollirResult;
@@ -298,7 +299,9 @@ public class JasminGenerator {
             throw new NotImplementedException(lhs.getClass());
         }
 
-        var operand = (Operand) lhs;
+        Operand operand = (Operand) lhs;
+
+        this.current_assign = operand.getName();
 
         if (operand.toString().contains("ArrayOperand")){
             code.append(this.generateStoreAssignArray(operand, assign));
@@ -313,6 +316,7 @@ public class JasminGenerator {
     }
 
     private String generateStoreAssign(Operand operand) {
+
         Descriptor reg = currentMethod.getVarTable().get(operand.getName());
         this.addLocals(reg.getVirtualReg());
         this.addStack(-1);
@@ -328,6 +332,7 @@ public class JasminGenerator {
 
     private String generateStoreAssignArray(Operand operand , AssignInstruction assign) {
         StringBuilder code = new StringBuilder();
+        this.current_assign = operand.getName();
 
         operand.getName();
         //dar load do array antes de tudo
@@ -402,16 +407,22 @@ public class JasminGenerator {
         String op = types.BinaryOperationType(type);
         if(op.equals("iadd")){
             if(binaryOp.getLeftOperand() instanceof LiteralElement leftLiteral && !(binaryOp.getRightOperand() instanceof LiteralElement rightOperand)){
-                op = "iinc";
-                Integer lit = Integer.parseInt(leftLiteral.getLiteral());
                 String rightOperandName = ((Operand) binaryOp.getRightOperand()).getName();
-                op += " " + rightOperandName + " " + lit + NL;
+                if(this.current_assign.equals(rightOperandName)){
+                    Integer reg = this.currentMethod.getVarTable().get(rightOperandName).getVirtualReg();
+                    op = "iinc";
+                    Integer lit = Integer.parseInt(leftLiteral.getLiteral());
+                    op += " " + reg + " " + lit + NL;
+                }
             }
             else if(binaryOp.getRightOperand() instanceof LiteralElement rightLiteral && !(binaryOp.getLeftOperand() instanceof LiteralElement)){
-                op = "iinc";
-                Integer lit = Integer.parseInt(rightLiteral.getLiteral());
                 String leftOperandName = ((Operand) binaryOp.getLeftOperand()).getName();
-                op += " " + leftOperandName + " " + lit + NL;
+                if(this.current_assign.equals(leftOperandName)){
+                    Integer reg = this.currentMethod.getVarTable().get(leftOperandName).getVirtualReg();
+                    op = "iinc";
+                    Integer lit = Integer.parseInt(rightLiteral.getLiteral());
+                    op += " " + reg + " " + lit + NL;
+                }
             }
 
         }
