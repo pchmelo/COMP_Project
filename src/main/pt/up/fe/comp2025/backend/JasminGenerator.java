@@ -163,20 +163,21 @@ public class JasminGenerator {
         return code.toString();
     }
 
-    private int generateLimitLocals(String methodName){
-        int limitLocals = 0;
-        for (Method method : ollirResult.getOllirClass().getMethods()){
-            if (method.getMethodName().equals(methodName)){
-                limitLocals = method.getVarTable().size(); //-1 because we are not counting the this local variable that is included in each instance method
+    private int generateLimitLocals(Method method){
+        int index = 0;
+        if (!method.isStaticMethod()) {
+            //set this as always used
+            usedLocals.add(0);
+            index = 1;
+        }
+        for (int i = index; i < method.getVarTable().size(); i++){
+            if (i < method.getParams().size()){  //params must be always on stack as used even if not actually used
                 usedLocals.add(0);
-                for (int i = 1; i < method.getVarTable().size(); i++){
-                    usedLocals.add(-1);
-                }
-                break;
+            }else {
+                usedLocals.add(-1);
             }
         }
-
-        return limitLocals;
+        return usedLocals.size();
     }
 
 
@@ -188,8 +189,7 @@ public class JasminGenerator {
         var code = new StringBuilder();
         code.append(this.getMethodHeader(method));
 
-        var methodName = method.getMethodName();
-        int limitLocals = generateLimitLocals(methodName); //obrigatorio antes das instruções
+        int limitLocals = generateLimitLocals(method); //obrigatorio antes das instruções
 
         StringBuilder instructions = new StringBuilder();
         for (var inst : method.getInstructions()) {
@@ -549,6 +549,10 @@ public class JasminGenerator {
 
         code.append("arraylength\n");
 
+        //put the variable caller inside the usedLocals since it was used to call method
+        int nRegCaller = currentMethod.getVarTable().get(caller.getName()).getVirtualReg();
+        usedLocals.set(nRegCaller,0);
+
         //TODO: ns  se é necessário ter o name da operation - AFINAL ISTO NAO É NECESSÁRIO FOR SOME REASON :(
        /* ArrayType tipo = (ArrayType) caller.getType();
         Type tipo_elem = tipo.getElementType();
@@ -688,7 +692,7 @@ public class JasminGenerator {
         String prefix = types.getPrefixStoreLoad(operand.getType());
         String suffix = " ";
 
-        if((variable.getVirtualReg() == 0 || variable.getVirtualReg() == 1 || variable.getVirtualReg() == 2 || variable.getVirtualReg() == 3)  && prefix.equals("i")){
+        if((variable.getVirtualReg() == 0 || variable.getVirtualReg() == 1 || variable.getVirtualReg() == 2 || variable.getVirtualReg() == 3)){ //&& prefix.equals("i")
             suffix = "_";
         }
         return prefix + "load" + suffix + variable.getVirtualReg() + "\n";
