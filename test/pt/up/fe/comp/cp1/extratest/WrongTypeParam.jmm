@@ -1,0 +1,12 @@
+class Field {
+
+    int foo(int a, boolean b) {
+        return a;
+    }
+
+    int bar() {
+        foo(true, 1);
+        return 2;
+    }
+
+}

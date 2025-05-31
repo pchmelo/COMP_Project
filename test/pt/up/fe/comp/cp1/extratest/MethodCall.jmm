@@ -18,7 +18,7 @@ class MethodCall {
         int result;
 
         b = this.bar(10);
-        result = a.close();
+        result = a.close(9);
 
         return result;
     }
