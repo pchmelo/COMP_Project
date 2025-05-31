@@ -287,8 +287,10 @@ d.io :=.io tmp0.io;*/
         if (lhs.getKind().equals("VarRefExpr")){
             lhsCode = lhs.get("name");
             // if the variable calling function is of class, import, extend type OR has type of Class,....
-            if (lhsType.equals(table.getClassName()) || table.getImports().contains(lhsType) || table.getSuper().equals(lhsType) ){
-                lhsCode += "." + lhsType;
+            if ( !lhsCode.equals(table.getClassName()) && !table.getImports().contains(lhsCode) && !table.getSuper().equals(lhsCode)  ) {
+                if (lhsType.equals(table.getClassName()) || table.getImports().contains(lhsType) || table.getSuper().equals(lhsType)) {
+                    lhsCode += "." + lhsType;
+                }
             }
         }else{
             var lhsOllirExpr = visit(node.getChild(0));
@@ -361,7 +363,7 @@ d.io :=.io tmp0.io;*/
         }
 
         String returnTypeMethodCall = ".V";
-        if (node.getChild(0).getKind().equals("ThisExpr") || lhsType.equals(table.getClassName()) || table.getImports().contains(lhsType) || table.getSuper().equals(lhsType) ){
+        if (node.getChild(0).getKind().equals("ThisExpr") || (lhsType.equals(table.getClassName()) && !lhsCode.equals(table.getClassName()) ) || (table.getImports().contains(lhsType) && !table.getImports().contains(lhsCode))|| (table.getSuper().equals(lhsType) && !table.getSuper().equals(lhsCode) ) ){
             computation.append("invokevirtual(");
             Type methodType = table.getReturnType(methodName);
             //happens when super or import

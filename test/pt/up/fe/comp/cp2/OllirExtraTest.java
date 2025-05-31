@@ -352,4 +352,11 @@ public class OllirExtraTest {
         var invInst = CpUtils.assertInstExists(InvokeVirtualInstruction.class, method, result);
         CpUtils.assertTrue("Invoke instruction in method main must be 2", invInst.size() == 2, result);
     }
+
+
+    @Test
+    public void AriError() {
+        var result = getOllirResult("/AriError.jmm");
+    }
+
 }
