@@ -1,0 +1,8 @@
+class Field {
+    int field1;
+
+    public int bar (int a) {
+        field1 = true;
+        return 2;
+    }
+}

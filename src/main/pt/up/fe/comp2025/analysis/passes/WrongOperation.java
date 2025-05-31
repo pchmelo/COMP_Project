@@ -344,6 +344,13 @@ public class WrongOperation extends AnalysisVisitor {
                     if (type_.getName().equals("String") || type_.isArray()){
                         return null;
                     }
+
+                    //Must check if right side is method first tho
+                    //when class A extends B  and int c; A a; c = a.add(10); (A doesn't have method add)  must pass
+                    String typeOfVariableCallingMethod = types.getExprType(rightExpression.getChild(0), table, currentMethod).getName();
+                    if (typeOfVariableCallingMethod.equals(table.getClassName()) && !table.getSuper().isEmpty()){
+                        return null;
+                    }
                 }
 
                 //class = extend
@@ -434,12 +441,6 @@ public class WrongOperation extends AnalysisVisitor {
                                 null)
                         );
                     }
-                    return null;
-                }
-
-                //when class A extends B  and int c; A a; c = a.add(10); (A doesn't have method add)  must pass
-                String typeOfVariableCallingMethod = types.getExprType(rightExpression.getChild(0), table, currentMethod).getName();
-                if (typeOfVariableCallingMethod.equals(table.getClassName()) && !table.getSuper().isEmpty()){
                     return null;
                 }
 

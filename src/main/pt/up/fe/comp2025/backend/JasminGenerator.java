@@ -4,17 +4,14 @@ import org.specs.comp.ollir.*;
 import org.specs.comp.ollir.inst.*;
 import org.specs.comp.ollir.tree.TreeNode;
 import org.specs.comp.ollir.type.ArrayType;
-import org.specs.comp.ollir.type.BuiltinType;
 import org.specs.comp.ollir.type.Type;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
-import pt.up.fe.comp2025.optimization.OptUtils;
 import pt.up.fe.specs.util.SpecsCheck;
 import pt.up.fe.specs.util.classmap.FunctionClassMap;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 import pt.up.fe.specs.util.utilities.StringLines;
 
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -67,7 +64,7 @@ public class JasminGenerator {
         generators.put(BinaryOpInstruction.class, this::generateBinaryOp);
         generators.put(ReturnInstruction.class, this::generateReturn);
 
-        generators.put(ArrayOperand.class, this::generateOperandArray);
+        generators.put(ArrayOperand.class, this::generateOperandArrayGet);
 
         //new generators
         generators.put(PutFieldInstruction.class, this::generatePutFieldInstruction);
@@ -100,10 +97,6 @@ public class JasminGenerator {
         if (this.stack > maxStack) {
             maxStack = this.stack;
         }
-    }
-
-    private void addLocals(int locals) {
-        maxLocals = Math.max(maxLocals, locals + 1);
     }
 
 
@@ -318,7 +311,6 @@ public class JasminGenerator {
     private String generateStoreAssign(Operand operand) {
 
         Descriptor reg = currentMethod.getVarTable().get(operand.getName());
-        this.addLocals(reg.getVirtualReg());
         this.addStack(-1);
 
         if (reg.getVirtualReg() < usedLocals.size() ){
@@ -337,7 +329,7 @@ public class JasminGenerator {
         operand.getName();
         //dar load do array antes de tudo
         currentMethod.getVarTable().get(operand.getName());
-        code.append(generateOperand(operand));
+        code.append(generateOperandArrayRef(operand));
 
         //dar load do temp1
         var indexOperand = (Operand) operand.getChildren().getFirst();
@@ -372,9 +364,8 @@ public class JasminGenerator {
         return "ldc " + literal.getLiteral() + NL;
     }
 
-    private String generateOperandArray(Operand operand) {
+    private String generateOperandArrayRef(Operand operand) {
         var reg = currentMethod.getVarTable().get(operand.getName());
-        addLocals(reg.getVirtualReg());
         addStack(1);
 
         if (reg.getVirtualReg() < usedLocals.size() ){
@@ -392,6 +383,28 @@ public class JasminGenerator {
             suffix = "_";
         }
         return prefix + "load" + suffix + reg.getVirtualReg() + "\n";
+    }
+
+    private String generateOperandArrayGet(Operand operand) {
+        var reg = currentMethod.getVarTable().get(operand.getName());
+        addStack(1);
+
+        if (reg.getVirtualReg() < usedLocals.size() ){
+            usedLocals.set(reg.getVirtualReg(), 0);
+        }
+
+        StringBuilder code = new StringBuilder();
+        //Load array ref - yes we have to
+        code.append(generateOperandArrayRef(operand));
+
+        //Load index of array
+        code.append(generateOperand((Operand) operand.getChildren().getFirst()));
+
+        String prefix = types.getPrefixStoreLoad(operand.getType()) + "a";
+
+        String arrayLoad = prefix + "load " + "\n";
+        code.append(arrayLoad);
+        return code.toString();
     }
 
     private String generateBinaryOp(BinaryOpInstruction binaryOp) {
@@ -688,7 +701,7 @@ public class JasminGenerator {
 
     private String generateOperand(Operand operand) {
         if (operand instanceof ArrayOperand op) {
-            return generateOperandArray(op);
+            return generateOperandArrayGet(op);
         }
 
         Descriptor variable = currentMethod.getVarTable().get(operand.getName());
@@ -697,8 +710,11 @@ public class JasminGenerator {
             return "";
         }
 
-        addLocals(variable.getVirtualReg());
         addStack(1);
+
+        if (variable.getVirtualReg() < usedLocals.size() ){
+            usedLocals.set(variable.getVirtualReg(), 0);
+        }
 
         String prefix = types.getPrefixStoreLoad(operand.getType());
         String suffix = " ";
