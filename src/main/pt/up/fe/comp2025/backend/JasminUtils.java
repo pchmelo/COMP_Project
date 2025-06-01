@@ -153,7 +153,7 @@ public class JasminUtils {
                 return "ifle ";
             }
             case LTH ->{
-                return "iflt ";
+                return "if_icmplt ";
             }
             case GTE ->{
                 return "ifge ";

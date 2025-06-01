@@ -18,11 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Generates Jasmin code from an OllirResult.
- * <p>
- * One JasminGenerator instance per OllirResult.
- */
 public class JasminGenerator {
     private static final String NL = "\n";
     private static final String TAB = "   ";
@@ -38,7 +33,6 @@ public class JasminGenerator {
 
     private int stack = 0;
     private int maxStack = 0;
-    private int maxLocals = 0;
 
     private int label_number = 0;
 
@@ -106,7 +100,6 @@ public class JasminGenerator {
 
     public String build() {
 
-        // This way, build is idempotent
         if (code == null) {
             code = apply(ollirResult.getOllirClass());
         }
@@ -124,11 +117,9 @@ public class JasminGenerator {
 
         var code = new StringBuilder();
 
-        // generate class name
         var className = classUnit.getClassName();
         code.append(".class ").append(className).append(NL);
 
-        // DONE: When you support 'extends', this must be updated
         var superClass = getSuperClassName();
         code.append(".super ").append(superClass).append(NL).append(NL);
 
@@ -137,7 +128,6 @@ public class JasminGenerator {
         }
 
 
-        // generate code for all other methods
         for (var method : ollirResult.getOllirClass().getMethods()) {
             if (method.isConstructMethod()) {
                 var defaultConstructor = """
@@ -160,24 +150,21 @@ public class JasminGenerator {
     private int generateLimitLocals(Method method){
         int index = 0;
         if (!method.isStaticMethod()) {
-            //set this as always used
             usedLocals.add(0);
             index = 1;
         }
+
         for (int i = index; i < method.getVarTable().size(); i++){
-            if (i < method.getParams().size()){  //params must be always on stack as used even if not actually used
+            if (i < method.getParams().size() + (method.isStaticMethod() ? 0 : 1)){
                 usedLocals.add(0);
-            }else {
+            } else {
                 usedLocals.add(-1);
             }
         }
         return usedLocals.size();
     }
 
-
     private String generateMethod(Method method) {
-        //System.out.println("STARTING METHOD " + method.getMethodName());
-        // set method
         currentMethod = method;
 
         var code = new StringBuilder();
@@ -199,19 +186,23 @@ public class JasminGenerator {
             instructions.append(instCode);
         }
 
-        for (int i = 0; i < usedLocals.size() ; i++){
-            limitLocals += usedLocals.get(i);
+        int actualUsedLocals = 0;
+        for (int i = 0; i < usedLocals.size(); i++) {
+            if (usedLocals.get(i) >= 0) { // Only count locals that are actually used
+                actualUsedLocals++;
+            }
         }
 
+        int finalLimitLocals = Math.max(limitLocals, actualUsedLocals);
+
         code.append(".limit stack ").append(maxStack).append(NL);
-        code.append(".limit locals ").append(limitLocals).append(NL);
+        code.append(".limit locals ").append(finalLimitLocals).append(NL);
         code.append(instructions);
         code.append(".end method\n\n");
 
         // unset method
         currentMethod = null;
         this.maxStack = 0;
-        this.maxLocals = 0;
         usedLocals.clear();
         return code.toString();
     }
@@ -301,11 +292,51 @@ public class JasminGenerator {
             return code.toString();
         }
 
-        // generate code for loading what's on the right
+        if (assign.getRhs() instanceof BinaryOpInstruction binOp &&
+                binOp.getOperation().getOpType() == OperationType.ADD) {
+
+            String iincCode = tryGenerateIinc(operand, binOp);
+            if (!iincCode.isEmpty()) {
+                return iincCode;
+            }
+        }
+
         code.append(apply(assign.getRhs()));
 
         code.append(this.generateStoreAssign(operand)).append(NL);
         return code.toString();
+    }
+
+    private String tryGenerateIinc(Operand dest, BinaryOpInstruction binOp) {
+        Element left = binOp.getLeftOperand();
+        Element right = binOp.getRightOperand();
+
+        // Check if dest = dest + literal or dest = literal + dest
+        if (left instanceof Operand leftOp && right instanceof LiteralElement rightLit) {
+            if (leftOp.getName().equals(dest.getName())) {
+                return generateIinc(dest, rightLit);
+            }
+        } else if (left instanceof LiteralElement leftLit && right instanceof Operand rightOp) {
+            if (rightOp.getName().equals(dest.getName())) {
+                return generateIinc(dest, leftLit);
+            }
+        }
+
+        return "";
+    }
+
+    private String generateIinc(Operand operand, LiteralElement literal) {
+        var reg = currentMethod.getVarTable().get(operand.getName());
+        int value = Integer.parseInt(literal.getLiteral());
+
+        if (value >= -128 && value <= 127) {
+            if (reg.getVirtualReg() < usedLocals.size()) {
+                usedLocals.set(reg.getVirtualReg(), 0);
+            }
+            return "iinc " + reg.getVirtualReg() + " " + value + NL;
+        }
+
+        return "";
     }
 
     private String generateStoreAssign(Operand operand) {
@@ -409,52 +440,72 @@ public class JasminGenerator {
 
     private String generateBinaryOp(BinaryOpInstruction binaryOp) {
         var code = new StringBuilder();
+        OperationType opType = binaryOp.getOperation().getOpType();
+
+        // For comparison operations, generate comparison code that leaves 0 or 1 on stack
+        if (isComparisonOp(opType)) {
+            return generateComparison(binaryOp);
+        }
 
         // load values on the left and on the right
         code.append(apply(binaryOp.getLeftOperand()));
         code.append(apply(binaryOp.getRightOperand()));
 
-        OperationType type = binaryOp.getOperation().getOpType();
-
         // apply operation
-        String op = types.BinaryOperationType(type);
-        if(op.equals("iadd")){
-            if(binaryOp.getLeftOperand() instanceof LiteralElement leftLiteral && !(binaryOp.getRightOperand() instanceof LiteralElement rightOperand)){
-                String rightOperandName = ((Operand) binaryOp.getRightOperand()).getName();
-                if(this.current_assign.equals(rightOperandName)){
-                    Integer reg = this.currentMethod.getVarTable().get(rightOperandName).getVirtualReg();
-                    op = "iinc";
-                    Integer lit = Integer.parseInt(leftLiteral.getLiteral());
-                    op += " " + reg + " " + lit + NL;
-                }
-            }
-            else if(binaryOp.getRightOperand() instanceof LiteralElement rightLiteral && !(binaryOp.getLeftOperand() instanceof LiteralElement)){
-                String leftOperandName = ((Operand) binaryOp.getLeftOperand()).getName();
-                if(this.current_assign.equals(leftOperandName)){
-                    Integer reg = this.currentMethod.getVarTable().get(leftOperandName).getVirtualReg();
-                    op = "iinc";
-                    Integer lit = Integer.parseInt(rightLiteral.getLiteral());
-                    op += " " + reg + " " + lit + NL;
-                }
-            }
-
-        }
+        String op = types.BinaryOperationType(opType);
         code.append(op).append(NL);
 
-        String comp = types.ComparatorGet(type);
-        if(!comp.isEmpty()){
-            code.append(comp);
+        addStack(-1); // Binary operations consume 2 values and produce 1
 
-            String trueLabel = "L_fact" + label_number++;
-            String endLabel = "L_end" + label_number++;
+        return code.toString();
+    }
 
-            code.append(trueLabel).append(NL);
-            code.append("iconst_0\ngoto ").append(endLabel).append("\n");
-            code.append(trueLabel).append(":\niconst_1\n");
-            code.append(endLabel).append(":\n");
+    private boolean isComparisonOp(OperationType opType) {
+        return opType == OperationType.LTH || opType == OperationType.LTE ||
+                opType == OperationType.GTH || opType == OperationType.GTE ||
+                opType == OperationType.EQ || opType == OperationType.NEQ;
+    }
+
+    private String generateComparison(BinaryOpInstruction binaryOp) {
+        var code = new StringBuilder();
+        OperationType opType = binaryOp.getOperation().getOpType();
+
+        // Load operands
+        code.append(apply(binaryOp.getLeftOperand()));
+        code.append(apply(binaryOp.getRightOperand()));
+
+        // Generate comparison
+        String trueLabel = "cmp_true_" + label_number;
+        String endLabel = "cmp_end_" + label_number++;
+
+        // Subtract to compare (leaves result on stack)
+        code.append("isub").append(NL);
+        addStack(-1); // isub consumes 2, produces 1
+
+        switch (opType) {
+            case LTH -> code.append("iflt ").append(trueLabel);
+            case LTE -> code.append("ifle ").append(trueLabel);
+            case GTH -> code.append("ifgt ").append(trueLabel);
+            case GTE -> code.append("ifge ").append(trueLabel);
+            case EQ -> code.append("ifeq ").append(trueLabel);
+            case NEQ -> code.append("ifne ").append(trueLabel);
         }
+        code.append(NL);
 
-        addStack(-1);
+        // False case: push 0
+        code.append("iconst_0").append(NL);
+        code.append("goto ").append(endLabel).append(NL);
+
+        // True case: push 1
+        code.append(trueLabel).append(":").append(NL);
+        code.append("iconst_1").append(NL);
+
+        // End label
+        code.append(endLabel).append(":").append(NL);
+
+        addStack(-1); // We consumed the comparison result
+        addStack(1);  // We pushed the boolean result (0 or 1)
+
         return code.toString();
     }
 
@@ -494,7 +545,6 @@ public class JasminGenerator {
             addStack(1);
             addStack(-1);
 
-            //if ollir is storing the params as a temp , and then it stores the temp, we must load it again
             Operand argumentOperand = (Operand) newInst.getArguments().getFirst();
             code.append(generateOperand(argumentOperand));
 
@@ -577,14 +627,6 @@ public class JasminGenerator {
         int nRegCaller = currentMethod.getVarTable().get(caller.getName()).getVirtualReg();
         usedLocals.set(nRegCaller,0);
 
-        //TODO: ns  se é necessário ter o name da operation - AFINAL ISTO NAO É NECESSÁRIO FOR SOME REASON :(
-       /* ArrayType tipo = (ArrayType) caller.getType();
-        Type tipo_elem = tipo.getElementType();
-        Operand storeOperand = new Operand("temp1",tipo_elem);
-        code.append(generateStoreAssign(storeOperand));
-       // for (a : currentMethod.getVarTable().){
-
-        //}*/
         return code.toString();
     }
 
@@ -596,14 +638,14 @@ public class JasminGenerator {
 
         code.append("aload");
 
-        if(reg.getVirtualReg() <= 3){  //  && reg.getVirtualReg() >= 0 because if register is negative it means its a field belonging to this which makes it aload_0
+        if(reg.getVirtualReg() <= 3){
             code.append("_");
         }
         else{
             code.append(" ");
         }
 
-        if (reg.getVirtualReg() < 0){ //for negative registers like fields , must be _0
+        if (reg.getVirtualReg() < 0){
             code.append("0").append(NL);
         }else{
             code.append(reg.getVirtualReg()).append(NL);
@@ -629,14 +671,14 @@ public class JasminGenerator {
 
         code.append("aload");
 
-        if(reg.getVirtualReg() <= 3){  //  && reg.getVirtualReg() >= 0 because if register is negative it means its a field belonging to this which makes it aload_0
+        if(reg.getVirtualReg() <= 3){
             code.append("_");
         }
         else{
             code.append(" ");
         }
 
-        if (reg.getVirtualReg() < 0){ //for negative registers like fields , must be _0
+        if (reg.getVirtualReg() < 0){
             code.append("0").append(NL);
         }else{
             code.append(reg.getVirtualReg()).append(NL);
@@ -730,18 +772,42 @@ public class JasminGenerator {
         Instruction condition = opCondInstruction.getCondition();
 
         if(condition instanceof BinaryOpInstruction binaryOpInstruction){
-            code.append(generators.apply(condition));
-            code.append("ifne ");
+            OperationType opType = binaryOpInstruction.getOperation().getOpType();
+
+            // Generate operands
+            code.append(apply(binaryOpInstruction.getLeftOperand()));
+            code.append(apply(binaryOpInstruction.getRightOperand()));
+
+            switch (opType) {
+                case LTH -> code.append("if_icmplt ");
+                case LTE -> code.append("if_icmple ");
+                case GTH -> code.append("if_icmpgt ");
+                case GTE -> code.append("if_icmpge ");
+                case EQ -> code.append("if_icmpeq ");
+                case NEQ -> code.append("if_icmpne ");
+                default -> {
+                    code.append(generateComparison(binaryOpInstruction));
+                    addStack(-1);
+                    code.append("ifne ");
+                }
+            }
+
+            if (isComparisonOp(opType)) {
+                addStack(-2); // Comparison consumes 2 values
+            }
         }
         else if(condition instanceof UnaryOpInstruction unaryOpInstruction){
             code.append(generators.apply(unaryOpInstruction.getOperand()));
-            code.append("ifeq");
+            addStack(-1);
+            code.append("ifeq ");
         }
         else{
-            throw new NotImplementedException("Type not implemented: " + condition);
+            // For other conditions, just check if non-zero
+            code.append(apply(condition));
+            addStack(-1);
+            code.append("ifne ");
         }
 
-        addStack(-1);
         code.append(opCondInstruction.getLabel());
 
         return code.toString();
@@ -749,12 +815,16 @@ public class JasminGenerator {
 
     private String generateUnaryOp(UnaryOpInstruction unaryOpInstruction) {
         StringBuilder code = new StringBuilder();
+
         code.append(generators.apply(unaryOpInstruction.getOperand()));
-        addStack(1);
-        addStack(-1);
 
-        return code.append("iconst_1").append(NL).append("ixor").append(NL).toString();
+        // For NOT operation: XOR with 1 (flip the least significant bit)
+        code.append("iconst_1").append(NL);
+        code.append("ixor").append(NL);
+
+        // addStack is already handled by the operand generation
+        // iconst_1 adds 1, ixor consumes 2 and produces 1, net effect is 0
+
+        return code.toString();
     }
-
-
 }
