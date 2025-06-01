@@ -1,0 +1,9 @@
+import B;
+
+class A {
+    public static void main(String[] args) {
+        int a;
+        a = 5;
+        B.bar(a);
+    }
+}

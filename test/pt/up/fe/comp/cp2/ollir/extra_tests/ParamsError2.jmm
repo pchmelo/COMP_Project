@@ -1,0 +1,16 @@
+class A {
+    int bar(boolean a, int e, boolean b, boolean c, boolean d){
+        return 7;
+    }
+    static void main(String[] args) {
+        A a;
+        int c;
+        int b;
+        boolean d;
+        c = 1;
+        b = 2;
+        a = new A();
+        d = true;
+        c = a.bar(c < b, 0, d && false , c < b && d, !d);
+    }
+}

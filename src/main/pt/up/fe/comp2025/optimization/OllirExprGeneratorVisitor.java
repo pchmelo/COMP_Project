@@ -287,8 +287,10 @@ d.io :=.io tmp0.io;*/
         if (lhs.getKind().equals("VarRefExpr")){
             lhsCode = lhs.get("name");
             // if the variable calling function is of class, import, extend type OR has type of Class,....
-            if (lhsType.equals(table.getClassName()) || table.getImports().contains(lhsType) || table.getSuper().equals(lhsType) ){
-                lhsCode += "." + lhsType;
+            if ( !lhsCode.equals(table.getClassName()) && !table.getImports().contains(lhsCode) && !table.getSuper().equals(lhsCode)  ) {
+                if (lhsType.equals(table.getClassName()) || table.getImports().contains(lhsType) || table.getSuper().equals(lhsType)) {
+                    lhsCode += "." + lhsType;
+                }
             }
         }else{
             var lhsOllirExpr = visit(node.getChild(0));
@@ -349,32 +351,48 @@ d.io :=.io tmp0.io;*/
                 Type resType = types.valueFromVarReturner(node.getParent().get("name"),table,currentMethod).getType();
                 resOllirType = ollirTypes.toOllirType(resType);
                 code += ollirTypes.nextTemp() + resOllirType;
-                computation.append(code + SPACE + ASSIGN + resOllirType + SPACE);
+                computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE);
             }else{
-                Type resType = types.getExprType(node.getParent(),table,currentMethod);
-                resOllirType = ollirTypes.toOllirType(resType);
+                if (node.getChild(0).getKind().equals("ThisExpr") || (lhsType.equals(table.getClassName()) && !lhsCode.equals(table.getClassName()) ) ) {
+                    Type methodType = table.getReturnType(methodName);
+                    //happens when super or import
+                    if (methodType == null) {
+                        Type resType = types.getExprType(node.getParent(), table, currentMethod);
+                        resOllirType = ollirTypes.toOllirType(resType);
+                    } else {
+                        resOllirType = ollirTypes.toOllirType(methodType);
+                    }
+                }else {
+                    Type resType = types.getExprType(node.getParent(), table, currentMethod);
+                    resOllirType = ollirTypes.toOllirType(resType);
+                }
                 code += ollirTypes.nextTemp() + resOllirType;
-                computation.append(code + SPACE + ASSIGN + resOllirType + SPACE);
+                computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE);
             }
         }else{
             computation.append(TAB);
+            resOllirType = ".V";
         }
 
         String returnTypeMethodCall = ".V";
-        if (node.getChild(0).getKind().equals("ThisExpr") || lhsType.equals(table.getClassName()) || table.getImports().contains(lhsType) || table.getSuper().equals(lhsType) ){
+        if (node.getChild(0).getKind().equals("ThisExpr") || (lhsType.equals(table.getClassName()) && !lhsCode.equals(table.getClassName()) ) ) {
             computation.append("invokevirtual(");
             Type methodType = table.getReturnType(methodName);
             //happens when super or import
-            if (methodType == null){
+            if (methodType == null) {
                 returnTypeMethodCall = resOllirType;
-            }else{
-                returnTypeMethodCall =  ollirTypes.toOllirType(table.getReturnType(methodName));
+            } else {
+                returnTypeMethodCall = ollirTypes.toOllirType(methodType);
             }
+        }else if((table.getImports().contains(lhsType) && !table.getImports().contains(lhsCode))|| (table.getSuper().equals(lhsType) && !table.getSuper().equals(lhsCode)) ) {
+            computation.append("invokevirtual(");
+            //happens when super or import
+            returnTypeMethodCall = resOllirType;
         }else{
             computation.append("invokestatic(");
         }
 
-        computation.append( lhsCode + ", \"" + methodName + "\"" + rhsCode + R_PAREN + returnTypeMethodCall );
+        computation.append(lhsCode).append(", \"").append(methodName).append("\"").append(rhsCode).append(R_PAREN).append(returnTypeMethodCall);
         return new OllirExprResult(code, computation.toString());
     }
 

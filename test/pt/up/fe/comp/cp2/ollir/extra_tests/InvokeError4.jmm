@@ -1,0 +1,16 @@
+import B;
+
+class A {
+    public int bar(B b) {
+        return 3;
+    }
+
+    static void main(String[] args) {
+        B b;
+        int c;
+        A a;
+        b = new B();
+        a = new A();
+        c = a.bar(b);
+    }
+}

@@ -1,0 +1,18 @@
+class Field {
+
+    int foo() {
+        int a;
+        int b;
+        int c;
+        int d;
+
+        a = 0;
+        b = 1;
+        c = 2;
+        d = 3;
+
+        b = d+5+a+c;
+        return b;
+    }
+
+}

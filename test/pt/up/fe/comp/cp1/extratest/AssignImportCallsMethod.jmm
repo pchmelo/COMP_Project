@@ -2,6 +2,6 @@ import B;
 class A {
   static void main(String[] args) {
     int a = B.getAge(1);
-    println(a);
+   // println(a);
   }
 }

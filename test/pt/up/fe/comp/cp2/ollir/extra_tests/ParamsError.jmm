@@ -1,0 +1,17 @@
+class A {
+    int bar(int a, int b){
+        return 7;
+    }
+    int foo(int a){
+        return 6;
+    }
+    static void main(String[] args) {
+        A a;
+        int c;
+        int b;
+        c = 1;
+        b = 2;
+        a = new A();
+        c = a.bar((new A()).foo(c),(new A()).f1(b)/4 + 3);
+    }
+}

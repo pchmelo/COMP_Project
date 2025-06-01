@@ -26,6 +26,7 @@ public class Varargs extends AnalysisVisitor {
 
         addVisit(Kind.RETURN_STMT, this::checkReturnExpression);
         addVisit(Kind.METHOD_CALL_EXPR, this::checkCallMethodExpression);
+        addVisit(Kind.METHOD_CALL, this::checkCallMethodExpression);
     }
 
     private Void visitMethodDecl(JmmNode mainNode, SymbolTable table) {
@@ -165,16 +166,6 @@ public class Varargs extends AnalysisVisitor {
 
     private Void checkCallMethodExpression(JmmNode mainNode, SymbolTable table){
 
-        Type type_ = types.getExprType(mainNode.getChild(0), table, currentMethod);
-        if (table.getImports().contains(type_.getName()) || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper())) || ((type_.getName().equals("this") || (type_.getName().equals(table.getClassName())) ) && !table.getSuper().isEmpty()) ) {
-            return null;
-        }
-
-
-        if (type_.getName().equals("String") || type_.isArray()){
-            return null;
-        }
-
         /* Type typeMainNode = types.getExprType(mainNode, table, currentMethod);
 
         if(typeMainNode == null){
@@ -207,11 +198,52 @@ public class Varargs extends AnalysisVisitor {
 
         SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
 
-        JmmNode methodClass = mainNode.getChild(0);
         String methodName = mainNode.get("name");
 
         List<Symbol> parameters = table.getParameters(methodName);
-        List<JmmNode> sendedArguments = mainNode.getChildren().subList(1, mainNode.getChildren().size());
+        List<JmmNode> sendedArguments;
+        if (mainNode.getKind().equals("MethodCallExpr")) {
+            Type type_ = types.getExprType(mainNode.getChild(0), table, currentMethod);
+
+            if (type_.getName().equals("String") || type_.isArray()){
+                return null;
+            }
+
+            if (mainNode.getChild(0).getKind().equals("VarRefExpr")){
+               String callerName = mainNode.getChild(0).get("name");
+               if (table.getImports().contains(callerName) || (!table.getSuper().isEmpty() && table.getSuper().equals(callerName))){
+                   return null;
+               }
+            }
+
+            if (table.getImports().contains(type_.getName())  || (!table.getSuper().isEmpty() && type_.getName().equals(table.getSuper())) || ((type_.getName().equals("this") || (type_.getName().equals(table.getClassName())) ) && !table.getSuper().isEmpty()) ) {
+                return null;
+            }
+
+            sendedArguments = mainNode.getChildren().subList(1, mainNode.getChildren().size());
+        }else{ //is MethodCall
+            sendedArguments = mainNode.getChildren();
+
+            if(!table.getMethods().contains(methodName)){
+                if (!table.getImports().isEmpty() || !table.getSuper().isEmpty()){
+                    return null;
+                }
+                var message = String.format("Method called doesn't exist on class");
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        mainNode.getLine(),
+                        mainNode.getColumn(),
+                        message,
+                        null)
+                );
+                return null;
+            }
+        }
+
+        int nParameters = 0;
+        if (parameters != null){
+            nParameters = parameters.size();
+        }
 
         boolean isVarArg = false;
         String varagType = null;
@@ -219,15 +251,32 @@ public class Varargs extends AnalysisVisitor {
         Type sendedParamType;
         Type currentParamType;
 
+        if (sendedArguments.size() < nParameters){
+            var message = String.format("Method Call has fewer parameters than the actual function");
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    mainNode.getLine(),
+                    mainNode.getColumn(),
+                    message,
+                    null)
+            );
+            return null;
+        }
+
+
         for(int i = 0; i < sendedArguments.size(); i++){
             sendedParamType = types.getExprType(sendedArguments.get(i), table, currentMethod);
 
-            if(parameters.size() >= i && !isVarArg){
+            if(nParameters >= i && !isVarArg && nParameters > 0){
 
-                if(!table.getParameters(methodName).get(i).getType().getAttributes().isEmpty()){
+                try {
+                    String hasAtributeVarArg =  table.getParameters(methodName).get(i).getType().get("isVarArg");
                     isVarArg = true;
                     varagType = table.getParameters(methodName).getLast().getType().getName();
+                } catch (Exception e) {
+                   //do nothing;
                 }
+
                 currentParamType = parameters.get(i).getType();
                 if(!currentParamType.getName().equals(sendedParamType.getName())){
 

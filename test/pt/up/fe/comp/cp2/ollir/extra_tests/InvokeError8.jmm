@@ -1,0 +1,21 @@
+import B;
+
+class A {
+    public int bar() {
+        return 3;
+    }
+
+    static void main(String[] args) {
+        A a;
+        B b;
+        int c;
+        a = new A();
+        b = new B();
+        c = a.total(b.bar(c), 5, b.foo(c), true);
+    }
+
+    public int total(int a, int b, boolean c, boolean d) {
+        return 5;
+    }
+
+}

@@ -10,6 +10,7 @@ import pt.up.fe.comp2025.ast.TypeUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static pt.up.fe.comp2025.ast.Kind.*;
@@ -104,8 +105,12 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         StringBuilder code = new StringBuilder();
         var ollirIndexExpr = exprVisitor.visit(node.getChild(0));
         var ollirRhsExpr = exprVisitor.visit(node.getChild(1));
-        code.append(ollirIndexExpr.getComputation());
-        code.append(ollirRhsExpr.getComputation());
+        if (!ollirIndexExpr.getComputation().isEmpty()) {
+            code.append(currentSpace).append(ollirIndexExpr.getComputation()).append(END_STMT);
+        }
+        if (!ollirRhsExpr.getComputation().isEmpty()){
+            code.append(currentSpace).append(ollirRhsExpr.getComputation()).append(END_STMT);
+        }
         Type variableType = types.valueFromVarReturner(node.get("name"),table,currentMethod).getType();
         Type newVariableType = new Type(variableType.getName(),false);
         String ollirNewVariableType = ollirTypes.toOllirType(newVariableType);
@@ -134,7 +139,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
     private String visitIfStmt(JmmNode node, Void unused) {
-        this.ollirTypes = exprVisitor.getOllirTypes();
+        //this.ollirTypes = exprVisitor.getOllirTypes();
 
         int size = node.getChildren().size();
         int tempNums = ollirTypes.currentThen();
@@ -169,7 +174,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append(currentSpace).append(endNameInside).append(COLON).append(NL);
             ifSpace.delete(0,3);
             currentSpace = ifSpace.toString();
-            tempNums = ollirTypes.previousThen();
+            tempNums -= 1;  //ollirTypes.previousThen();
         }
 
         currentSpace = ifCurrentSpace;
@@ -339,6 +344,13 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         if (isPublic) {
             code.append("public ");
+        }
+
+        Map<String, Boolean> staticMethods = (Map<String, Boolean>) table.getObject("staticMethods");
+        boolean isStatic = staticMethods.get(currentMethod);
+
+        if (isStatic) {
+            code.append("static ");
         }
 
         List<JmmNode> varArgList = node.getChildren(VAR_ARG_TYPE); //its only one per method but function requires list

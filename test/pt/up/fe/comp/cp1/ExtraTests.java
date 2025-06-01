@@ -635,4 +635,16 @@ public class ExtraTests {
         TestUtils.mustFail(result);
     }
 
+    @Test
+    public void WrongNumberParam(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/WrongNumberParam.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void WrongTypeParam(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/WrongTypeParam.jmm"));
+        TestUtils.mustFail(result);
+    }
+
 }

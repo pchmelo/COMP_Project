@@ -1,0 +1,20 @@
+import B;
+
+class A {
+    public int bar() {
+        return 3;
+    }
+
+    static void main(String[] args) {
+        B b;
+        int c;
+        b = new B();
+        b = b.bar();
+    }
+
+    public int foo() {
+        int c;
+        c = this.bar();
+        return 5;
+    }
+}
