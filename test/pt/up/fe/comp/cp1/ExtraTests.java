@@ -611,4 +611,28 @@ public class ExtraTests {
         TestUtils.noErrors(result);
     }
 
+    @Test
+    public void WrongAssignFields(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/WrongAssignFields.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void WrongAssignFields2(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/WrongAssignFields2.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void WrongAssignFields3(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/WrongAssignFields3.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void WrongAssignFields4(){
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/extratest/WrongAssignFields4.jmm"));
+        TestUtils.mustFail(result);
+    }
+
 }

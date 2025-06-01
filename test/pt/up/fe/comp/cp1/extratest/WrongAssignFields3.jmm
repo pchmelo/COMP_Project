@@ -1,0 +1,9 @@
+class Field {
+    boolean field1;
+
+    public int bar (int a) {
+        int a = 3;
+        field1 = a;
+        return 2;
+    }
+}
