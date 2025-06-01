@@ -1,0 +1,10 @@
+import B;
+
+class A {
+    static void main(String[] args) {
+        B b;
+        int c;
+        b = new B();
+        c = b.MethVirtualI();
+    }
+}

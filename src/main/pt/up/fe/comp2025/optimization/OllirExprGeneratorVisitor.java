@@ -353,25 +353,41 @@ d.io :=.io tmp0.io;*/
                 code += ollirTypes.nextTemp() + resOllirType;
                 computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE);
             }else{
-                Type resType = types.getExprType(node.getParent(),table,currentMethod);
-                resOllirType = ollirTypes.toOllirType(resType);
+                if (node.getChild(0).getKind().equals("ThisExpr") || (lhsType.equals(table.getClassName()) && !lhsCode.equals(table.getClassName()) ) ) {
+                    Type methodType = table.getReturnType(methodName);
+                    //happens when super or import
+                    if (methodType == null) {
+                        Type resType = types.getExprType(node.getParent(), table, currentMethod);
+                        resOllirType = ollirTypes.toOllirType(resType);
+                    } else {
+                        resOllirType = ollirTypes.toOllirType(methodType);
+                    }
+                }else {
+                    Type resType = types.getExprType(node.getParent(), table, currentMethod);
+                    resOllirType = ollirTypes.toOllirType(resType);
+                }
                 code += ollirTypes.nextTemp() + resOllirType;
                 computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE);
             }
         }else{
             computation.append(TAB);
+            resOllirType = ".V";
         }
 
         String returnTypeMethodCall = ".V";
-        if (node.getChild(0).getKind().equals("ThisExpr") || (lhsType.equals(table.getClassName()) && !lhsCode.equals(table.getClassName()) ) || (table.getImports().contains(lhsType) && !table.getImports().contains(lhsCode))|| (table.getSuper().equals(lhsType) && !table.getSuper().equals(lhsCode) ) ){
+        if (node.getChild(0).getKind().equals("ThisExpr") || (lhsType.equals(table.getClassName()) && !lhsCode.equals(table.getClassName()) ) ) {
             computation.append("invokevirtual(");
             Type methodType = table.getReturnType(methodName);
             //happens when super or import
-            if (methodType == null){
+            if (methodType == null) {
                 returnTypeMethodCall = resOllirType;
-            }else{
-                returnTypeMethodCall =  ollirTypes.toOllirType(table.getReturnType(methodName));
+            } else {
+                returnTypeMethodCall = ollirTypes.toOllirType(methodType);
             }
+        }else if((table.getImports().contains(lhsType) && !table.getImports().contains(lhsCode))|| (table.getSuper().equals(lhsType) && !table.getSuper().equals(lhsCode)) ) {
+            computation.append("invokevirtual(");
+            //happens when super or import
+            returnTypeMethodCall = resOllirType;
         }else{
             computation.append("invokestatic(");
         }

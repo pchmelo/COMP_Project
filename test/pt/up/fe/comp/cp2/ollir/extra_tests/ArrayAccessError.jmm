@@ -1,0 +1,14 @@
+class A {
+    int f() {
+        int a;
+        int b;
+        int[] d;
+        int c;
+        a = 1; b = 2;
+        c = 3;
+        d = new int[4];
+        d[c-3] = b-a;
+
+        return 3;
+    }
+}
