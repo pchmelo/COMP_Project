@@ -1,5 +1,7 @@
 # Compiler Project
 
+**Project Grade:** 18.0/20.0
+
 ## Group T03 G3F
 
 | Name             | Number    | E-Mail            | Participation |
